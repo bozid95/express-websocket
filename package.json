@@ -1,0 +1,21 @@
+{
+  "name": "binance-ws-n8n-bridge",
+  "version": "1.0.0",
+  "description": "Binance Futures WebSocket listener with smart filter and n8n webhook trigger",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ws": "^8.17.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "",
+  "license": "MIT"
+}
