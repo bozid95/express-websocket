@@ -1,5 +1,9 @@
 'use strict';
+const https = require('https');
 const axios = require('axios');
+
+// Allow self-signed certificates (common for self-hosted n8n on VPS)
+const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 const config = require('./config');
 
 /**
@@ -19,6 +23,7 @@ async function triggerN8n(payload) {
     const res = await axios.post(url, payload, {
       timeout: 10000, // 10s timeout
       headers: { 'Content-Type': 'application/json' },
+      httpsAgent,     // allow self-signed SSL certs
     });
     console.log(`[n8n] ✅ Triggered for ${payload.symbol} → HTTP ${res.status}`);
   } catch (err) {
