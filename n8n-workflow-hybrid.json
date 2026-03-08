@@ -1,0 +1,129 @@
+{
+  "name": "Spike Hunter Pro v10 — Config A (PF 2.02)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crypto-signal",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "b1000001-0001-4000-b000-000000000001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [-1600, 800],
+      "webhookId": "crypto-signal"
+    },
+    {
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/klines",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "symbol", "value": "={{ $json.body.symbol }}" },
+            { "name": "interval", "value": "1h" },
+            { "name": "limit", "value": "300" }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "text" } } }
+      },
+      "id": "b1000001-0003-4000-b000-000000000003",
+      "name": "Get Klines 1h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [-1300, 800]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// SPIKE HUNTER PRO v10 — CONFIG A (BEST BACKTESTED)\n// Backtest: WR 57.6% | PF 2.02 | +14.24R over 42 days (33 trades)\n// Strategy: Mean Reversion Buy-the-Dip (LONG only)\n// Config A: Green candle + RSI rising + MinScore 40 + SL 2.0x ATR\n// ═══════════════════════════════════════════════════════════════\n\nconst webhookData = $('Webhook Trigger').first().json.body;\nconst symbol = webhookData.symbol;\nconst wsPrice = parseFloat(webhookData.lastPrice);\nconst wsPctChange = parseFloat(webhookData.priceChangePercent);\nconst wsDirection = webhookData.direction;\n\nfunction parseKlines(nodeName) {\n  let raw = $(nodeName).first().json;\n  let data = Array.isArray(raw) ? raw : (typeof raw.data === 'string' ? JSON.parse(raw.data) : raw.data);\n  if (!Array.isArray(data) || data.length < 30) return null;\n  return {\n    open: data.map(k => parseFloat(k[1])),\n    high: data.map(k => parseFloat(k[2])),\n    low: data.map(k => parseFloat(k[3])),\n    close: data.map(k => parseFloat(k[4])),\n    volume: data.map(k => parseFloat(k[5])),\n  };\n}\n\nconst tf1h = parseKlines('Get Klines 1h');\nif (!tf1h) return [{ json: { isHot: false, symbol, rejectReason: 'Data klines tidak cukup' } }];\n\nconst c = tf1h.close, h = tf1h.high, l = tf1h.low, o = tf1h.open, v = tf1h.volume;\nconst price = c[c.length - 1];\nconst idx = c.length - 1;\n\nfunction calcEMA(p, n) {\n  const k = 2/(n+1); let e = p.slice(0,n).reduce((a,b)=>a+b)/n;\n  const r = new Array(n-1).fill(null); r.push(e);\n  for (let i=n; i<p.length; i++) { e=(p[i]-e)*k+e; r.push(e); }\n  return r;\n}\nfunction calcRSI(p, n=14) {\n  if (p.length < n+1) return 50;\n  let g=0,lo=0;\n  for (let i=1; i<=n; i++) { let d=p[i]-p[i-1]; d>=0?g+=d:lo-=d; }\n  let ag=g/n, al=lo/n;\n  for (let i=n+1; i<p.length; i++) {\n    let d=p[i]-p[i-1]; ag=((ag*(n-1))+(d>=0?d:0))/n; al=((al*(n-1))+(d<0?-d:0))/n;\n  }\n  return al===0 ? 100 : 100-(100/(1+(ag/al)));\n}\nfunction calcMACD(p) {\n  const f=calcEMA(p,12), s=calcEMA(p,26), ml=[];\n  for (let i=0; i<p.length; i++) if(f[i]!==null&&s[i]!==null) ml.push(f[i]-s[i]);\n  if (ml.length<9) return {h:0,ph:0,cu:false,cd:false,hist:0};\n  const sl=calcEMA(ml,9);\n  const lm=ml[ml.length-1],ls=sl[sl.length-1]||0,pm=ml[ml.length-2]||lm,ps=sl[sl.length-2]||ls;\n  return {h:lm-ls, ph:pm-ps, cu:pm<=ps&&lm>ls, cd:pm>=ps&&lm<ls, hist:lm-ls};\n}\nfunction calcATR(h,l,c,n=14) {\n  if(h.length<n+1) return 0;\n  let t=[h[0]-l[0]];\n  for(let i=1;i<h.length;i++) t.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));\n  let a=t.slice(0,n).reduce((x,y)=>x+y)/n;\n  for(let i=n;i<t.length;i++) a=(a*(n-1)+t[i])/n;\n  return a;\n}\nfunction calcADX(h,l,c,n=14) {\n  if(h.length<n*3) return 0;\n  let t=[],pd=[],md=[];\n  for(let i=1;i<h.length;i++) {\n    t.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));\n    let u=h[i]-h[i-1],d=l[i-1]-l[i];\n    pd.push(u>d&&u>0?u:0); md.push(d>u&&d>0?d:0);\n  }\n  let aT=t.slice(0,n).reduce((a,b)=>a+b),aP=pd.slice(0,n).reduce((a,b)=>a+b),aM=md.slice(0,n).reduce((a,b)=>a+b);\n  const dx=[];\n  for(let i=n;i<t.length;i++) {\n    aT=aT-aT/n+t[i]; aP=aP-aP/n+pd[i]; aM=aM-aM/n+md[i];\n    let pI=(aP/aT)*100,mI=(aM/aT)*100;\n    dx.push((pI+mI)===0?0:Math.abs(pI-mI)/(pI+mI)*100);\n  }\n  if(dx.length<n) return 0;\n  let a=dx.slice(0,n).reduce((x,y)=>x+y)/n;\n  for(let i=n;i<dx.length;i++) a=((a*(n-1))+dx[i])/n;\n  return a;\n}\n\nconst _rsi = calcRSI(c);\nconst _prevRsi = calcRSI(c.slice(0, -1));\nconst _macd = calcMACD(c);\nconst _atr = calcATR(h, l, c);\nconst _adx = calcADX(h, l, c);\nconst e21 = calcEMA(c, 21), e50 = calcEMA(c, 50);\nconst E21 = e21[e21.length-1]||price, E50 = e50[e50.length-1]||price;\nconst avgVol = v.slice(-20).reduce((a,b)=>a+b)/20;\nconst volRatio = v[v.length-1]/avgVol;\nlet trend = 'SIDEWAYS';\nif(price>E21&&E21>E50) trend = 'UPTREND';\nelse if(price<E21&&E21<E50) trend = 'DOWNTREND';\nconst recentH = Math.max(...h.slice(-50));\nconst recentL = Math.min(...l.slice(-50));\n\nlet score = 0;\nlet signal = 'NEUTRAL';\nlet strategy = 'WAIT';\nlet confidence = 'LOW';\nconst reasons = [];\n\nif (wsPctChange < -3) {\n  if (_rsi >= 40) { reasons.push('RSI ' + _rsi.toFixed(0) + ' tidak oversold'); }\n  else {\n    let ff = 0;\n    for (let k = idx-5; k <= idx; k++) {\n      if (k > 24) { const ll = Math.min(...l.slice(k-24, k)); if (l[k] < ll) ff++; }\n    }\n    if (ff >= 3) { reasons.push('FREEFALL - skip'); }\n    else {\n      if (E21 <= price * 1.003) { reasons.push('EMA21 tidak di atas harga'); }\n      else {\n        if (c[idx] <= o[idx]) { reasons.push('Candle merah - tunggu hijau'); }\n        else {\n          if (_rsi <= _prevRsi) { reasons.push('RSI masih turun - tunggu naik'); }\n          else {\n            if (_rsi < 22) { score += 20; reasons.push('RSI ' + _rsi.toFixed(0) + ' extreme'); }\n            else if (_rsi < 28) { score += 15; reasons.push('RSI ' + _rsi.toFixed(0) + ' oversold'); }\n            else if (_rsi < 33) { score += 10; reasons.push('RSI ' + _rsi.toFixed(0)); }\n            else { score += 5; }\n\n            const absPct = Math.abs(wsPctChange);\n            if (absPct >= 8) { score += 12; reasons.push(absPct.toFixed(0) + '% crash'); }\n            else if (absPct >= 5) { score += 9; reasons.push(absPct.toFixed(0) + '% drop'); }\n            else if (absPct >= 4) { score += 6; }\n            else { score += 3; }\n\n            const body = Math.abs(c[idx] - o[idx]), range = h[idx] - l[idx];\n            if (range > 0 && body/range > 0.4) { score += 15; reasons.push('Bullish candle'); }\n            else { score += 8; reasons.push('Green candle'); }\n\n            if (_macd.cu) { score += 10; reasons.push('MACD Cross Up'); }\n            else if (_macd.h < 0 && _macd.h > _macd.ph) { score += 6; reasons.push('MACD turning'); }\n\n            if (volRatio > 3.0) { score += 8; reasons.push('Vol ' + volRatio.toFixed(1) + 'x cap'); }\n            else if (volRatio > 2.0) { score += 5; reasons.push('Vol ' + volRatio.toFixed(1) + 'x'); }\n            else if (volRatio > 1.5) { score += 2; }\n\n            const sup3d = Math.min(...l.slice(Math.max(0, idx-72), idx));\n            const dSup = (price - sup3d) / price * 100;\n            if (dSup < 0.5) { score += 10; reasons.push('Double bottom'); }\n            else if (dSup < 1.5) { score += 6; reasons.push('Near support'); }\n            else if (dSup < 3) { score += 3; }\n\n            if (range > 0) {\n              const lw = Math.min(c[idx], o[idx]) - l[idx];\n              if (lw/range > 0.5) { score += 5; reasons.push('Wick up'); }\n            }\n\n            if (_adx < 20) { score += 5; reasons.push('ADX weak'); }\n            else if (_adx > 35) { score -= 3; }\n\n            if (score >= 55) { signal = 'STRONG BUY'; strategy = 'LONG'; confidence = 'VERY HIGH'; }\n            else if (score >= 45) { signal = 'BUY'; strategy = 'LONG'; confidence = 'HIGH'; }\n            else if (score >= 40) { signal = 'POSSIBLE LONG'; strategy = 'LONG'; confidence = 'MEDIUM'; }\n          }\n        }\n      }\n    }\n  }\n} else {\n  reasons.push('Change ' + wsPctChange.toFixed(1) + '% - hanya proses drop > -3%');\n}\n\nlet sl = 0, tp1 = 0, tp2 = 0, tp3 = 0;\nlet riskPct = '0';\nif (strategy === 'LONG' && _atr > 0) {\n  sl = price - (_atr * 2.0);\n  const slDist = price - sl;\n  const meanDist = Math.max(E21 - price, 0);\n  tp1 = price + Math.max(meanDist * 0.4, slDist * 1.5);\n  tp2 = price + Math.max(meanDist * 0.7, slDist * 2.0);\n  tp3 = price + Math.max(meanDist * 1.0, slDist * 3.0);\n  riskPct = ((slDist / price) * 100).toFixed(2);\n}\n\nreturn [{\n  json: {\n    symbol, price: price.toFixed(4),\n    wsChange: wsPctChange.toFixed(2) + '%', wsDirection,\n    signal, strategy, confidence, score,\n    reasons: reasons.join(' | '),\n    trend1h: trend, rsi1h: _rsi.toFixed(1),\n    macdHist: _macd.hist.toFixed(6),\n    macdCross: _macd.cu ? 'BULL CROSS' : (_macd.cd ? 'BEAR CROSS' : 'None'),\n    adx1h: _adx.toFixed(1), volRatio: volRatio.toFixed(1) + 'x',\n    ema21: E21.toFixed(4),\n    support: recentL.toFixed(4), resistance: recentH.toFixed(4),\n    distSupport: ((price - recentL) / price * 100).toFixed(2) + '%',\n    distResistance: ((recentH - price) / price * 100).toFixed(2) + '%',\n    sl: sl.toFixed(4), tp1: tp1.toFixed(4), tp2: tp2.toFixed(4), tp3: tp3.toFixed(4),\n    riskPct: riskPct + '%', atr: _atr.toFixed(6),\n    isHot: signal !== 'NEUTRAL',\n    rejectReason: signal === 'NEUTRAL' ? 'Score ' + score + '. ' + reasons.join(', ') : '',\n  }\n}];"
+      },
+      "id": "b1000001-0006-4000-b000-000000000006",
+      "name": "Pro Analisa TA v10",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-900, 800]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isHot }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "b1000001-0007-4000-b000-000000000007",
+      "name": "Is Hot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [-600, 800]
+    },
+    {
+      "parameters": {
+        "chatId": "@cryptospikehunter",
+        "text": "=\ud83d\udfe2 *{{ $json.symbol }} \u2014 {{ $json.signal }}*\n\ud83c\udfaf Confidence: *{{ $json.confidence }}* (Score: {{ $json.score }}/100)\n\n\ud83d\udcb0 *Entry:* `{{ $json.price }}`\n\ud83d\udcca *WS Trigger:* {{ $json.wsDirection }} {{ $json.wsChange }}\n\ud83d\udcc8 *Strategy:* Mean Reversion (Buy the Dip)\n\n*Market Context:*\n\u251c Trend 1H: {{ $json.trend1h }}\n\u251c RSI: {{ $json.rsi1h }}\n\u251c MACD: {{ $json.macdCross }} ({{ $json.macdHist }})\n\u251c ADX: {{ $json.adx1h }} {{ parseInt($json.adx1h) > 25 ? '\ud83d\udcaa' : '\ud83d\ude10' }}\n\u251c Volume: {{ $json.volRatio }}\n\u2514 EMA21: `{{ $json.ema21 }}`\n\n*Support & Resistance:*\n\u251c \ud83d\udd3a Resistance: `{{ $json.resistance }}` ({{ $json.distResistance }})\n\u2514 \ud83d\udd3b Support: `{{ $json.support }}` ({{ $json.distSupport }})\n\n*Risk Management (Backtested):*\n\u251c \ud83c\udfaf *EXECUTE:* LONG (buy oversold bounce)\n\u251c \ud83d\udee1\ufe0f *SL:* `{{ $json.sl }}` ({{ $json.riskPct }} risk)\n\u251c \ud83e\udd47 *TP1:* `{{ $json.tp1 }}` (close 50%, RR 1.5:1)\n\u251c \ud83e\udd48 *TP2:* `{{ $json.tp2 }}` (close 30%, RR 2:1)\n\u2514 \ud83e\udd49 *TP3:* `{{ $json.tp3 }}` (close 20%, RR 3:1)\n\n\ud83d\udcd0 ATR: {{ $json.atr }}\n\ud83d\udca1 _{{ $json.reasons }}_\n\n\ud83d\udcca _Backtest: WR 57.6% | PF 2.02 | +14.24R/42d_\n\n\ud83d\udd17 [Binance](https://www.binance.com/en/futures/{{ $json.symbol }}) | [TradingView](https://www.tradingview.com/chart/?symbol=BINANCE:{{ $json.symbol }}.P)\n\u23f0 {{ $now.setZone('Asia/Jakarta').format('dd MMM HH:mm') }} WIB",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b1000001-0008-4000-b000-000000000008",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-200, 700],
+      "credentials": {
+        "telegramApi": {
+          "id": "aNtvHk0oDffDwsLX",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "@cryptospikehunter",
+        "text": "=\ud83d\udccb *{{ $json.symbol }}* \u2014 SKIP (Score {{ $json.score }}/100)\n{{ $json.rejectReason }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "b1000001-0009-4000-b000-000000000009",
+      "name": "Telegram Log (Disabled)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [-200, 1000],
+      "credentials": {
+        "telegramApi": {
+          "id": "aNtvHk0oDffDwsLX",
+          "name": "Telegram account"
+        }
+      },
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[ { "node": "Get Klines 1h", "type": "main", "index": 0 } ]]
+    },
+    "Get Klines 1h": {
+      "main": [[ { "node": "Pro Analisa TA v10", "type": "main", "index": 0 } ]]
+    },
+    "Pro Analisa TA v10": {
+      "main": [[ { "node": "Is Hot?", "type": "main", "index": 0 } ]]
+    },
+    "Is Hot?": {
+      "main": [
+        [ { "node": "Telegram Alert", "type": "main", "index": 0 } ],
+        [ { "node": "Telegram Log (Disabled)", "type": "main", "index": 0 } ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": true },
+  "tags": []
+}
