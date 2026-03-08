@@ -1,4 +1,6 @@
-node_modules
-.env
 .git
-*.log
+.idea
+.vscode
+.env
+express-websocket.exe
+logs/

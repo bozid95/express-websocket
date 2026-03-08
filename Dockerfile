@@ -1,19 +1,33 @@
-FROM node:20-alpine
+# Build stage
+FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies first (cache layer)
-COPY package*.json ./
-RUN npm install --omit=dev
+# Copy go mod and sum files
+COPY go.mod go.sum ./
 
-# Copy source
+# Download dependencies
+RUN go mod download
+
+# Copy the source code
 COPY . .
 
-# Expose port (harus match dengan PORT env variable)
+# Build the Go app statically
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o express-websocket .
+
+# Final stage (minimal image)
+FROM alpine:latest
+
+WORKDIR /app
+
+# Add bash and ca-certificates for N8N webhook TLS
+RUN apk --no-cache add ca-certificates tzdata
+
+# Copy the pre-built binary file from the previous stage
+COPY --from=builder /app/express-websocket .
+
+# Expose port (default 3000)
 EXPOSE 3000
 
-# Health check bawaan Docker — Dokploy akan pakai ini
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-  CMD wget -qO- http://localhost:3000/health || exit 1
-
-CMD ["node", "index.js"]
+# Command to run the executable
+CMD ["./express-websocket"]
