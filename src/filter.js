@@ -84,6 +84,7 @@ function applyFilter(ticker) {
     volume: baseVolume.toFixed(4),
     quoteVolume: quoteVolume.toFixed(2),
     direction: pctChange >= 0 ? 'UP' : 'DOWN',
+    threshold: config.PRICE_CHANGE_THRESHOLD,
     triggeredAt: new Date().toISOString(),
   });
 }
