@@ -11,13 +11,13 @@ import (
 )
 
 type TickerData struct {
-	Symbol             string `json:"s"`
-	PriceChangePercent string `json:"P"`
-	LastPrice          string `json:"c"`
-	HighPrice          string `json:"h"`
-	LowPrice           string `json:"l"`
-	BaseVolume         string `json:"v"`
-	QuoteVolume        string `json:"q"`
+	Symbol             string      `json:"s"`
+	PriceChangePercent interface{} `json:"P"`
+	LastPrice          interface{} `json:"c"`
+	HighPrice          interface{} `json:"h"`
+	LowPrice           interface{} `json:"l"`
+	BaseVolume         interface{} `json:"v"`
+	QuoteVolume        interface{} `json:"q"`
 }
 
 // Global Stats Map (Concurrency safe)
@@ -43,13 +43,25 @@ var Stats = StatsData{
 var cooldownMap sync.Map
 var volumeHistory sync.Map
 
+func parseFloat(v interface{}) float64 {
+	switch val := v.(type) {
+	case float64:
+		return val
+	case string:
+		f, _ := strconv.ParseFloat(val, 64)
+		return f
+	default:
+		return 0
+	}
+}
+
 func ApplyFilter(ticker TickerData) {
-	pctChange, _ := strconv.ParseFloat(ticker.PriceChangePercent, 64)
-	lastPrice, _ := strconv.ParseFloat(ticker.LastPrice, 64)
-	highPrice, _ := strconv.ParseFloat(ticker.HighPrice, 64)
-	lowPrice, _ := strconv.ParseFloat(ticker.LowPrice, 64)
-	baseVolume, _ := strconv.ParseFloat(ticker.BaseVolume, 64)
-	quoteVolume, _ := strconv.ParseFloat(ticker.QuoteVolume, 64)
+	pctChange := parseFloat(ticker.PriceChangePercent)
+	lastPrice := parseFloat(ticker.LastPrice)
+	highPrice := parseFloat(ticker.HighPrice)
+	lowPrice := parseFloat(ticker.LowPrice)
+	baseVolume := parseFloat(ticker.BaseVolume)
+	quoteVolume := parseFloat(ticker.QuoteVolume)
 
 	// Increment total checked
 	Stats.mu.Lock()

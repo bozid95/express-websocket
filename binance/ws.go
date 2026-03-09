@@ -94,6 +94,7 @@ func handleMessage(msg []byte) {
 
 	var parsedMsg WsMessageMsg
 	if err := json.Unmarshal(msg, &parsedMsg); err != nil {
+		log.Printf("[WS] Unmarshal error: %v | Raw: %s", err, string(msg))
 		return
 	}
 
