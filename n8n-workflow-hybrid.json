@@ -172,6 +172,263 @@
         }
       },
       "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "operation": "insertRow",
+        "tableId": {
+          "__rl": true,
+          "value": "Data eksekusi",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ .toISO() }}",
+            "symbol": "={{ .symbol }}",
+            "signal": "={{ .signal }}",
+            "strategy": "={{ .strategy }}",
+            "score": "={{ .score }}",
+            "price": "={{ .price }}",
+            "sl": "={{ .sl }}",
+            "tp1": "={{ .tp1 }}",
+            "tp2": "={{ .tp2 }}",
+            "tp3": "={{ .tp3 }}",
+            "riskPct": "={{ .riskPct }}",
+            "rsi1h": "={{ .rsi1h }}",
+            "rsi4h": "={{ .rsi4h }}",
+            "trend1h": "={{ .trend1h }}",
+            "trend4h": "={{ .trend4h }}",
+            "adx1h": "={{ .adx1h }}",
+            "volRatio": "={{ .volRatio }}",
+            "res1h": "={{ .res1h }}",
+            "res4h": "={{ .res4h }}",
+            "macroTrend": "={{ .macroTrend }}",
+            "reasons": "={{ .reasons }}"
+          },
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "symbol",
+              "displayName": "symbol",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "signal",
+              "displayName": "signal",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "strategy",
+              "displayName": "strategy",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "sl",
+              "displayName": "sl",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tp1",
+              "displayName": "tp1",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tp2",
+              "displayName": "tp2",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tp3",
+              "displayName": "tp3",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "riskPct",
+              "displayName": "riskPct",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "rsi1h",
+              "displayName": "rsi1h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "rsi4h",
+              "displayName": "rsi4h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "trend1h",
+              "displayName": "trend1h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "trend4h",
+              "displayName": "trend4h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "adx1h",
+              "displayName": "adx1h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "volRatio",
+              "displayName": "volRatio",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "res1h",
+              "displayName": "res1h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "res4h",
+              "displayName": "res4h",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "macroTrend",
+              "displayName": "macroTrend",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ]
+        }
+      },
+      "id": "b1000001-0010-4000-b000-000000000010",
+      "name": "Log to Data Table",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        100,
+        700
+      ]
     }
   ],
   "pinData": {},
@@ -232,6 +489,17 @@
         [
           {
             "node": "Telegram Log (Disabled)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Alert": {
+      "main": [
+        [
+          {
+            "node": "Log to Data Table",
             "type": "main",
             "index": 0
           }
