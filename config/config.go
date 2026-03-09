@@ -1,6 +1,7 @@
 package config
 
 import (
+	"express-websocket/fetcher"
 	"log"
 	"os"
 	"strconv"
@@ -74,7 +75,15 @@ func getPairs() []string {
 		}
 		return list
 	}
-	return copyTop100()
+
+	// Fetch Top 100 dynamic pairs from Binance API
+	fetchedPairs, err := fetcher.FetchTop100Pairs()
+	if err != nil {
+		log.Printf("[Config] Failed to fetch dynamic pairs: %v. Falling back to hardcoded list.", err)
+		return copyTop100()
+	}
+
+	return fetchedPairs
 }
 
 func copyTop100() []string {
