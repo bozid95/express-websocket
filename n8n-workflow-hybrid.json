@@ -172,102 +172,6 @@
         }
       },
       "disabled": true
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $vars.N8N_BASE_URL }}/api/v1/tables/REPLACE_WITH_TABLE_ID/rows",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "X-N8N-API-KEY",
-              "value": "={{ $vars.N8N_API_KEY }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "timestamp",
-              "value": "={{ $now.toISO() }}"
-            },
-            {
-              "name": "symbol",
-              "value": "={{ $json.symbol }}"
-            },
-            {
-              "name": "signal",
-              "value": "={{ $json.signal }}"
-            },
-            {
-              "name": "strategy",
-              "value": "={{ $json.strategy }}"
-            },
-            {
-              "name": "score",
-              "value": "={{ $json.score }}"
-            },
-            {
-              "name": "price",
-              "value": "={{ $json.price }}"
-            },
-            {
-              "name": "sl",
-              "value": "={{ $json.sl }}"
-            },
-            {
-              "name": "tp1",
-              "value": "={{ $json.tp1 }}"
-            },
-            {
-              "name": "rsi1h",
-              "value": "={{ $json.rsi1h }}"
-            },
-            {
-              "name": "rsi4h",
-              "value": "={{ $json.rsi4h }}"
-            },
-            {
-              "name": "trend1h",
-              "value": "={{ $json.trend1h }}"
-            },
-            {
-              "name": "trend4h",
-              "value": "={{ $json.trend4h }}"
-            },
-            {
-              "name": "macroTrend",
-              "value": "={{ $json.macroTrend }}"
-            },
-            {
-              "name": "reasons",
-              "value": "={{ $json.reasons }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "b1000001-0010-4000-b000-000000000010",
-      "name": "Log to Data Table",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        100,
-        700
-      ],
-      "notes": "Ganti REPLACE_WITH_TABLE_ID dengan ID tabel dari URL n8n Data Tables"
     }
   ],
   "pinData": {},
@@ -328,17 +232,6 @@
         [
           {
             "node": "Telegram Log (Disabled)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Telegram Alert": {
-      "main": [
-        [
-          {
-            "node": "Log to Data Table",
             "type": "main",
             "index": 0
           }
