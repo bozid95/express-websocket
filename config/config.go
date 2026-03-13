@@ -47,7 +47,7 @@ func LoadConfig() {
 	AppConfig = Config{
 		Port:                  getEnvAsInt("PORT", 3000),
 		N8nWebhookURL:         os.Getenv("N8N_WEBHOOK_URL"),
-		PriceChangeThreshold:  getEnvAsFloat("PRICE_CHANGE_THRESHOLD", 3.0),
+		PriceChangeThreshold:  getEnvAsFloat("PRICE_CHANGE_THRESHOLD", 2.0),
 		VolumeSpikeMultiplier: getEnvAsFloat("VOLUME_SPIKE_MULTIPLIER", 0.0),
 		CooldownMs:            getEnvAsInt("COOLDOWN_MS", 300000),
 		Pairs:                 getPairs(),
