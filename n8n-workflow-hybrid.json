@@ -368,23 +368,6 @@
           "parse_mode": "Markdown"
         }
       }
-    },
-    {
-      "id": "n14-merge",
-      "name": "Merge All Data",
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 2.1,
-      "position": [
-        -850,
-        800
-      ],
-      "parameters": {
-        "mode": "combineBySingleField",
-        "mergeByFields": {
-          "values": []
-        },
-        "options": {}
-      }
     }
   ],
   "pinData": {},
@@ -497,7 +480,7 @@
       "main": [
         [
           {
-            "node": "Merge All Data",
+            "node": "Pro Analisa TA v15.2",
             "type": "main",
             "index": 0
           }
@@ -508,7 +491,7 @@
       "main": [
         [
           {
-            "node": "Merge All Data",
+            "node": "Pro Analisa TA v15.2",
             "type": "main",
             "index": 0
           }
@@ -519,7 +502,7 @@
       "main": [
         [
           {
-            "node": "Merge All Data",
+            "node": "Pro Analisa TA v15.2",
             "type": "main",
             "index": 0
           }
@@ -527,17 +510,6 @@
       ]
     },
     "Get Taker Volume": {
-      "main": [
-        [
-          {
-            "node": "Merge All Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge All Data": {
       "main": [
         [
           {
