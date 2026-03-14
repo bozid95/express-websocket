@@ -1,25 +1,33 @@
 {
-  "name": "Spike Hunter Pro v14 — Multi-Layer Confluence (PF 2.0+)",
+  "name": "Spike Hunter Pro v15 — Pro Crypto Futures Engine",
   "nodes": [
     {
+      "id": "b1000001-0001-4000-b000-000000000001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1800,
+        800
+      ],
+      "webhookId": "crypto-signal",
       "parameters": {
         "httpMethod": "POST",
         "path": "crypto-signal",
         "responseMode": "onReceived",
         "responseData": "allEntries",
         "options": {}
-      },
-      "id": "b1000001-0001-4000-b000-000000000001",
-      "name": "Webhook Trigger",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [
-        -1600,
-        800
-      ],
-      "webhookId": "crypto-signal"
+      }
     },
     {
+      "id": "b1000001-0003-4000-b000-000000000003",
+      "name": "Get Klines 1h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1500,
+        800
+      ],
       "parameters": {
         "url": "https://fapi.binance.com/fapi/v1/klines",
         "sendQuery": true,
@@ -35,7 +43,7 @@
             },
             {
               "name": "limit",
-              "value": "1500"
+              "value": "500"
             }
           ]
         },
@@ -46,17 +54,17 @@
             }
           }
         }
-      },
-      "id": "b1000001-0003-4000-b000-000000000003",
-      "name": "Get Klines 1h",
+      }
+    },
+    {
+      "id": "b1000001-0004-4000-b000-000000000004",
+      "name": "Get Klines 4h",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        -1300,
+        -1250,
         800
-      ]
-    },
-    {
+      ],
       "parameters": {
         "url": "https://fapi.binance.com/fapi/v1/klines",
         "sendQuery": true,
@@ -72,7 +80,7 @@
             },
             {
               "name": "limit",
-              "value": "1500"
+              "value": "200"
             }
           ]
         },
@@ -83,30 +91,90 @@
             }
           }
         }
-      },
-      "id": "b1000001-0004-4000-b000-000000000004",
-      "name": "Get Klines 4h",
+      }
+    },
+    {
+      "id": "b1000001-0011-4000-b000-000000000011",
+      "name": "Get Klines 1D",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        -1050,
+        -1000,
         800
-      ]
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/klines",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "1d"
+            },
+            {
+              "name": "limit",
+              "value": "60"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      }
     },
     {
+      "id": "b1000001-0012-4000-b000-000000000012",
+      "name": "Get Funding Rate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -750,
+        800
+      ],
       "parameters": {
-        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// SPIKE HUNTER PRO v14.1 — ADVANCED MOMENTUM DETECTION\n// Hard Gates → Advanced Indicators → Score → Confluence → Profit\n// NEW: RSI Divergence | OBV Confirmation | Bollinger Squeeze\n// ═══════════════════════════════════════════════════════════════\n\nconst webhookData = $('Webhook Trigger').first().json.body;\nconst symbol = webhookData.symbol;\nconst wsPctChange = parseFloat(webhookData.priceChangePercent);\nconst wsDirection = webhookData.direction;\nconst dynamicThreshold = webhookData.threshold ? parseFloat(webhookData.threshold) : 2.0;\nconst nowTs = Date.now();\n\n// ═══ LAYER 1: FRESHNESS CHECK ═══\nconst FRESHNESS_LIMIT_MS = 3 * 60 * 1000;\nif (webhookData.triggeredAt) {\n  const triggeredTs = new Date(webhookData.triggeredAt).getTime();\n  const ageSec = Math.round((nowTs - triggeredTs) / 1000);\n  if (nowTs - triggeredTs > FRESHNESS_LIMIT_MS) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\u23f0 STALE: Signal sudah ' + ageSec + 's (maks 180s).' } }];\n  }\n}\n\n// ═══ LAYER 2: DEDUP + RATE LIMIT ═══\nconst DEDUP_WINDOW_MS = 3 * 60 * 60 * 1000;\nconst RATE_LIMIT_MS = 10 * 60 * 1000;\nconst SCORE_UPGRADE_THRESHOLD = 12;\nconst state = $getWorkflowStaticData('global');\nif (!state.signalCache) state.signalCache = {};\nfor (const key of Object.keys(state.signalCache)) {\n  if (nowTs - state.signalCache[key].ts > 6 * 60 * 60 * 1000) delete state.signalCache[key];\n}\nconst dedupKey = symbol + '_' + wsDirection;\nconst lastEntry = state.signalCache[dedupKey];\nif (lastEntry && (nowTs - lastEntry.ts < RATE_LIMIT_MS)) {\n  return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udd04 RATE LIMIT: ' + symbol + ' sudah diproses ' + Math.round((nowTs - lastEntry.ts) / 60000) + 'm lalu.' } }];\n}\n\n// ═══ KLINES PARSING ═══\nfunction parseKlines(nodeName) {\n  let raw = $(nodeName).first().json;\n  let data = Array.isArray(raw) ? raw : (typeof raw.data === 'string' ? JSON.parse(raw.data) : raw.data);\n  if (!Array.isArray(data) || data.length < 20) return null;\n  return {\n    open:   data.map(function(k) { return parseFloat(k[1]); }),\n    high:   data.map(function(k) { return parseFloat(k[2]); }),\n    low:    data.map(function(k) { return parseFloat(k[3]); }),\n    close:  data.map(function(k) { return parseFloat(k[4]); }),\n    volume: data.map(function(k) { return parseFloat(k[5]); }),\n  };\n}\n\nconst tf1h = parseKlines('Get Klines 1h');\nconst tf4h = parseKlines('Get Klines 4h');\nif (!tf1h) return [{ json: { isHot: false, symbol, rejectReason: 'Data klines 1H tidak cukup' } }];\n\n// ═══ CORE INDICATOR FUNCTIONS ═══\nfunction calcEMA(p, n) {\n  const k = 2/(n+1); let e = p.slice(0,n).reduce(function(a,b){return a+b;})/n;\n  const r = new Array(n-1).fill(null); r.push(e);\n  for (let i=n; i<p.length; i++) { e=(p[i]-e)*k+e; r.push(e); }\n  return r;\n}\nfunction calcSMA(p, n) {\n  const r = [];\n  for (let i = 0; i < p.length; i++) {\n    if (i < n - 1) { r.push(null); continue; }\n    let sum = 0;\n    for (let j = i - n + 1; j <= i; j++) sum += p[j];\n    r.push(sum / n);\n  }\n  return r;\n}\nfunction calcRSI(p, n) {\n  n = n || 14;\n  if (p.length < n+1) return 50;\n  let g=0,lo=0;\n  for (let i=1; i<=n; i++) { let d=p[i]-p[i-1]; d>=0?g+=d:lo-=d; }\n  let ag=g/n, al=lo/n;\n  for (let i=n+1; i<p.length; i++) {\n    let d=p[i]-p[i-1]; ag=((ag*(n-1))+(d>=0?d:0))/n; al=((al*(n-1))+(d<0?-d:0))/n;\n  }\n  return al===0 ? 100 : 100-(100/(1+(ag/al)));\n}\nfunction calcRSIArray(p, n) {\n  n = n || 14;\n  const result = [];\n  for (let i = 0; i < p.length; i++) {\n    if (i < n) { result.push(null); continue; }\n    result.push(calcRSI(p.slice(0, i + 1), n));\n  }\n  return result;\n}\nfunction calcMACD(p) {\n  const f=calcEMA(p,12), s=calcEMA(p,26), ml=[];\n  for (let i=0; i<p.length; i++) if(f[i]!==null&&s[i]!==null) ml.push(f[i]-s[i]);\n  if (ml.length<9) return {h:0,ph:0,cu:false,cd:false,hist:0};\n  const sl=calcEMA(ml,9);\n  const lm=ml[ml.length-1],ls=sl[sl.length-1]||0,pm=ml[ml.length-2]||lm,ps=sl[sl.length-2]||ls;\n  return {h:lm-ls, ph:pm-ps, cu:pm<=ps&&lm>ls, cd:pm>=ps&&lm<ls, hist:lm-ls};\n}\nfunction calcATR(h,l,c,n) {\n  n=n||14; if(h.length<n+1) return 0;\n  let t=[h[0]-l[0]];\n  for(let i=1;i<h.length;i++) t.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));\n  let a=t.slice(0,n).reduce(function(x,y){return x+y;})/n;\n  for(let i=n;i<t.length;i++) a=(a*(n-1)+t[i])/n;\n  return a;\n}\nfunction calcADX(h,l,c,n) {\n  n=n||14; if(h.length<n*3) return 0;\n  let t=[],pd=[],md=[];\n  for(let i=1;i<h.length;i++) {\n    t.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));\n    let u=h[i]-h[i-1],d=l[i-1]-l[i];\n    pd.push(u>d&&u>0?u:0); md.push(d>u&&d>0?d:0);\n  }\n  let aT=t.slice(0,n).reduce(function(a,b){return a+b;}),aP=pd.slice(0,n).reduce(function(a,b){return a+b;}),aM=md.slice(0,n).reduce(function(a,b){return a+b;});\n  const dx=[];\n  for(let i=n;i<t.length;i++) {\n    aT=aT-aT/n+t[i]; aP=aP-aP/n+pd[i]; aM=aM-aM/n+md[i];\n    let pI=(aP/aT)*100,mI=(aM/aT)*100;\n    dx.push((pI+mI)===0?0:Math.abs(pI-mI)/(pI+mI)*100);\n  }\n  if(dx.length<n) return 0;\n  let a=dx.slice(0,n).reduce(function(x,y){return x+y;})/n;\n  for(let i=n;i<dx.length;i++) a=((a*(n-1))+dx[i])/n;\n  return a;\n}\n\n// ═══ NEW: OBV (On-Balance Volume) ═══\nfunction calcOBV(close, volume) {\n  const obv = [0];\n  for (let i = 1; i < close.length; i++) {\n    if (close[i] > close[i-1]) obv.push(obv[i-1] + volume[i]);\n    else if (close[i] < close[i-1]) obv.push(obv[i-1] - volume[i]);\n    else obv.push(obv[i-1]);\n  }\n  return obv;\n}\n\nfunction getOBVTrend(obv, lookback) {\n  lookback = lookback || 10;\n  if (obv.length < lookback + 1) return 'NEUTRAL';\n  const recent = obv.slice(-lookback);\n  let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;\n  const n = recent.length;\n  for (let i = 0; i < n; i++) {\n    sumX += i; sumY += recent[i]; sumXY += i * recent[i]; sumX2 += i * i;\n  }\n  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);\n  const avgObv = sumY / n;\n  const normalizedSlope = avgObv !== 0 ? (slope / Math.abs(avgObv)) * 100 : 0;\n  if (normalizedSlope > 0.5) return 'RISING';\n  if (normalizedSlope < -0.5) return 'FALLING';\n  return 'NEUTRAL';\n}\n\n// ═══ NEW: RSI DIVERGENCE DETECTOR ═══\nfunction detectRSIDivergence(close, low, high, rsiArr, lookback) {\n  lookback = lookback || 50;\n  const idx = close.length - 1;\n  if (idx < lookback || !rsiArr[idx]) return { bullish: false, bearish: false };\n\n  const startIdx = idx - lookback;\n  let bullDiv = false, bearDiv = false;\n\n  // Bullish: price lower low, RSI higher low\n  for (let i = startIdx + 2; i < idx - 2; i++) {\n    if (!rsiArr[i]) continue;\n    const isSwingLow = low[i] <= low[i-1] && low[i] <= low[i-2] && low[i] <= low[i+1] && low[i] <= low[i+2];\n    if (!isSwingLow) continue;\n    if (low[idx] < low[i] || (Math.abs(low[idx] - low[i]) / low[i] < 0.005)) {\n      if (rsiArr[idx] > rsiArr[i] + 2) { bullDiv = true; break; }\n    }\n  }\n\n  // Bearish: price higher high, RSI lower high\n  for (let i = startIdx + 2; i < idx - 2; i++) {\n    if (!rsiArr[i]) continue;\n    const isSwingHigh = high[i] >= high[i-1] && high[i] >= high[i-2] && high[i] >= high[i+1] && high[i] >= high[i+2];\n    if (!isSwingHigh) continue;\n    if (high[idx] > high[i] || (Math.abs(high[idx] - high[i]) / high[i] < 0.005)) {\n      if (rsiArr[idx] < rsiArr[i] - 2) { bearDiv = true; break; }\n    }\n  }\n\n  return { bullish: bullDiv, bearish: bearDiv };\n}\n\n// ═══ NEW: BOLLINGER BAND SQUEEZE ═══\nfunction calcBollingerBands(close, period, mult) {\n  period = period || 20; mult = mult || 2;\n  const sma = calcSMA(close, period);\n  const upper = [], lower = [], width = [];\n  for (let i = 0; i < close.length; i++) {\n    if (sma[i] === null) { upper.push(null); lower.push(null); width.push(null); continue; }\n    let variance = 0;\n    for (let j = i - period + 1; j <= i; j++) variance += Math.pow(close[j] - sma[i], 2);\n    const stdDev = Math.sqrt(variance / period);\n    upper.push(sma[i] + mult * stdDev);\n    lower.push(sma[i] - mult * stdDev);\n    width.push(sma[i] !== 0 ? ((mult * 2 * stdDev) / sma[i]) * 100 : 0);\n  }\n  return { sma, upper, lower, width };\n}\n\nfunction detectBBSqueeze(width, lookback) {\n  lookback = lookback || 20;\n  if (width.length < lookback + 1) return { isSqueeze: false, isBreakout: false };\n  const recent = width.slice(-lookback).filter(function(w) { return w !== null; });\n  if (recent.length < 10) return { isSqueeze: false, isBreakout: false };\n  const currentW = recent[recent.length - 1];\n  const prevWidths = recent.slice(0, -1);\n  const avgW = prevWidths.reduce(function(a,b){return a+b;}) / prevWidths.length;\n  const isSqueeze = currentW < avgW * 0.7;\n  const prevW = recent[recent.length - 2] || currentW;\n  const isBreakout = prevW < avgW * 0.7 && currentW > prevW * 1.1;\n  return { isSqueeze, isBreakout, currentWidth: currentW, avgWidth: avgW };\n}\n\n// ═══ 4H TREND ANALYSIS ═══\nlet trend4h = 'SIDEWAYS';\nlet rsi4h = 50;\nlet trend4hBias = 'NEUTRAL';\nlet res4h = 0;\nif (tf4h) {\n  const c4 = tf4h.close, h4 = tf4h.high;\n  const e21_4h = calcEMA(c4, 21);\n  const e50_4h = calcEMA(c4, 50);\n  const price4h = c4[c4.length - 1];\n  const E21_4h = e21_4h[e21_4h.length-1] || price4h;\n  const E50_4h = e50_4h[e50_4h.length-1] || price4h;\n  rsi4h = calcRSI(c4);\n  res4h = Math.max.apply(null, h4.slice(-90));\n  if (price4h > E21_4h && E21_4h > E50_4h) { trend4h = 'UPTREND'; trend4hBias = 'BULLISH'; }\n  else if (price4h < E21_4h && E21_4h < E50_4h) { trend4h = 'DOWNTREND'; trend4hBias = 'BEARISH'; }\n}\n\n// ═══ 1H INDICATORS ═══\nconst c = tf1h.close, h = tf1h.high, l = tf1h.low, o = tf1h.open, v = tf1h.volume;\nconst price = c[c.length - 1];\nconst idx = c.length - 1;\nconst _rsi = calcRSI(c);\nconst _prevRsi = calcRSI(c.slice(0, -1));\nconst _rsiArray = calcRSIArray(c, 14);\nconst _macd = calcMACD(c);\nconst _atr = calcATR(h, l, c);\nconst _adx = calcADX(h, l, c);\nconst e9 = calcEMA(c, 9), e21 = calcEMA(c, 21), e50 = calcEMA(c, 50), e200 = calcEMA(c, 200);\nconst E9 = e9[e9.length-1]||price, E21 = e21[e21.length-1]||price;\nconst E50 = e50[e50.length-1]||price, E200 = e200[e200.length-1]||price;\nconst prevE9 = e9[e9.length-2]||E9, prevE21 = e21[e21.length-2]||E21;\n\n// EMA 9/21 Cross\nconst ema9CrossAbove21 = prevE9 <= prevE21 && E9 > E21;\nconst ema9CrossBelow21 = prevE9 >= prevE21 && E9 < E21;\n\nconst avgVol = v.slice(-20).reduce(function(a,b){return a+b;})/20;\nconst volRatio = v[v.length-1]/avgVol;\nconst res1h = Math.max.apply(null, h.slice(-200));\nconst recentL = Math.min.apply(null, l.slice(-200));\nconst effectiveRes = (res4h > 0 && Math.abs(res4h - res1h) / price < 0.05)\n  ? Math.max(res4h, res1h) : (res4h > 0 ? Math.min(res4h, res1h) : res1h);\nlet trend = 'SIDEWAYS';\nif(price>E21&&E21>E50) trend = 'UPTREND';\nelse if(price<E21&&E21<E50) trend = 'DOWNTREND';\nconst body = Math.abs(c[idx] - o[idx]);\nconst range = h[idx] - l[idx];\nconst upperWick = h[idx] - Math.max(c[idx], o[idx]);\nconst lowerWick = Math.min(c[idx], o[idx]) - l[idx];\nconst bodyRatio = range > 0 ? body / range : 0;\nconst isGreen = c[idx] > o[idx];\nconst isRed = c[idx] < o[idx];\nconst vol5avg = v.slice(Math.max(0, idx-5), idx).reduce(function(a,b){return a+b;}, 0) / Math.min(5, idx);\nconst volBreakRatio = vol5avg > 0 ? v[idx] / vol5avg : 1;\n\n// Freefall\nlet ffCount = 0;\nfor (let k = idx-5; k <= idx; k++) {\n  if (k > 24) { const ll = Math.min.apply(null, l.slice(k-24, k)); if (l[k] < ll) ffCount++; }\n}\n\n// ═══ ADVANCED INDICATORS ═══\nconst _obv = calcOBV(c, v);\nconst _obvTrend = getOBVTrend(_obv, 10);\nconst _rsiDiv = detectRSIDivergence(c, l, h, _rsiArray, 50);\nconst _bb = calcBollingerBands(c, 20, 2);\nconst _bbSqueeze = detectBBSqueeze(_bb.width, 20);\nconst priceAboveUpperBB = _bb.upper[idx] !== null && price > _bb.upper[idx];\nconst priceBelowLowerBB = _bb.lower[idx] !== null && price < _bb.lower[idx];\nconst atrPct = price > 0 ? (_atr / price) * 100 : 0;\n\nlet score = 0, signal = 'NEUTRAL', strategy = 'WAIT', confidence = 'LOW';\nconst reasons = [];\nlet confluenceCount = 0;\nlet confluenceTotal = 9;\nlet estimatedTP1Pct = 0, estimatedTP2Pct = 0, estimatedTP3Pct = 0, estimatedRiskPct = 0;\n\n// ═══ STRATEGY 1: BUY THE DIP ═══\nif (wsPctChange <= -dynamicThreshold) {\n  // HARD GATES\n  if (_rsi >= 40) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: RSI ' + _rsi.toFixed(0) + ' tidak oversold (<40)' } }];\n  if (ffCount >= 3) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: FREEFALL (' + ffCount + ' break low)' } }];\n  if (!isGreen) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: Candle merah. RSI: ' + _rsi.toFixed(0) } }];\n  if (volRatio < 1.5) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: Volume rendah (' + volRatio.toFixed(1) + 'x) min 1.5x' } }];\n  if (trend4hBias === 'BEARISH') return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: 4H DOWNTREND' } }];\n  if (_rsi > _prevRsi === false && _rsi >= 25) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: RSI ' + _rsi.toFixed(0) + ' masih turun' } }];\n  if (_obvTrend === 'FALLING') return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: OBV FALLING — smart money jual' } }];\n  if (atrPct < 0.3) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: ATR rendah (' + atrPct.toFixed(2) + '%)' } }];\n\n  // SCORING\n  if (_rsi < 20) { score += 25; reasons.push('RSI ' + _rsi.toFixed(0) + ' extreme \\ud83d\\udd25'); confluenceCount++; }\n  else if (_rsi < 25) { score += 20; reasons.push('RSI ' + _rsi.toFixed(0) + ' deep oversold'); confluenceCount++; }\n  else if (_rsi < 30) { score += 15; reasons.push('RSI ' + _rsi.toFixed(0) + ' oversold'); confluenceCount++; }\n  else if (_rsi < 35) { score += 10; reasons.push('RSI ' + _rsi.toFixed(0)); confluenceCount++; }\n  else { score += 5; }\n\n  const absPct = Math.abs(wsPctChange);\n  if (absPct >= 10) { score += 15; reasons.push(absPct.toFixed(1) + '% CRASH \\ud83d\\udca5'); confluenceCount++; }\n  else if (absPct >= 7) { score += 12; reasons.push(absPct.toFixed(1) + '% big drop'); confluenceCount++; }\n  else if (absPct >= 5) { score += 9; reasons.push(absPct.toFixed(1) + '% drop'); confluenceCount++; }\n  else if (absPct >= 3) { score += 6; reasons.push(absPct.toFixed(1) + '% dip'); }\n  else { score += 3; }\n\n  if (volRatio > 4.0) { score += 12; reasons.push('Vol ' + volRatio.toFixed(1) + 'x MASSIVE'); confluenceCount++; }\n  else if (volRatio > 2.5) { score += 8; reasons.push('Vol ' + volRatio.toFixed(1) + 'x spike'); confluenceCount++; }\n  else { score += 4; reasons.push('Vol ' + volRatio.toFixed(1) + 'x'); }\n\n  if (bodyRatio > 0.6) { score += 15; reasons.push('Marubozu (' + (bodyRatio*100).toFixed(0) + '%) \\u2705'); confluenceCount++; }\n  else if (bodyRatio > 0.4) { score += 10; reasons.push('Strong green (' + (bodyRatio*100).toFixed(0) + '%)'); confluenceCount++; }\n  else { score += 5; reasons.push('Weak green (' + (bodyRatio*100).toFixed(0) + '%)'); }\n\n  if (_macd.cu) { score += 12; reasons.push('MACD Bull Cross \\ud83d\\udd25'); confluenceCount++; }\n  else if (_macd.h < 0 && _macd.h > _macd.ph) { score += 7; reasons.push('MACD turning up'); confluenceCount++; }\n  else { reasons.push('MACD belum confirm'); }\n\n  const sup = Math.min.apply(null, l.slice(Math.max(0, idx-168), idx));\n  const dSup = (price - sup) / price * 100;\n  if (dSup < 0.5) { score += 12; reasons.push('Double Bottom \\u2705'); confluenceCount++; }\n  else if (dSup < 1.5) { score += 7; reasons.push('Near support (' + dSup.toFixed(1) + '%)'); confluenceCount++; }\n  else if (dSup < 3) { score += 3; }\n\n  if (range > 0 && lowerWick/range > 0.5) { score += 7; reasons.push('Buyer wick \\u2191'); }\n  else if (range > 0 && lowerWick/range > 0.3) { score += 4; }\n  if (_adx < 20) { score += 5; reasons.push('ADX weak — mean revert'); }\n  else if (_adx > 40) { score -= 5; reasons.push('ADX strong \\u26a0\\ufe0f'); }\n\n  // RSI Bullish Divergence\n  if (_rsiDiv.bullish) { score += 20; reasons.push('\\ud83d\\udd25 RSI BULL DIVERGENCE'); confluenceCount++; }\n\n  // OBV\n  if (_obvTrend === 'RISING') { score += 10; reasons.push('OBV RISING — accumulation \\u2705'); confluenceCount++; }\n  else { score += 3; reasons.push('OBV neutral'); }\n\n  // BONUS\n  if (ema9CrossAbove21) { score += 8; reasons.push('EMA 9/21 Bull Cross \\u2705'); }\n  if (priceBelowLowerBB) { score += 5; reasons.push('Below BB Lower \\u2705'); }\n  if (trend4hBias === 'BULLISH') { score += 10; reasons.push('4H UPTREND \\u2705'); }\n  else { score += 3; reasons.push('4H Sideways'); }\n\n  if (confluenceCount < 4) return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab CONFLUENCE: ' + confluenceCount + '/9 (min 4). Score ' + score } }];\n\n  if (score >= 75) { signal = 'STRONG BUY'; strategy = 'LONG (Buy Dip)'; confidence = 'VERY HIGH'; }\n  else if (score >= 65) { signal = 'STRONG BUY'; strategy = 'LONG (Buy Dip)'; confidence = 'HIGH'; }\n  else { reasons.push('Score ' + score + ' < 65'); }\n}\n\n// ═══ STRATEGY 2 & 3: PUMP ═══\nelse if (wsPctChange >= dynamicThreshold) {\n  let shortScore = 0, breakoutScore = 0;\n  const shortReasons = [], breakoutReasons = [];\n  let shortConfluence = 0, breakoutConfluence = 0;\n\n  // SHORT\n  const shortGatePass = (_rsi >= 65) && isRed && (trend4hBias !== 'BULLISH') && (_obvTrend !== 'RISING');\n  if (shortGatePass) {\n    if (_rsi >= 80) { shortScore += 25; shortReasons.push('RSI ' + _rsi.toFixed(0) + ' EXTREME OB \\ud83d\\udd25'); shortConfluence++; }\n    else if (_rsi >= 75) { shortScore += 20; shortReasons.push('RSI ' + _rsi.toFixed(0) + ' overbought'); shortConfluence++; }\n    else if (_rsi >= 70) { shortScore += 15; shortReasons.push('RSI ' + _rsi.toFixed(0) + ' high'); shortConfluence++; }\n    else { shortScore += 8; shortReasons.push('RSI ' + _rsi.toFixed(0)); shortConfluence++; }\n\n    if (wsPctChange >= 12) { shortScore += 15; shortReasons.push('MASSIVE Pump ' + wsPctChange.toFixed(1) + '%'); shortConfluence++; }\n    else if (wsPctChange >= 8) { shortScore += 12; shortReasons.push('Big Pump ' + wsPctChange.toFixed(1) + '%'); shortConfluence++; }\n    else if (wsPctChange >= 5) { shortScore += 8; shortReasons.push('Pump ' + wsPctChange.toFixed(1) + '%'); shortConfluence++; }\n    else { shortScore += 4; }\n\n    if (bodyRatio > 0.5) { shortScore += 15; shortReasons.push('Strong reversal'); shortConfluence++; }\n    else { shortScore += 8; shortReasons.push('Red candle'); shortConfluence++; }\n\n    if (range > 0 && upperWick/range > 0.5) { shortScore += 12; shortReasons.push('Long upper wick'); shortConfluence++; }\n    else if (range > 0 && upperWick/range > 0.3) { shortScore += 7; shortReasons.push('Upper wick'); shortConfluence++; }\n\n    if (_macd.cd) { shortScore += 12; shortReasons.push('MACD Bear Cross \\ud83d\\udd25'); shortConfluence++; }\n    else if (_macd.h > 0 && _macd.h < _macd.ph) { shortScore += 6; shortReasons.push('MACD fading'); shortConfluence++; }\n\n    const dResShort = (effectiveRes - price) / price * 100;\n    if (dResShort > -0.5 && dResShort < 1.0) { shortScore += 10; shortReasons.push('At MTF Resistance'); shortConfluence++; }\n\n    if (_rsiDiv.bearish) { shortScore += 20; shortReasons.push('\\ud83d\\udd25 RSI BEAR DIVERGENCE'); shortConfluence++; }\n    if (_obvTrend === 'FALLING') { shortScore += 10; shortReasons.push('OBV FALLING \\u2705'); shortConfluence++; }\n    if (ema9CrossBelow21) { shortScore += 8; shortReasons.push('EMA 9/21 Bear Cross'); }\n\n    if (trend4hBias === 'BEARISH') { shortScore += 10; shortReasons.push('4H DOWNTREND \\u2705'); }\n    else { shortScore += 3; shortReasons.push('4H Sideways'); }\n  }\n\n  // BREAKOUT\n  const dRes1hBreak = (price - res1h) / price * 100;\n  const breakoutGatePass = (dRes1hBreak > 0 || (res4h > 0 && price > res4h))\n    && volBreakRatio > 1.5 && trend4hBias !== 'BEARISH'\n    && (range > 0 && upperWick/range < 0.5) && _obvTrend !== 'FALLING';\n\n  if (breakoutGatePass) {\n    const prevAboveRes = idx > 0 && c[idx-1] > res1h;\n    if (prevAboveRes) { breakoutScore += 20; breakoutReasons.push('2-bar above res \\ud83d\\udd11'); breakoutConfluence++; }\n    else { breakoutScore += 10; breakoutReasons.push('1-bar breakout'); breakoutConfluence++; }\n\n    if (volBreakRatio > 3.0) { breakoutScore += 20; breakoutReasons.push('Vol BREAKOUT ' + volBreakRatio.toFixed(1) + 'x \\ud83d\\udd25'); breakoutConfluence++; }\n    else if (volBreakRatio > 2.0) { breakoutScore += 14; breakoutReasons.push('Vol ' + volBreakRatio.toFixed(1) + 'x'); breakoutConfluence++; }\n    else { breakoutScore += 8; breakoutReasons.push('Vol ' + volBreakRatio.toFixed(1) + 'x'); breakoutConfluence++; }\n\n    if (_rsi >= 55 && _rsi < 70) { breakoutScore += 15; breakoutReasons.push('RSI Momentum ' + _rsi.toFixed(0)); breakoutConfluence++; }\n    else if (_rsi >= 50) { breakoutScore += 8; breakoutReasons.push('RSI ' + _rsi.toFixed(0)); breakoutConfluence++; }\n    else if (_rsi >= 70) { breakoutScore += 5; breakoutReasons.push('RSI high \\u26a0\\ufe0f'); }\n    else { breakoutScore -= 5; breakoutReasons.push('RSI weak'); }\n\n    if (isGreen && bodyRatio > 0.75) { breakoutScore += 15; breakoutReasons.push('Marubozu'); breakoutConfluence++; }\n    else if (isGreen && bodyRatio > 0.55) { breakoutScore += 8; breakoutReasons.push('Bullish candle'); breakoutConfluence++; }\n    else if (bodyRatio < 0.3) { breakoutScore -= 10; breakoutReasons.push('Weak candle \\u26a0\\ufe0f'); }\n\n    if (range > 0) {\n      const wickR = upperWick / range;\n      if (wickR < 0.15) { breakoutScore += 5; breakoutReasons.push('Clean breakout'); }\n      else if (wickR > 0.35) { breakoutScore -= 8; breakoutReasons.push('Upper wick risk'); }\n    }\n\n    const dRes4hBreak = res4h > 0 ? (price - res4h) / price * 100 : null;\n    if (dRes4hBreak !== null && dRes4hBreak > 0 && dRes4hBreak < 3.0) {\n      breakoutScore += 18; breakoutReasons.push('4H Res BREAK \\ud83d\\udd11'); breakoutConfluence++;\n    } else if (dRes1hBreak > 0 && dRes1hBreak < 2.0) {\n      breakoutScore += 12; breakoutReasons.push('1H Res break'); breakoutConfluence++;\n    }\n\n    if (_macd.cu) { breakoutScore += 10; breakoutReasons.push('MACD Bull Cross'); breakoutConfluence++; }\n    else if (_macd.h > 0 && _macd.h > _macd.ph) { breakoutScore += 7; breakoutReasons.push('MACD momentum \\u2191'); breakoutConfluence++; }\n\n    if (_adx > 30) { breakoutScore += 10; breakoutReasons.push('ADX Strong (' + _adx.toFixed(0) + ')'); }\n    else if (_adx > 25) { breakoutScore += 6; }\n    else if (_adx < 15) { breakoutScore -= 8; breakoutReasons.push('ADX lemah'); }\n\n    // BB Squeeze Breakout\n    if (_bbSqueeze.isBreakout && priceAboveUpperBB) {\n      breakoutScore += 15; breakoutReasons.push('\\ud83d\\udca5 BB SQUEEZE BREAKOUT'); breakoutConfluence++;\n    } else if (_bbSqueeze.isSqueeze) {\n      breakoutScore += 5; breakoutReasons.push('BB Squeeze');\n    }\n\n    if (_obvTrend === 'RISING') { breakoutScore += 10; breakoutReasons.push('OBV RISING \\u2705'); breakoutConfluence++; }\n    if (ema9CrossAbove21) { breakoutScore += 8; breakoutReasons.push('EMA 9/21 Bull Cross'); }\n\n    if (trend4hBias === 'BULLISH') { breakoutScore += 12; breakoutReasons.push('4H UPTREND \\u2705'); }\n    else { breakoutScore += 3; }\n  }\n\n  // DECIDE\n  const shortOk = shortGatePass && shortConfluence >= 4 && shortScore >= 65;\n  const breakOk = breakoutGatePass && breakoutConfluence >= 4 && breakoutScore >= 65;\n\n  if (shortOk && shortScore >= breakoutScore) {\n    score = shortScore; confluenceCount = shortConfluence; confluenceTotal = 9;\n    reasons.push.apply(reasons, shortReasons);\n    if (score >= 75) { signal = 'STRONG SELL'; strategy = 'SHORT (Overbought)'; confidence = 'VERY HIGH'; }\n    else { signal = 'STRONG SELL'; strategy = 'SHORT (Overbought)'; confidence = 'HIGH'; }\n  } else if (breakOk) {\n    score = breakoutScore; confluenceCount = breakoutConfluence; confluenceTotal = 9;\n    reasons.push.apply(reasons, breakoutReasons);\n    if (score >= 75) { signal = 'STRONG BUY'; strategy = 'LONG (Breakout)'; confidence = 'VERY HIGH'; }\n    else { signal = 'STRONG BUY'; strategy = 'LONG (Breakout)'; confidence = 'HIGH'; }\n  } else {\n    const why = [];\n    if (shortGatePass) why.push('SHORT sc:' + shortScore + ' conf:' + shortConfluence + '/4');\n    else why.push('SHORT gates fail');\n    if (breakoutGatePass) why.push('BREAK sc:' + breakoutScore + ' conf:' + breakoutConfluence + '/4');\n    else why.push('BREAK gates fail');\n    reasons.push('Pump ' + wsPctChange.toFixed(1) + '% — ' + why.join(' | '));\n  }\n} else {\n  reasons.push('Change ' + wsPctChange.toFixed(1) + '% di bawah threshold ' + dynamicThreshold + '%');\n}\n\n// ═══ SL/TP + PROFIT ESTIMATION ═══\nlet sl = 0, tp1 = 0, tp2 = 0, tp3 = 0, riskPct = '0';\nconst isStrongSignal = signal === 'STRONG BUY' || signal === 'STRONG SELL';\n\nif (_atr > 0 && isStrongSignal) {\n  if (strategy.indexOf('LONG') !== -1) {\n    sl = price - (_atr * 2.0);\n    const slDist = price - sl;\n    const meanDist = Math.max(E21 - price, _atr * 2);\n    tp1 = price + Math.max(meanDist * 0.4, slDist * 1.5);\n    tp2 = price + Math.max(meanDist * 0.7, slDist * 2.5);\n    tp3 = price + Math.max(meanDist * 1.0, slDist * 3.5);\n    riskPct = ((slDist / price) * 100).toFixed(2);\n    estimatedTP1Pct = ((tp1 - price) / price * 100);\n    estimatedTP2Pct = ((tp2 - price) / price * 100);\n    estimatedTP3Pct = ((tp3 - price) / price * 100);\n    estimatedRiskPct = ((price - sl) / price * 100);\n  } else if (strategy.indexOf('SHORT') !== -1) {\n    sl = price + (_atr * 2.0);\n    const slDist = sl - price;\n    const meanDist = Math.max(price - E21, _atr * 2);\n    tp1 = price - Math.max(meanDist * 0.4, slDist * 1.5);\n    tp2 = price - Math.max(meanDist * 0.7, slDist * 2.5);\n    tp3 = price - Math.max(meanDist * 1.0, slDist * 3.5);\n    riskPct = ((slDist / price) * 100).toFixed(2);\n    estimatedTP1Pct = ((price - tp1) / price * 100);\n    estimatedTP2Pct = ((price - tp2) / price * 100);\n    estimatedTP3Pct = ((price - tp3) / price * 100);\n    estimatedRiskPct = ((sl - price) / price * 100);\n  }\n}\n\n// FINAL DEDUP\nif (isStrongSignal && lastEntry && (nowTs - lastEntry.ts < DEDUP_WINDOW_MS)) {\n  const scoreDiff = score - lastEntry.score;\n  const elapsedMin = Math.round((nowTs - lastEntry.ts) / 60000);\n  if (scoreDiff < SCORE_UPGRADE_THRESHOLD) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udd01 DEDUP: ' + symbol + ' sent ' + elapsedMin + 'm ago (score ' + lastEntry.score + '\\u2192' + score + ').' } }];\n  }\n}\nif (isStrongSignal) { state.signalCache[dedupKey] = { ts: nowTs, score, signal }; }\n\nreturn [{\n  json: {\n    symbol, price: price.toFixed(4),\n    wsChange: wsPctChange.toFixed(2) + '%', wsDirection,\n    signal, strategy, confidence, score,\n    confluenceCount: confluenceCount + '/' + confluenceTotal,\n    reasons: reasons.join(' | '),\n    trend1h: trend, trend4h,\n    ema9: E9.toFixed(4), ema21: E21.toFixed(4), ema200: E200.toFixed(4),\n    emaCross: ema9CrossAbove21 ? 'EMA9/21 BULL \\u2705' : (ema9CrossBelow21 ? 'EMA9/21 BEAR' : 'None'),\n    macroTrend: price > E200 ? 'ABOVE MA200' : 'BELOW MA200',\n    rsi1h: _rsi.toFixed(1), rsi4h: rsi4h.toFixed(1),\n    rsiDivergence: _rsiDiv.bullish ? 'BULLISH DIV \\ud83d\\udd25' : (_rsiDiv.bearish ? 'BEARISH DIV \\ud83d\\udd25' : 'None'),\n    obvTrend: _obvTrend,\n    bbSqueeze: _bbSqueeze.isBreakout ? 'BREAKOUT \\ud83d\\udca5' : (_bbSqueeze.isSqueeze ? 'SQUEEZE' : 'Normal'),\n    macdHist: _macd.hist.toFixed(6),\n    macdCross: _macd.cu ? 'BULL CROSS' : (_macd.cd ? 'BEAR CROSS' : 'None'),\n    adx1h: _adx.toFixed(1), volRatio: volRatio.toFixed(1) + 'x',\n    volBreakRatio: volBreakRatio.toFixed(1) + 'x vs 5bar',\n    res1h: res1h.toFixed(4), res4h: res4h > 0 ? res4h.toFixed(4) : 'N/A',\n    support: recentL.toFixed(4), resistance: effectiveRes.toFixed(4),\n    distSupport: ((price - recentL) / price * 100).toFixed(2) + '%',\n    distResistance: ((effectiveRes - price) / price * 100).toFixed(2) + '%',\n    sl: sl.toFixed(4), tp1: tp1.toFixed(4), tp2: tp2.toFixed(4), tp3: tp3.toFixed(4),\n    riskPct: riskPct + '%', atr: _atr.toFixed(6),\n    atrPct: atrPct.toFixed(2) + '%',\n    estTP1: '+' + estimatedTP1Pct.toFixed(2) + '%',\n    estTP2: '+' + estimatedTP2Pct.toFixed(2) + '%',\n    estTP3: '+' + estimatedTP3Pct.toFixed(2) + '%',\n    estRisk: '-' + estimatedRiskPct.toFixed(2) + '%',\n    estRR1: '1:' + (estimatedTP1Pct / (estimatedRiskPct || 1)).toFixed(1),\n    estRR2: '1:' + (estimatedTP2Pct / (estimatedRiskPct || 1)).toFixed(1),\n    estRR3: '1:' + (estimatedTP3Pct / (estimatedRiskPct || 1)).toFixed(1),\n    isHot: isStrongSignal,\n    rejectReason: !isStrongSignal ? 'Score ' + score + '/100 (Min 65). ' + reasons.join(', ') : '',\n  }\n}];"
-      },
+        "url": "https://fapi.binance.com/fapi/v1/premiumIndex",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
       "id": "b1000001-0006-4000-b000-000000000006",
-      "name": "Pro Analisa TA v14.1",
+      "name": "Pro Analisa TA v15",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -900,
+        -500,
         800
-      ]
+      ],
+      "parameters": {
+        "jsCode": "// ═══════════════════════════════════════════════════════════════\n// SPIKE HUNTER PRO v15 — PRO CRYPTO FUTURES ENGINE\n// Daily Macro Filter | Market Structure | Funding Rate | Clean TA\n// Removed: OBV, ADX, BB Squeeze, EMA 9/21 (not relevant for crypto)\n// ═══════════════════════════════════════════════════════════════\n\nconst webhookData = $('Webhook Trigger').first().json.body;\nconst symbol = webhookData.symbol;\nconst wsPctChange = parseFloat(webhookData.priceChangePercent);\nconst wsDirection = webhookData.direction;\nconst dynamicThreshold = webhookData.threshold ? parseFloat(webhookData.threshold) : 2.0;\nconst nowTs = Date.now();\n\n// ═══ LAYER 1: FRESHNESS ═══\nconst FRESHNESS_LIMIT_MS = 3 * 60 * 1000;\nif (webhookData.triggeredAt) {\n  const triggeredTs = new Date(webhookData.triggeredAt).getTime();\n  const ageSec = Math.round((nowTs - triggeredTs) / 1000);\n  if (nowTs - triggeredTs > FRESHNESS_LIMIT_MS) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\u23f0 STALE: ' + ageSec + 's (max 180s)' } }];\n  }\n}\n\n// ═══ LAYER 2: RATE LIMIT + DEDUP ═══\nconst DEDUP_WINDOW_MS = 3 * 60 * 60 * 1000;\nconst RATE_LIMIT_MS = 10 * 60 * 1000;\nconst SCORE_UPGRADE_THRESHOLD = 12;\nconst state = $getWorkflowStaticData('global');\nif (!state.signalCache) state.signalCache = {};\nfor (const key of Object.keys(state.signalCache)) {\n  if (nowTs - state.signalCache[key].ts > 6 * 60 * 60 * 1000) delete state.signalCache[key];\n}\nconst dedupKey = symbol + '_' + wsDirection;\nconst lastEntry = state.signalCache[dedupKey];\nif (lastEntry && (nowTs - lastEntry.ts < RATE_LIMIT_MS)) {\n  return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udd04 RATE LIMIT: ' + Math.round((nowTs - lastEntry.ts) / 60000) + 'm lalu' } }];\n}\n\n// ═══ KLINES PARSING ═══\nfunction parseKlines(nodeName) {\n  try {\n    let raw = $(nodeName).first().json;\n    let data = Array.isArray(raw) ? raw : (typeof raw.data === 'string' ? JSON.parse(raw.data) : raw.data);\n    if (!Array.isArray(data) || data.length < 20) return null;\n    return {\n      open:   data.map(function(k) { return parseFloat(k[1]); }),\n      high:   data.map(function(k) { return parseFloat(k[2]); }),\n      low:    data.map(function(k) { return parseFloat(k[3]); }),\n      close:  data.map(function(k) { return parseFloat(k[4]); }),\n      volume: data.map(function(k) { return parseFloat(k[5]); }),\n    };\n  } catch(e) { return null; }\n}\n\nconst tf1h = parseKlines('Get Klines 1h');\nconst tf4h = parseKlines('Get Klines 4h');\nconst tf1d = parseKlines('Get Klines 1D');\nif (!tf1h) return [{ json: { isHot: false, symbol, rejectReason: 'Data klines 1H tidak cukup' } }];\n\n// ═══ INDICATOR FUNCTIONS ═══\nfunction calcEMA(p, n) {\n  if (p.length < n) return p[p.length-1] || 0;\n  const k = 2/(n+1);\n  let e = p.slice(0,n).reduce(function(a,b){return a+b;})/n;\n  for (let i=n; i<p.length; i++) e=(p[i]-e)*k+e;\n  return e;\n}\nfunction calcEMAArr(p, n) {\n  const k = 2/(n+1); let e = p.slice(0,n).reduce(function(a,b){return a+b;})/n;\n  const r = new Array(n-1).fill(null); r.push(e);\n  for (let i=n; i<p.length; i++) { e=(p[i]-e)*k+e; r.push(e); }\n  return r;\n}\nfunction calcRSI(p, n) {\n  n = n || 14;\n  if (p.length < n+1) return 50;\n  let g=0,lo=0;\n  for (let i=1; i<=n; i++) { let d=p[i]-p[i-1]; d>=0?g+=d:lo-=d; }\n  let ag=g/n, al=lo/n;\n  for (let i=n+1; i<p.length; i++) {\n    let d=p[i]-p[i-1]; ag=((ag*(n-1))+(d>=0?d:0))/n; al=((al*(n-1))+(d<0?-d:0))/n;\n  }\n  return al===0 ? 100 : 100-(100/(1+(ag/al)));\n}\nfunction calcRSIArr(p, n) {\n  n = n || 14;\n  const result = [];\n  for (let i = 0; i < p.length; i++) {\n    if (i < n) { result.push(null); continue; }\n    result.push(calcRSI(p.slice(0, i+1), n));\n  }\n  return result;\n}\nfunction calcMACD(p) {\n  const e12 = calcEMAArr(p, 12), e26 = calcEMAArr(p, 26), ml = [];\n  for (let i=0; i<p.length; i++) if(e12[i]!==null&&e26[i]!==null) ml.push(e12[i]-e26[i]);\n  if (ml.length<9) return {h:0,ph:0,cu:false,cd:false,hist:0};\n  const sl = calcEMAArr(ml, 9);\n  const lm=ml[ml.length-1], ls=sl[sl.length-1]||0, pm=ml[ml.length-2]||lm, ps=sl[sl.length-2]||ls;\n  return {h:lm-ls, ph:pm-ps, cu:pm<=ps&&lm>ls, cd:pm>=ps&&lm<ls, hist:lm-ls};\n}\nfunction calcATR(h,l,c,n) {\n  n=n||14; if(h.length<n+1) return 0;\n  let t=[h[0]-l[0]];\n  for(let i=1;i<h.length;i++) t.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));\n  let a=t.slice(0,n).reduce(function(x,y){return x+y;})/n;\n  for(let i=n;i<t.length;i++) a=(a*(n-1)+t[i])/n;\n  return a;\n}\n\n// ═══ NEW: MARKET STRUCTURE ANALYSIS ═══\n// Detects: BULLISH (HH+HL), BEARISH (LH+LL), or TRANSITION\nfunction analyzeMarketStructure(h, l, c, lookback) {\n  lookback = lookback || 30;\n  const len = c.length;\n  if (len < lookback) return 'NEUTRAL';\n  const slice_h = h.slice(len-lookback);\n  const slice_l = l.slice(len-lookback);\n  const slice_c = c.slice(len-lookback);\n\n  // Find swing highs and lows\n  const swingHighs = [], swingLows = [];\n  for (let i = 2; i < slice_h.length - 2; i++) {\n    if (slice_h[i] > slice_h[i-1] && slice_h[i] > slice_h[i-2] &&\n        slice_h[i] > slice_h[i+1] && slice_h[i] > slice_h[i+2]) {\n      swingHighs.push({ idx: i, val: slice_h[i] });\n    }\n    if (slice_l[i] < slice_l[i-1] && slice_l[i] < slice_l[i-2] &&\n        slice_l[i] < slice_l[i+1] && slice_l[i] < slice_l[i+2]) {\n      swingLows.push({ idx: i, val: slice_l[i] });\n    }\n  }\n\n  if (swingHighs.length < 2 || swingLows.length < 2) return 'NEUTRAL';\n\n  // Compare last 2 swing highs and lows\n  const lastHH = swingHighs[swingHighs.length-1].val;\n  const prevHH = swingHighs[swingHighs.length-2].val;\n  const lastLL = swingLows[swingLows.length-1].val;\n  const prevLL = swingLows[swingLows.length-2].val;\n\n  const higherHigh = lastHH > prevHH;\n  const higherLow = lastLL > prevLL;\n  const lowerHigh = lastHH < prevHH;\n  const lowerLow = lastLL < prevLL;\n\n  if (higherHigh && higherLow) return 'BULLISH';  // HH + HL\n  if (lowerHigh && lowerLow) return 'BEARISH';    // LH + LL\n  if (higherLow && lowerHigh) return 'TRANSITION_UP';  // Potential reversal up\n  if (lowerLow && higherHigh) return 'CHOPPY';\n  return 'NEUTRAL';\n}\n\n// ═══ NEW: RSI DIVERGENCE ═══\nfunction detectRSIDivergence(close, low, high, rsiArr, lookback) {\n  lookback = lookback || 40;\n  const idx = close.length - 1;\n  if (idx < lookback || !rsiArr[idx]) return { bullish: false, bearish: false };\n  const startIdx = idx - lookback;\n  let bullDiv = false, bearDiv = false;\n\n  for (let i = startIdx + 2; i < idx - 2; i++) {\n    if (!rsiArr[i]) continue;\n    const isSwingLow = low[i] <= low[i-1] && low[i] <= low[i-2] && low[i] <= low[i+1] && low[i] <= low[i+2];\n    if (isSwingLow && (low[idx] < low[i] || Math.abs(low[idx]-low[i])/low[i] < 0.005)) {\n      if (rsiArr[idx] > rsiArr[i] + 3) { bullDiv = true; break; }\n    }\n  }\n  for (let i = startIdx + 2; i < idx - 2; i++) {\n    if (!rsiArr[i]) continue;\n    const isSwingHigh = high[i] >= high[i-1] && high[i] >= high[i-2] && high[i] >= high[i+1] && high[i] >= high[i+2];\n    if (isSwingHigh && (high[idx] > high[i] || Math.abs(high[idx]-high[i])/high[i] < 0.005)) {\n      if (rsiArr[idx] < rsiArr[i] - 3) { bearDiv = true; break; }\n    }\n  }\n  return { bullish: bullDiv, bearish: bearDiv };\n}\n\n// ═══ 1D MACRO TREND ═══\nlet dailyTrend = 'NEUTRAL';\nlet dailyEMA21 = 0;\nlet dailyEMA50 = 0;\nif (tf1d) {\n  const dc = tf1d.close;\n  dailyEMA21 = calcEMA(dc, 21);\n  dailyEMA50 = calcEMA(dc, 50);\n  const dPrice = dc[dc.length-1];\n  const dPrev = (dc.length > 1) ? dc[dc.length-2] : dPrice;\n  if (dPrice > dailyEMA21 && dailyEMA21 > dailyEMA50) dailyTrend = 'BULLISH';\n  else if (dPrice < dailyEMA21 && dailyEMA21 < dailyEMA50) dailyTrend = 'BEARISH';\n  else if (dPrice > dailyEMA21) dailyTrend = 'ABOVE_EMA';\n  else dailyTrend = 'BELOW_EMA';\n}\n\n// IS DAILY BULLISH? (Above EMA21)\nconst dailyBullish = dailyTrend === 'BULLISH' || dailyTrend === 'ABOVE_EMA';\nconst dailyBearish = dailyTrend === 'BEARISH' || dailyTrend === 'BELOW_EMA';\n\n// ═══ 4H TREND ═══\nlet trend4h = 'SIDEWAYS', rsi4h = 50, trend4hBias = 'NEUTRAL', res4h = 0;\nif (tf4h) {\n  const c4 = tf4h.close, h4 = tf4h.high;\n  const E21_4h = calcEMA(c4, 21);\n  const E50_4h = calcEMA(c4, 50);\n  const p4h = c4[c4.length-1];\n  rsi4h = calcRSI(c4);\n  res4h = Math.max.apply(null, h4.slice(-90));\n  if (p4h > E21_4h && E21_4h > E50_4h) { trend4h = 'UPTREND'; trend4hBias = 'BULLISH'; }\n  else if (p4h < E21_4h && E21_4h < E50_4h) { trend4h = 'DOWNTREND'; trend4hBias = 'BEARISH'; }\n}\n\n// ═══ 1H INDICATORS ═══\nconst c = tf1h.close, h = tf1h.high, l = tf1h.low, o = tf1h.open, v = tf1h.volume;\nconst price = c[c.length-1];\nconst idx = c.length - 1;\nconst _rsi = calcRSI(c);\nconst _prevRsi = calcRSI(c.slice(0,-1));\nconst _rsiArr = calcRSIArr(c, 14);\nconst _macd = calcMACD(c);\nconst _atr = calcATR(h, l, c);\nconst E21 = calcEMA(c, 21);\nconst E50 = calcEMA(c, 50);\nconst E200 = calcEMA(c, 200);\n\nconst avgVol = v.slice(-20).reduce(function(a,b){return a+b;})/20;\nconst volRatio = avgVol > 0 ? v[v.length-1]/avgVol : 1;\nconst res1h = Math.max.apply(null, h.slice(-200));\nconst recentL = Math.min.apply(null, l.slice(-200));\nconst effectiveRes = (res4h > 0 && Math.abs(res4h-res1h)/price < 0.05)\n  ? Math.max(res4h, res1h) : (res4h > 0 ? Math.min(res4h, res1h) : res1h);\n\nlet trend1h = 'SIDEWAYS';\nif (price > E21 && E21 > E50) trend1h = 'UPTREND';\nelse if (price < E21 && E21 < E50) trend1h = 'DOWNTREND';\n\nconst body = Math.abs(c[idx]-o[idx]);\nconst range = h[idx]-l[idx];\nconst upperWick = h[idx]-Math.max(c[idx],o[idx]);\nconst lowerWick = Math.min(c[idx],o[idx])-l[idx];\nconst bodyRatio = range > 0 ? body/range : 0;\nconst isGreen = c[idx] > o[idx];\nconst isRed = c[idx] < o[idx];\n\n// Last CLOSED candle check (index -2 = last completed candle)\nconst lastClosedDrop = o.length > 1 ? ((c[idx-1] - o[idx-1]) / o[idx-1]) * 100 : 0;\nconst lastClosedPump = lastClosedDrop; // positive = pump\n\n// Volume for breakout (vs 5 bar avg)\nconst vol5avg = v.slice(Math.max(0,idx-5),idx).reduce(function(a,b){return a+b;},0) / Math.min(5,idx);\nconst volBreakRatio = vol5avg > 0 ? v[idx]/vol5avg : 1;\n\n// Freefall\nlet ffCount = 0;\nfor (let k=idx-5;k<=idx;k++) {\n  if (k>24) { const ll=Math.min.apply(null,l.slice(k-24,k)); if(l[k]<ll) ffCount++; }\n}\n\n// ATR %\nconst atrPct = price > 0 ? (_atr/price)*100 : 0;\n\n// Market Structure\nconst _marketStructure = analyzeMarketStructure(h, l, c, 30);\n\n// RSI Divergence\nconst _rsiDiv = detectRSIDivergence(c, l, h, _rsiArr, 40);\n\n// ═══ FUNDING RATE (from separate node) ═══\nlet fundingRate = 0;\nlet fundingLabel = 'N/A';\ntry {\n  const fr = $('Get Funding Rate').first().json;\n  fundingRate = parseFloat(fr.lastFundingRate || fr.body?.lastFundingRate || 0);\n  const frPct = fundingRate * 100;\n  if (frPct < -0.1) fundingLabel = frPct.toFixed(3) + '% \\ud83d\\udd25 SHORT SQUEEZE';\n  else if (frPct < -0.05) fundingLabel = frPct.toFixed(3) + '% Negative';\n  else if (frPct > 0.1) fundingLabel = '+' + frPct.toFixed(3) + '% \\ud83d\\udd25 LONG LURE';\n  else if (frPct > 0.05) fundingLabel = '+' + frPct.toFixed(3) + '% High';\n  else fundingLabel = (frPct >= 0 ? '+' : '') + frPct.toFixed(3) + '% Neutral';\n} catch(e) { fundingRate = 0; fundingLabel = 'N/A'; }\n\nconst frPct = fundingRate * 100;\n\n// ════════════════════════════════════════════════════════\n// SCORING ENGINE\n// ════════════════════════════════════════════════════════\nlet score = 0, signal = 'NEUTRAL', strategy = 'WAIT', confidence = 'LOW';\nconst reasons = [];\n\n// ═══ STRATEGY 1: BUY THE DIP ═══\nif (wsPctChange <= -dynamicThreshold) {\n\n  // ── HARD GATES ──\n  // GATE A: Daily macro — no LONG in daily downtrend\n  if (dailyBearish) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: Daily ' + dailyTrend + ' — no LONG melawan macro bear' } }];\n  }\n  // GATE B: RSI oversold (core signal)\n  if (_rsi >= 42) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: RSI ' + _rsi.toFixed(0) + ' tidak oversold' } }];\n  }\n  // GATE C: No freefall\n  if (ffCount >= 3) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: FREEFALL (' + ffCount + ' break low)' } }];\n  }\n  // GATE D: Green candle confirmation\n  if (!isGreen) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: Candle merah — tunggu hijau. RSI: ' + _rsi.toFixed(0) } }];\n  }\n  // GATE E: Volume must be present\n  if (volRatio < 1.5) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: Volume ' + volRatio.toFixed(1) + 'x — min 1.5x' } }];\n  }\n  // GATE F: Market structure must not be BEARISH\n  if (_marketStructure === 'BEARISH') {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: Market structure BEARISH (LH+LL) — no buy dip' } }];\n  }\n  // GATE G: ATR filter\n  if (atrPct < 0.3) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udeab GATE: ATR ' + atrPct.toFixed(2) + '% terlalu rendah' } }];\n  }\n\n  // ── SCORING ──\n  // 1. RSI level (max 25)\n  if (_rsi < 20) { score += 25; reasons.push('RSI ' + _rsi.toFixed(0) + ' EXTREME \\ud83d\\udd25'); }\n  else if (_rsi < 25) { score += 20; reasons.push('RSI ' + _rsi.toFixed(0) + ' extreme oversold'); }\n  else if (_rsi < 30) { score += 15; reasons.push('RSI ' + _rsi.toFixed(0) + ' oversold'); }\n  else if (_rsi < 35) { score += 10; reasons.push('RSI ' + _rsi.toFixed(0)); }\n  else { score += 5; reasons.push('RSI ' + _rsi.toFixed(0) + ' borderline'); }\n\n  // 2. Drop magnitude (max 15)\n  const absPct = Math.abs(wsPctChange);\n  if (absPct >= 10) { score += 15; reasons.push(absPct.toFixed(1) + '% CRASH \\ud83d\\udca5'); }\n  else if (absPct >= 7) { score += 12; reasons.push(absPct.toFixed(1) + '% big drop'); }\n  else if (absPct >= 5) { score += 9; reasons.push(absPct.toFixed(1) + '% drop'); }\n  else { score += 5; reasons.push(absPct.toFixed(1) + '% dip'); }\n\n  // 3. Volume (max 12)\n  if (volRatio > 4.0) { score += 12; reasons.push('Vol ' + volRatio.toFixed(1) + 'x massive'); }\n  else if (volRatio > 2.5) { score += 8; reasons.push('Vol ' + volRatio.toFixed(1) + 'x spike'); }\n  else { score += 4; reasons.push('Vol ' + volRatio.toFixed(1) + 'x'); }\n\n  // 4. Candle quality (max 12)\n  if (bodyRatio > 0.6) { score += 12; reasons.push('Marubozu (' + (bodyRatio*100).toFixed(0) + '%) \\u2705'); }\n  else if (bodyRatio > 0.4) { score += 8; reasons.push('Strong green (' + (bodyRatio*100).toFixed(0) + '%)'); }\n  else { score += 4; reasons.push('Green (' + (bodyRatio*100).toFixed(0) + '%)'); }\n\n  // 5. MACD (max 12)\n  if (_macd.cu) { score += 12; reasons.push('MACD Bull Cross \\ud83d\\udd25'); }\n  else if (_macd.h < 0 && _macd.h > _macd.ph) { score += 7; reasons.push('MACD turning \\u2191'); }\n  else { reasons.push('MACD bearish'); }\n\n  // 6. Support level (max 12)\n  const sup = Math.min.apply(null, l.slice(Math.max(0,idx-168),idx));\n  const dSup = (price-sup)/price*100;\n  if (dSup < 0.5) { score += 12; reasons.push('Double Bottom \\u2705'); }\n  else if (dSup < 1.5) { score += 7; reasons.push('Near support (' + dSup.toFixed(1) + '%)'); }\n  else if (dSup < 3) { score += 3; }\n\n  // 7. Lower wick (max 7)\n  if (range > 0 && lowerWick/range > 0.5) { score += 7; reasons.push('Buyer wick \\u2191'); }\n  else if (range > 0 && lowerWick/range > 0.3) { score += 4; }\n\n  // 8. NEW: Market Structure bonus (max 15)\n  if (_marketStructure === 'BULLISH') { score += 15; reasons.push('Structure: HH+HL \\u2705'); }\n  else if (_marketStructure === 'TRANSITION_UP') { score += 10; reasons.push('Structure: TRANSITION \\u2705'); }\n  else { reasons.push('Structure: ' + _marketStructure); }\n\n  // 9. NEW: Funding Rate (max 15) — contrarian signal\n  if (frPct < -0.1) { score += 15; reasons.push('Funding ' + frPct.toFixed(3) + '% — SHORT SQUEEZE \\ud83d\\udd25'); }\n  else if (frPct < -0.05) { score += 10; reasons.push('Funding ' + frPct.toFixed(3) + '% negative'); }\n  else if (frPct > 0.05) { score -= 5; reasons.push('Funding +' + frPct.toFixed(3) + '% — long crowded'); }\n\n  // 10. New: RSI Divergence (max 20) — very strong reversal signal\n  if (_rsiDiv.bullish) { score += 20; reasons.push('\\ud83d\\udd25 RSI BULLISH DIVERGENCE'); }\n\n  // 11. 4H alignment bonus\n  if (trend4hBias === 'BULLISH') { score += 8; reasons.push('4H UPTREND \\u2705'); }\n  else if (trend4hBias === 'BEARISH') { score -= 5; reasons.push('4H downtrend \\u26a0\\ufe0f'); }\n\n  // ── CLASSIFY ──\n  if (score >= 68) { signal = 'STRONG BUY'; strategy = 'LONG (Buy Dip)'; confidence = 'VERY HIGH'; }\n  else if (score >= 58) { signal = 'STRONG BUY'; strategy = 'LONG (Buy Dip)'; confidence = 'HIGH'; }\n  else { reasons.push('Score ' + score + ' (min 58)'); }\n}\n\n// ═══ STRATEGY 2 & 3: PUMP ═══\nelse if (wsPctChange >= dynamicThreshold) {\n  let shortScore = 0, breakoutScore = 0;\n  const shortReasons = [], breakoutReasons = [];\n\n  // ── SHORT: GATE Daily BULLISH = no short ──\n  const shortGate = (_rsi >= 65) && isRed && (!dailyBullish);\n  if (shortGate) {\n    if (_rsi >= 80) { shortScore += 25; shortReasons.push('RSI ' + _rsi.toFixed(0) + ' EXTREME OB \\ud83d\\udd25'); }\n    else if (_rsi >= 75) { shortScore += 20; shortReasons.push('RSI ' + _rsi.toFixed(0) + ' OB'); }\n    else if (_rsi >= 70) { shortScore += 15; shortReasons.push('RSI ' + _rsi.toFixed(0)); }\n    else { shortScore += 8; shortReasons.push('RSI ' + _rsi.toFixed(0)); }\n\n    if (wsPctChange >= 12) { shortScore += 15; shortReasons.push('Pump ' + wsPctChange.toFixed(1) + '% MASSIVE'); }\n    else if (wsPctChange >= 8) { shortScore += 12; shortReasons.push('Pump ' + wsPctChange.toFixed(1) + '%'); }\n    else if (wsPctChange >= 5) { shortScore += 8; shortReasons.push('Pump ' + wsPctChange.toFixed(1) + '%'); }\n    else { shortScore += 4; }\n\n    if (bodyRatio > 0.5) { shortScore += 12; shortReasons.push('Strong red reversal'); }\n    else { shortScore += 7; shortReasons.push('Red candle'); }\n\n    if (range > 0 && upperWick/range > 0.5) { shortScore += 12; shortReasons.push('Upper wick rejection'); }\n    else if (range > 0 && upperWick/range > 0.3) { shortScore += 6; }\n\n    if (_macd.cd) { shortScore += 12; shortReasons.push('MACD Bear Cross \\ud83d\\udd25'); }\n    else if (_macd.h > 0 && _macd.h < _macd.ph) { shortScore += 6; shortReasons.push('MACD fading'); }\n\n    const dRes = (effectiveRes-price)/price*100;\n    if (dRes > -0.5 && dRes < 1.0) { shortScore += 10; shortReasons.push('At Resistance'); }\n\n    // Market structure\n    if (_marketStructure === 'BEARISH') { shortScore += 12; shortReasons.push('Structure: LH+LL \\u2705'); }\n\n    // Funding — contrarian short\n    if (frPct > 0.1) { shortScore += 15; shortReasons.push('Funding +' + frPct.toFixed(3) + '% LONG LURE \\ud83d\\udd25'); }\n    else if (frPct > 0.05) { shortScore += 8; shortReasons.push('Funding high +' + frPct.toFixed(3) + '%'); }\n\n    // RSI Bearish Divergence\n    if (_rsiDiv.bearish) { shortScore += 20; shortReasons.push('\\ud83d\\udd25 RSI BEARISH DIVERGENCE'); }\n\n    // Daily alignment\n    if (dailyBearish) { shortScore += 8; shortReasons.push('Daily BEARISH \\u2705'); }\n    if (trend4hBias === 'BEARISH') { shortScore += 8; shortReasons.push('4H DOWNTREND \\u2705'); }\n  }\n\n  // ── BREAKOUT: GATE Daily BEARISH = no breakout ──\n  const dRes1hBreak = (price-res1h)/price*100;\n  const breakGate = (dRes1hBreak > 0 || (res4h > 0 && price > res4h))\n    && volBreakRatio > 1.5 && dailyBullish\n    && (range > 0 && upperWick/range < 0.5);\n\n  if (breakGate) {\n    const prevAboveRes = idx > 0 && c[idx-1] > res1h;\n    if (prevAboveRes) { breakoutScore += 18; breakoutReasons.push('2-bar close above res \\ud83d\\udd11'); }\n    else { breakoutScore += 10; breakoutReasons.push('Breakout candle'); }\n\n    if (volBreakRatio > 3.0) { breakoutScore += 20; breakoutReasons.push('Vol ' + volBreakRatio.toFixed(1) + 'x BREAKOUT \\ud83d\\udd25'); }\n    else if (volBreakRatio > 2.0) { breakoutScore += 14; breakoutReasons.push('Vol ' + volBreakRatio.toFixed(1) + 'x'); }\n    else { breakoutScore += 8; breakoutReasons.push('Vol ' + volBreakRatio.toFixed(1) + 'x'); }\n\n    if (_rsi >= 55 && _rsi < 70) { breakoutScore += 15; breakoutReasons.push('RSI Momentum ' + _rsi.toFixed(0)); }\n    else if (_rsi >= 50) { breakoutScore += 8; breakoutReasons.push('RSI ' + _rsi.toFixed(0)); }\n    else { breakoutScore -= 5; breakoutReasons.push('RSI weak ' + _rsi.toFixed(0)); }\n\n    if (isGreen && bodyRatio > 0.7) { breakoutScore += 15; breakoutReasons.push('Marubozu breakout'); }\n    else if (isGreen && bodyRatio > 0.5) { breakoutScore += 8; breakoutReasons.push('Bullish body'); }\n\n    const dRes4h = res4h > 0 ? (price-res4h)/price*100 : null;\n    if (dRes4h !== null && dRes4h > 0 && dRes4h < 3) { breakoutScore += 18; breakoutReasons.push('4H Res BREAK \\ud83d\\udd11'); }\n    else if (dRes1hBreak > 0 && dRes1hBreak < 2) { breakoutScore += 10; breakoutReasons.push('1H Res break'); }\n\n    if (_macd.cu) { breakoutScore += 10; breakoutReasons.push('MACD Bull Cross'); }\n    else if (_macd.h > 0 && _macd.h > _macd.ph) { breakoutScore += 6; breakoutReasons.push('MACD \\u2191'); }\n\n    // Market structure aligned\n    if (_marketStructure === 'BULLISH') { breakoutScore += 12; breakoutReasons.push('Structure: HH+HL \\u2705'); }\n\n    // Funding — short squeeze = breakout reinforcement\n    if (frPct < -0.05) { breakoutScore += 12; breakoutReasons.push('Funding neg — SHORT SQUEEZE \\ud83d\\udd25'); }\n\n    if (trend4hBias === 'BULLISH') { breakoutScore += 10; breakoutReasons.push('4H UPTREND \\u2705'); }\n    if (dailyTrend === 'BULLISH') { breakoutScore += 8; breakoutReasons.push('Daily BULLISH \\u2705'); }\n  }\n\n  // WINNER\n  const shortOk = shortGate && shortScore >= 60;\n  const breakOk = breakGate && breakoutScore >= 60;\n\n  if (shortOk && shortScore >= breakoutScore) {\n    score = shortScore; reasons.push.apply(reasons, shortReasons);\n    if (score >= 75) { signal = 'STRONG SELL'; strategy = 'SHORT (Overbought)'; confidence = 'VERY HIGH'; }\n    else { signal = 'STRONG SELL'; strategy = 'SHORT (Overbought)'; confidence = 'HIGH'; }\n  } else if (breakOk) {\n    score = breakoutScore; reasons.push.apply(reasons, breakoutReasons);\n    if (score >= 75) { signal = 'STRONG BUY'; strategy = 'LONG (Breakout)'; confidence = 'VERY HIGH'; }\n    else { signal = 'STRONG BUY'; strategy = 'LONG (Breakout)'; confidence = 'HIGH'; }\n  } else {\n    const why = [];\n    if (shortGate) why.push('SHORT sc:' + shortScore);\n    else why.push('SHORT gate fail (RSI/candle/daily)');\n    if (breakGate) why.push('BREAK sc:' + breakoutScore);\n    else why.push('BREAK gate fail');\n    reasons.push('Pump ' + wsPctChange.toFixed(1) + '% — ' + why.join(' | '));\n  }\n} else {\n  reasons.push('Change ' + wsPctChange.toFixed(1) + '% < threshold ' + dynamicThreshold + '%');\n}\n\n// ═══ SL/TP + PROFIT ESTIMATION ═══\nlet sl = 0, tp1 = 0, tp2 = 0, tp3 = 0, riskPct = '0';\nconst isStrongSignal = signal === 'STRONG BUY' || signal === 'STRONG SELL';\n\nif (_atr > 0 && isStrongSignal) {\n  if (strategy.indexOf('LONG') !== -1) {\n    sl = price - (_atr * 2.0);\n    const slDist = price - sl;\n    const meanDist = Math.max(E21 - price, _atr * 2);\n    tp1 = price + Math.max(meanDist * 0.4, slDist * 1.5);\n    tp2 = price + Math.max(meanDist * 0.7, slDist * 2.5);\n    tp3 = price + Math.max(meanDist * 1.0, slDist * 3.5);\n    riskPct = ((slDist/price)*100).toFixed(2);\n  } else {\n    sl = price + (_atr * 2.0);\n    const slDist = sl - price;\n    const meanDist = Math.max(price - E21, _atr * 2);\n    tp1 = price - Math.max(meanDist * 0.4, slDist * 1.5);\n    tp2 = price - Math.max(meanDist * 0.7, slDist * 2.5);\n    tp3 = price - Math.max(meanDist * 1.0, slDist * 3.5);\n    riskPct = ((slDist/price)*100).toFixed(2);\n  }\n}\n\nconst estTP1Pct = strategy.indexOf('LONG') !== -1 ? (tp1-price)/price*100 : (price-tp1)/price*100;\nconst estTP2Pct = strategy.indexOf('LONG') !== -1 ? (tp2-price)/price*100 : (price-tp2)/price*100;\nconst estTP3Pct = strategy.indexOf('LONG') !== -1 ? (tp3-price)/price*100 : (price-tp3)/price*100;\nconst estRiskPct = parseFloat(riskPct) || 0;\n\n// ═══ DEDUP FINAL ═══\nif (isStrongSignal && lastEntry && (nowTs-lastEntry.ts < DEDUP_WINDOW_MS)) {\n  if (score - lastEntry.score < SCORE_UPGRADE_THRESHOLD) {\n    return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udd01 DEDUP: sent ' + Math.round((nowTs-lastEntry.ts)/60000) + 'm ago (sc ' + lastEntry.score + '\\u2192' + score + ')' } }];\n  }\n}\nif (isStrongSignal) { state.signalCache[dedupKey] = { ts: nowTs, score, signal }; }\n\nreturn [{\n  json: {\n    symbol, price: price.toFixed(4),\n    wsChange: wsPctChange.toFixed(2) + '%', wsDirection,\n    signal, strategy, confidence, score,\n    reasons: reasons.join(' | '),\n    dailyTrend,\n    trend4h, trend1h: trend1h,\n    rsi1h: _rsi.toFixed(1), rsi4h: rsi4h.toFixed(1),\n    marketStructure: _marketStructure,\n    fundingRate: fundingLabel,\n    rsiDivergence: _rsiDiv.bullish ? 'BULL DIV \\ud83d\\udd25' : (_rsiDiv.bearish ? 'BEAR DIV \\ud83d\\udd25' : 'None'),\n    macdCross: _macd.cu ? 'BULL CROSS' : (_macd.cd ? 'BEAR CROSS' : 'None'),\n    macdHist: _macd.hist.toFixed(6),\n    volRatio: volRatio.toFixed(1) + 'x', volBreakRatio: volBreakRatio.toFixed(1) + 'x',\n    ema21: E21.toFixed(4), ema200: E200.toFixed(4),\n    macroTrend: price > E200 ? 'ABOVE MA200' : 'BELOW MA200',\n    res1h: res1h.toFixed(4), res4h: res4h > 0 ? res4h.toFixed(4) : 'N/A',\n    support: recentL.toFixed(4), resistance: effectiveRes.toFixed(4),\n    distSupport: ((price-recentL)/price*100).toFixed(2) + '%',\n    distResistance: ((effectiveRes-price)/price*100).toFixed(2) + '%',\n    sl: sl.toFixed(4), tp1: tp1.toFixed(4), tp2: tp2.toFixed(4), tp3: tp3.toFixed(4),\n    riskPct: riskPct + '%', atr: _atr.toFixed(6), atrPct: atrPct.toFixed(2) + '%',\n    estTP1: '+' + estTP1Pct.toFixed(2) + '%',\n    estTP2: '+' + estTP2Pct.toFixed(2) + '%',\n    estTP3: '+' + estTP3Pct.toFixed(2) + '%',\n    estRisk: '-' + estRiskPct.toFixed(2) + '%',\n    estRR1: '1:' + (estTP1Pct/(estRiskPct||1)).toFixed(1),\n    estRR2: '1:' + (estTP2Pct/(estRiskPct||1)).toFixed(1),\n    estRR3: '1:' + (estTP3Pct/(estRiskPct||1)).toFixed(1),\n    isHot: isStrongSignal,\n    rejectReason: !isStrongSignal ? 'Score ' + score + '/100 (min 58). ' + reasons.join(', ') : '',\n  }\n}];"
+      }
     },
     {
+      "id": "b1000001-0007-4000-b000-000000000007",
+      "name": "Is Hot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -250,
+        800
+      ],
       "parameters": {
         "conditions": {
           "boolean": [
@@ -116,40 +184,40 @@
             }
           ]
         }
-      },
-      "id": "b1000001-0007-4000-b000-000000000007",
-      "name": "Is Hot?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 1,
-      "position": [
-        -600,
-        800
-      ]
+      }
     },
     {
-      "parameters": {
-        "chatId": "@cryptospikehunter",
-        "text": "={{ $json.signal === 'STRONG BUY' ? '🟢' : '🔴' }} *{{ $json.symbol }} — {{ $json.signal }}*\n🎯 Confidence: *{{ $json.confidence }}* (Score: {{ $json.score }}/100)\n📊 Confluence: *{{ $json.confluenceCount }}* ✅\n\n💰 *Entry:* `{{ $json.price }}`\n📉 *WS Trigger:* {{ $json.wsDirection }} {{ $json.wsChange }}\n📈 *Strategy:* {{ $json.strategy }}\n\n*💵 Estimated Profit:*\n├ 🥇 *TP1:* `{{ $json.tp1 }}` ({{ $json.estTP1 }}) — close 50%, RR {{ $json.estRR1 }}\n├ 🥈 *TP2:* `{{ $json.tp2 }}` ({{ $json.estTP2 }}) — close 30%, RR {{ $json.estRR2 }}\n├ 🥉 *TP3:* `{{ $json.tp3 }}` ({{ $json.estTP3 }}) — close 20%, RR {{ $json.estRR3 }}\n├ 🛡️ *SL:* `{{ $json.sl }}` ({{ $json.estRisk }} risk)\n└ 📐 ATR: {{ $json.atr }} ({{ $json.atrPct }})\n\n*Market Context:*\n├ Trend 4H: {{ $json.trend4h }} (RSI: {{ $json.rsi4h }})\n├ Trend 1H: {{ $json.trend1h }} (RSI: {{ $json.rsi1h }})\n├ MACD: {{ $json.macdCross }} ({{ $json.macdHist }})\n├ ADX: {{ $json.adx1h }} {{ parseInt($json.adx1h) > 25 ? '💪' : '😐' }}\n├ Volume: {{ $json.volRatio }}\n├ EMA Cross: {{ $json.emaCross }}\n└ {{ $json.macroTrend }}\n\n*🔬 Advanced Indicators:*\n├ RSI Divergence: {{ $json.rsiDivergence }}\n├ OBV Trend: {{ $json.obvTrend }}\n└ Bollinger: {{ $json.bbSqueeze }}\n\n*Support & Resistance:*\n├ 🔺 Resistance: `{{ $json.resistance }}` ({{ $json.distResistance }})\n└ 🔻 Support: `{{ $json.support }}` ({{ $json.distSupport }})\n\n💡 _{{ $json.reasons }}_\n\n📊 _v14.1 Advanced Momentum | 9-Point Confluence_\n\n🔗 [Binance](https://www.binance.com/en/futures/{{ $json.symbol }}) | [TradingView](https://www.tradingview.com/chart/?symbol=BINANCE:{{ $json.symbol }}.P)\n⏰ {{ $now.setZone('Asia/Jakarta').format('dd MMM HH:mm') }} WIB",
-        "additionalFields": {
-          "parse_mode": "Markdown"
-        }
-      },
       "id": "b1000001-0008-4000-b000-000000000008",
       "name": "Telegram Alert",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -200,
-        600
+        50,
+        620
       ],
       "credentials": {
         "telegramApi": {
           "id": "aNtvHk0oDffDwsLX",
           "name": "Telegram account"
         }
+      },
+      "parameters": {
+        "chatId": "@cryptospikehunter",
+        "text": "={{ $json.signal === 'STRONG BUY' ? '🟢' : '🔴' }} *{{ $json.symbol }} — {{ $json.signal }}*\n🎯 Confidence: *{{ $json.confidence }}* (Score: {{ $json.score }}/100)\n\n💰 *Entry:* `{{ $json.price }}`\n📉 *WS Trigger:* {{ $json.wsDirection }} {{ $json.wsChange }}\n📈 *Strategy:* {{ $json.strategy }}\n\n*💵 Estimated Profit:*\n├ 🥇 *TP1:* `{{ $json.tp1 }}` ({{ $json.estTP1 }}) — RR {{ $json.estRR1 }}\n├ 🥈 *TP2:* `{{ $json.tp2 }}` ({{ $json.estTP2 }}) — RR {{ $json.estRR2 }}\n├ 🥉 *TP3:* `{{ $json.tp3 }}` ({{ $json.estTP3 }}) — RR {{ $json.estRR3 }}\n├ 🛡️ *SL:* `{{ $json.sl }}` ({{ $json.estRisk }} risk)\n└ 📐 ATR: {{ $json.atr }} ({{ $json.atrPct }})\n\n*Market Context:*\n├ 🌍 Daily: {{ $json.dailyTrend }}\n├ Trend 4H: {{ $json.trend4h }} (RSI: {{ $json.rsi4h }})\n├ Trend 1H: {{ $json.trend1h }} (RSI: {{ $json.rsi1h }})\n├ Structure: {{ $json.marketStructure }}\n├ MACD: {{ $json.macdCross }}\n├ RSI Div: {{ $json.rsiDivergence }}\n├ Volume: {{ $json.volRatio }}\n└ {{ $json.macroTrend }}\n\n*⚡ Crypto Futures Signals:*\n└ Funding Rate: {{ $json.fundingRate }}\n\n*Support & Resistance:*\n├ 🔺 Resistance: `{{ $json.resistance }}` ({{ $json.distResistance }})\n└ 🔻 Support: `{{ $json.support }}` ({{ $json.distSupport }})\n\n💡 _{{ $json.reasons }}_\n\n📊 _v15 Pro Crypto Engine | Daily+4H+1H Confluence_\n🔗 [Binance](https://www.binance.com/en/futures/{{ $json.symbol }}) | [TradingView](https://www.tradingview.com/chart/?symbol=BINANCE:{{ $json.symbol }}.P)\n⏰ {{ $now.setZone('Asia/Jakarta').format('dd MMM HH:mm') }} WIB",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
       }
     },
     {
+      "id": "b1000001-0010-4000-b000-000000000010",
+      "name": "Ntfy Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        50,
+        900
+      ],
       "parameters": {
         "method": "POST",
         "url": "https://ntfy.sh/cryptospike-bot-tetot",
@@ -158,7 +226,7 @@
           "parameters": [
             {
               "name": "Title",
-              "value": "={{ $json.signal === 'STRONG BUY' ? '🟢' : '🔴' }} {{ $json.symbol }} — {{ $json.signal }} ({{ $json.score }}/100) {{ $json.rsiDivergence !== 'None' ? '📡 DIV' : '' }}"
+              "value": "={{ $json.signal === 'STRONG BUY' ? '🟢' : '🔴' }} {{ $json.symbol }} — {{ $json.signal }} ({{ $json.score }}/100) {{ $json.rsiDivergence !== 'None' ? '📡' : '' }}"
             },
             {
               "name": "Tags",
@@ -176,41 +244,33 @@
         },
         "sendBody": true,
         "specifyBody": "string",
-        "body": "={{ $json.signal === \"STRONG BUY\" ? \"🟢\" : \"🔴\" }} {{ $json.symbol }} — {{ $json.signal }}\n🎯 Confidence: {{ $json.confidence }} (Score: {{ $json.score }}/100)\n📊 Confluence: {{ $json.confluenceCount }} ✅\n\n💰 Entry: {{ $json.price }}\n📉 WS Trigger: {{ $json.wsDirection }} {{ $json.wsChange }}\n📈 Strategy: {{ $json.strategy }}\n\n💵 Estimated Profit:\n├ 🥇 TP1: {{ $json.tp1 }} ({{ $json.estTP1 }}) — close 50%, RR {{ $json.estRR1 }}\n├ 🥈 TP2: {{ $json.tp2 }} ({{ $json.estTP2 }}) — close 30%, RR {{ $json.estRR2 }}\n├ 🥉 TP3: {{ $json.tp3 }} ({{ $json.estTP3 }}) — close 20%, RR {{ $json.estRR3 }}\n├ 🛡️ SL: {{ $json.sl }} ({{ $json.estRisk }} risk)\n└ 📐 ATR: {{ $json.atr }} ({{ $json.atrPct }})\n\nMarket Context:\n├ Trend 4H: {{ $json.trend4h }} (RSI: {{ $json.rsi4h }})\n├ Trend 1H: {{ $json.trend1h }} (RSI: {{ $json.rsi1h }})\n├ MACD: {{ $json.macdCross }} ({{ $json.macdHist }})\n├ ADX: {{ $json.adx1h }}\n├ Volume: {{ $json.volRatio }}\n├ EMA Cross: {{ $json.emaCross }}\n└ {{ $json.macroTrend }}\n\n🔬 Advanced Indicators:\n├ RSI Divergence: {{ $json.rsiDivergence }}\n├ OBV Trend: {{ $json.obvTrend }}\n└ Bollinger: {{ $json.bbSqueeze }}\n\nSupport & Resistance:\n├ 🔺 Resistance: {{ $json.resistance }} ({{ $json.distResistance }})\n└ 🔻 Support: {{ $json.support }} ({{ $json.distSupport }})\n\n💡 {{ $json.reasons }}\n\n📊 v14.1 Advanced Momentum | 9-Point Confluence\n⏰ {{ $now.setZone(\"Asia/Jakarta\").format(\"dd MMM HH:mm\") }} WIB",
+        "body": "={{ $json.signal === \"STRONG BUY\" ? \"🟢\" : \"🔴\" }} {{ $json.symbol }} — {{ $json.signal }}\n🎯 Confidence: {{ $json.confidence }} (Score: {{ $json.score }}/100)\n\n💰 Entry: {{ $json.price }}\n📉 WS: {{ $json.wsDirection }} {{ $json.wsChange }}\n📈 Strategy: {{ $json.strategy }}\n\n💵 Estimated Profit:\n├ 🥇 TP1: {{ $json.tp1 }} ({{ $json.estTP1 }}) RR {{ $json.estRR1 }}\n├ 🥈 TP2: {{ $json.tp2 }} ({{ $json.estTP2 }}) RR {{ $json.estRR2 }}\n├ 🥉 TP3: {{ $json.tp3 }} ({{ $json.estTP3 }}) RR {{ $json.estRR3 }}\n├ 🛡️ SL: {{ $json.sl }} ({{ $json.estRisk }})\n└ 📐 ATR: {{ $json.atr }} ({{ $json.atrPct }})\n\nMarket Context:\n├ 🌍 Daily: {{ $json.dailyTrend }}\n├ 4H: {{ $json.trend4h }} | 1H: {{ $json.trend1h }}\n├ RSI: {{ $json.rsi1h }} | Vol: {{ $json.volRatio }}\n├ Structure: {{ $json.marketStructure }}\n├ RSI Div: {{ $json.rsiDivergence }}\n└ Funding Rate: {{ $json.fundingRate }}\n\nSupport & Resistance:\n├ 🔺 Resistance: {{ $json.resistance }} ({{ $json.distResistance }})\n└ 🔻 Support: {{ $json.support }} ({{ $json.distSupport }})\n\n💡 {{ $json.reasons }}\n\n📊 v15 Pro Crypto Engine\n⏰ {{ $now.setZone(\"Asia/Jakarta\").format(\"dd MMM HH:mm\") }} WIB",
         "options": {}
-      },
-      "id": "b1000001-0010-4000-b000-000000000010",
-      "name": "Ntfy Alert",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        -200,
-        900
-      ]
+      }
     },
     {
-      "parameters": {
-        "chatId": "@cryptospikehunter",
-        "text": "=📋 *{{ $json.symbol }}* — SKIP (Score {{ $json.score }}/100)\n{{ $json.rejectReason }}",
-        "additionalFields": {
-          "parse_mode": "Markdown"
-        }
-      },
       "id": "b1000001-0009-4000-b000-000000000009",
       "name": "Telegram Log (Disabled)",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -200,
-        1200
+        50,
+        1150
       ],
+      "disabled": true,
       "credentials": {
         "telegramApi": {
           "id": "aNtvHk0oDffDwsLX",
           "name": "Telegram account"
         }
       },
-      "disabled": true
+      "parameters": {
+        "chatId": "@cryptospikehunter",
+        "text": "=📋 *{{ $json.symbol }}* — SKIP ({{ $json.score }}/100)\n_{{ $json.rejectReason }}_",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -241,7 +301,40 @@
       "main": [
         [
           {
-            "node": "Pro Analisa TA v14.1",
+            "node": "Get Klines 1D",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Klines 1D": {
+      "main": [
+        [
+          {
+            "node": "Get Funding Rate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Funding Rate": {
+      "main": [
+        [
+          {
+            "node": "Pro Analisa TA v15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pro Analisa TA v15": {
+      "main": [
+        [
+          {
+            "node": "Is Hot?",
             "type": "main",
             "index": 0
           }
@@ -265,17 +358,6 @@
         [
           {
             "node": "Telegram Log (Disabled)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Pro Analisa TA v14.1": {
-      "main": [
-        [
-          {
-            "node": "Is Hot?",
             "type": "main",
             "index": 0
           }
