@@ -129,10 +129,13 @@ func main() {
 		}
 	}()
 
-	// 5. Start Binance WebSocket
+	// 5. Start 1H Candle Close Detector (polls REST API every 5 min)
+	go engine.StartCandleDetector()
+
+	// 6. Start Binance WebSocket (real-time 24H ticker)
 	binance.Connect()
 
-	// 6. Graceful Shutdown
+	// 7. Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-quit
