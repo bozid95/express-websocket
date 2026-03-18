@@ -109,7 +109,7 @@ async function main() {
     let hotCount = 0, skipCount = 0;
     for (const t of scanList) {
         let pct = parseFloat(t.priceChangePercent).toFixed(2).padStart(6);
-        process.stdout.write("Analyzing " + t.symbol.padEnd(10) + " (" + pct + "%) ... ");
+        console.log("Analyzing " + t.symbol.padEnd(10) + " (" + pct + "%) ... ");
         let res = await analyzeCoin(t, THRESHOLD);
         
         if (res.isHot) {
