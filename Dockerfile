@@ -25,6 +25,7 @@ RUN apk --no-cache add ca-certificates tzdata
 
 # Copy the pre-built binary file from the previous stage
 COPY --from=builder /app/express-websocket .
+COPY --from=builder /app/public ./public
 
 # Expose port (default 3000)
 EXPOSE 3000
