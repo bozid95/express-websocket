@@ -366,21 +366,48 @@
       });
     }
 
-    // ── Live Price Tracker ──
+    // ── Live Price Tracker (Direct Binance API) ──
     let lastPrices = {};
 
     async function fetchLivePrices() {
       try {
-        const res = await fetch('/api/prices');
-        if (!res.ok) return;
-        const prices = await res.json();
+        // Collect unique symbols from signal cards
+        const rows = document.querySelectorAll('.price-now-row[data-symbol]');
+        if (rows.length === 0) return;
 
-        document.querySelectorAll('.price-now-row[data-symbol]').forEach(row => {
+        const symbols = [...new Set([...rows].map(r => r.dataset.symbol))];
+        if (symbols.length === 0) return;
+
+        // Fetch prices from Binance API for these specific symbols
+        const prices = {};
+        try {
+          const query = symbols.map(s => `"${s}"`).join(',');
+          const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=[${query}]`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data)) {
+              data.forEach(item => { prices[item.symbol] = parseFloat(item.price); });
+            }
+          }
+        } catch (_) {}
+
+        // Fallback: fetch individually for symbols not found in batch
+        const missing = symbols.filter(s => !prices[s]);
+        await Promise.allSettled(missing.map(async sym => {
+          try {
+            const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
+            if (r.ok) {
+              const d = await r.json();
+              if (d && d.price) prices[d.symbol] = parseFloat(d.price);
+            }
+          } catch (_) {}
+        }));
+
+        rows.forEach(row => {
           const sym = row.dataset.symbol;
-          const info = prices[sym];
-          if (!info) return;
+          const price = prices[sym];
+          if (!price || isNaN(price)) return;
 
-          const price = info.price;
           const valEl = row.querySelector('.price-now-val');
           const pnlEl = row.querySelector('.price-now-pnl');
           const prec = price < 1 ? 6 : price < 100 ? 4 : 2;
