@@ -201,11 +201,6 @@
           </div>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="panel-title">Growth Curve</div>
-        <canvas id="pnlChart" height="150"></canvas>
-      </div>
     </div>
 
     <!-- SIGNALS: History -->
@@ -487,57 +482,7 @@
     }
 
     function drawCharts(closed, wr, all) {
-      // 1. Line Chart (Growth Curve)
-      // Filter data valid & sort by time
-      const sorted = [...closed]
-        .filter(s => s.sent_at && !isNaN(parseFloat(s.profit_pct)))
-        .sort((a,b) => new Date(a.sent_at) - new Date(b.sent_at));
-      
-      // Start with a 0 point to prevent 'infinity' scaling or floating lines
-      let cum = 0;
-      const points = [0]; 
-      const labels = ["Start"];
-
-      sorted.forEach(s => { 
-        cum += parseFloat(s.profit_pct || 0); 
-        points.push(cum);
-        labels.push(new Date(s.sent_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }));
-      });
-
-      if (charts.pnl) charts.pnl.destroy();
-      
-      // Only draw if we have at least 1 actual trade (2 points including Start)
-      if (points.length >= 2) {
-        charts.pnl = new Chart(document.getElementById('pnlChart').getContext('2d'), {
-          type: 'line',
-          data: { 
-            labels, 
-            datasets: [{ 
-              data: points, 
-              borderColor: '#6366f1', 
-              borderWidth: 2.5, 
-              tension: 0.3, 
-              pointRadius: 2, 
-              fill: true,
-              backgroundColor: 'rgba(99, 102, 241, 0.05)'
-            }] 
-          },
-          options: { 
-            responsive: true, 
-            maintainAspectRatio: false, 
-            plugins: { legend: { display:false } }, 
-            scales: { 
-              x: { display: false }, 
-              y: { 
-                beginAtZero: true, 
-                ticks: { color: '#848e9c', font: { size: 9 }, callback: v => v.toFixed(1) + '%' } 
-              } 
-            } 
-          }
-        });
-      }
-
-      // 2. Donut (Win Rate)
+      // 1. Donut (Win Rate)
       if (charts.donut) charts.donut.destroy();
       charts.donut = new Chart(document.getElementById('accuracyDonut'), {
         type: 'doughnut',
