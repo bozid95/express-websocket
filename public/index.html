@@ -96,6 +96,19 @@
     .accuracy-bar { height: 6px; background: rgba(246, 70, 93, 0.3); border-radius: 3px; overflow: hidden; }
     .accuracy-fill { height: 100%; background: linear-gradient(90deg, var(--buy), #34d399); border-radius: 3px; transition: width 0.5s ease; }
 
+    /* Mini P&L Cards */
+    .pnl-cards-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .pnl-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .pnl-mini { padding: 10px 8px; border-radius: 10px; text-align: center; border: 1px solid var(--border); background: var(--card); transition: all 0.3s; }
+    .pnl-mini.up { border-color: rgba(14, 203, 129, 0.3); background: rgba(14, 203, 129, 0.05); }
+    .pnl-mini.down { border-color: rgba(246, 70, 93, 0.3); background: rgba(246, 70, 93, 0.05); }
+    .pnl-mini-sym { font-size: 10px; font-weight: 700; color: var(--text); letter-spacing: 0.5px; }
+    .pnl-mini-val { font-size: 16px; font-weight: 700; margin-top: 2px; }
+    .pnl-mini-side { font-size: 8px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+    .pnl-net { text-align: center; margin-top: 10px; padding: 8px; border-radius: 8px; background: rgba(99, 102, 241, 0.06); border: 1px solid rgba(99, 102, 241, 0.15); }
+    .pnl-net-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+    .pnl-net-val { font-size: 18px; font-weight: 700; }
+
     /* Navigation */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); height: 70px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); z-index: 1000; }
     .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; text-decoration: none; width: 33%; opacity: 0.7; }
@@ -135,18 +148,18 @@
 <body>
   <header class="header">
     <div class="brand">Hunter <span>Pro</span></div>
-    <div class="status"><div class="status-dot"></div>Sinyal Aktif</div>
+    <div class="status"><div class="status-dot"></div>Signals Active</div>
   </header>
 
   <main class="container">
     
-    <!-- BERANDA: Ringkasan -->
+    <!-- HOME: Summary -->
     <div id="tab-home" class="tab-content active">
       <div class="summary-grid">
         <div class="stat-box hero-box">
           <div class="stat-label">Total Performance</div>
           <div class="hero-pnl" id="hpnl">0.00%</div>
-          <div class="stat-label" style="font-size: 10px;" id="hwin">Memuat data...</div>
+          <div class="stat-label" style="font-size: 10px;" id="hwin">Loading data...</div>
         </div>
         <div class="stat-box">
           <div class="stat-label">Win Rate</div>
@@ -171,11 +184,22 @@
           </div>
           <div class="running-item accuracy">
             <div class="running-num" id="runAccuracy" style="color:var(--accent)">—</div>
-            <div class="running-label">Akurasi Sinyal</div>
+            <div class="running-label">Signal Accuracy</div>
           </div>
         </div>
         <div class="accuracy-bar"><div class="accuracy-fill" id="accFill" style="width:0%"></div></div>
-        <div style="font-size:10px; color:var(--text-dim); margin-top:6px; text-align:center;" id="runDetail">Menunggu harga live...</div>
+        <div style="font-size:10px; color:var(--text-dim); margin-top:6px; text-align:center;" id="runDetail">Waiting for live prices...</div>
+        <div id="pnlCardsContainer" style="margin-top:14px; display:none;">
+          <div class="pnl-cards-title">
+            <span>📊 Live P&L per Signal</span>
+            <span style="font-size:10px; color:var(--text-dim); font-weight:400;" id="pnlCardCount"></span>
+          </div>
+          <div class="pnl-cards-grid" id="pnlCardsGrid"></div>
+          <div class="pnl-net" id="pnlNet" style="display:none;">
+            <div class="pnl-net-label">Net Unrealized P&L</div>
+            <div class="pnl-net-val" id="pnlNetVal">—</div>
+          </div>
+        </div>
       </div>
 
       <div class="panel">
@@ -184,14 +208,14 @@
       </div>
     </div>
 
-    <!-- SINYAL: Riwayat -->
+    <!-- SIGNALS: History -->
     <div id="tab-signals" class="tab-content">
       <div class="filter-bar">
-        <input type="text" class="filter-search" id="filterSearch" placeholder="🔍 Cari symbol... (BTCUSDT)">
+        <input type="text" class="filter-search" id="filterSearch" placeholder="🔍 Search symbol... (BTCUSDT)">
         <div>
           <div class="filter-label">Status</div>
           <div class="filter-row" id="filterStatus">
-            <button class="filter-chip active" data-val="all">Semua</button>
+            <button class="filter-chip active" data-val="all">All</button>
             <button class="filter-chip" data-val="active">⌛ Active</button>
             <button class="filter-chip" data-val="tp">✅ TP Hit</button>
             <button class="filter-chip" data-val="sl">❌ SL Hit</button>
@@ -200,7 +224,7 @@
         <div>
           <div class="filter-label">Side</div>
           <div class="filter-row" id="filterSide">
-            <button class="filter-chip active" data-val="all">Semua</button>
+            <button class="filter-chip active" data-val="all">All</button>
             <button class="filter-chip" data-val="long">🟢 Long</button>
             <button class="filter-chip" data-val="short">🔴 Short</button>
           </div>
@@ -209,7 +233,7 @@
       <div class="signal-count" id="signalCount"></div>
       <div id="signalContainer">
         <div style="text-align:center; padding:100px 20px; color:var(--text-dim); font-size: 13px;">
-          Menunggu data dari pasar...
+          Waiting for market data...
         </div>
       </div>
       <div class="pagination" id="pagination" style="display:none;">
@@ -219,7 +243,7 @@
       </div>
     </div>
 
-    <!-- ANALISA: Grafik Strategi -->
+    <!-- ANALYSIS: Strategy Charts -->
     <div id="tab-charts" class="tab-content">
       <div class="panel">
         <div class="panel-title">Win Rate Ratio</div>
@@ -339,12 +363,12 @@
       const pageItems = filtered.slice(start, start + PAGE_SIZE);
 
       // Count label
-      document.getElementById('signalCount').textContent = `Menampilkan ${pageItems.length} dari ${filtered.length} sinyal`;
+      document.getElementById('signalCount').textContent = `Showing ${pageItems.length} of ${filtered.length} signals`;
 
       // Render cards
       const container = document.getElementById('signalContainer');
       if (pageItems.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:60px 20px; color:var(--text-dim); font-size: 13px;">Tidak ada sinyal ditemukan</div>';
+        container.innerHTML = '<div style="text-align:center; padding:60px 20px; color:var(--text-dim); font-size: 13px;">No signals found</div>';
       } else {
         container.innerHTML = pageItems.map(s => renderCard(s)).join('');
       }
@@ -363,8 +387,8 @@
     function renderCard(s) {
       const side = s.signal === 'STRONG BUY' ? 'LONG' : 'SHORT';
       const pnl = parseFloat(s.profit_pct || 0);
-      const time = new Date(s.sent_at || s.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      const date = new Date(s.sent_at || s.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+      const time = new Date(s.sent_at || s.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(s.sent_at || s.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 
       const status = s.status || 'ACTIVE';
       const isTP1 = status.includes('TP1');
@@ -385,11 +409,11 @@
           </div>
           <div class="price-now-row" data-symbol="${s.symbol}" data-entry="${parseFloat(s.entry_price || 0)}" data-side="${side}">
             <div>
-              <div class="price-now-label">💰 Harga Sekarang</div>
+              <div class="price-now-label">💰 Current Price</div>
               <div class="price-now-val">—</div>
             </div>
             <div style="text-align:right">
-              <div class="price-now-label">P&L dari Entry</div>
+              <div class="price-now-label">P&L from Entry</div>
               <div class="price-now-pnl">—</div>
             </div>
           </div>
@@ -477,7 +501,7 @@
       sorted.forEach(s => { 
         cum += parseFloat(s.profit_pct || 0); 
         points.push(cum);
-        labels.push(new Date(s.sent_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }));
+        labels.push(new Date(s.sent_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }));
       });
 
       if (charts.pnl) charts.pnl.destroy();
@@ -577,11 +601,14 @@
         document.getElementById('runLoss').textContent = '0';
         document.getElementById('runAccuracy').textContent = '—';
         document.getElementById('accFill').style.width = '0%';
-        document.getElementById('runDetail').textContent = 'Tidak ada sinyal aktif';
+        document.getElementById('runDetail').textContent = 'No active signals';
+        document.getElementById('pnlCardsContainer').style.display = 'none';
         return;
       }
 
       let profit = 0, loss = 0, noPrice = 0;
+      const pnlData = [];
+
       active.forEach(s => {
         const price = lastPrices[s.symbol];
         if (!price) { noPrice++; return; }
@@ -591,6 +618,7 @@
         let pnl = ((price - entry) / entry) * 100;
         if (side === 'SHORT') pnl = -pnl;
         if (pnl >= 0) profit++; else loss++;
+        pnlData.push({ symbol: s.symbol, side, pnl });
       });
 
       const tracked = profit + loss;
@@ -602,8 +630,43 @@
       document.getElementById('accFill').style.width = acc !== '—' ? acc + '%' : '0%';
 
       let detail = `${profit} profit · ${loss} loss`;
-      if (noPrice > 0) detail += ` · ${noPrice} menunggu harga`;
+      if (noPrice > 0) detail += ` · ${noPrice} awaiting price`;
       document.getElementById('runDetail').textContent = detail;
+
+      // Render mini P&L cards
+      const container = document.getElementById('pnlCardsContainer');
+      const grid = document.getElementById('pnlCardsGrid');
+
+      if (pnlData.length === 0) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      document.getElementById('pnlCardCount').textContent = `${pnlData.length} signals`;
+
+      // Sort by P&L descending (best first)
+      pnlData.sort((a, b) => b.pnl - a.pnl);
+
+      grid.innerHTML = pnlData.map(d => {
+        const cls = d.pnl >= 0 ? 'up' : 'down';
+        const color = d.pnl >= 0 ? 'pos' : 'neg';
+        const arrow = d.pnl >= 0 ? '▲' : '▼';
+        const sym = d.symbol.replace('USDT', '');
+        return `<div class="pnl-mini ${cls}">
+          <div class="pnl-mini-sym">${sym}</div>
+          <div class="pnl-mini-val ${color}">${arrow} ${d.pnl >= 0 ? '+' : ''}${d.pnl.toFixed(2)}%</div>
+          <div class="pnl-mini-side">${d.side}</div>
+        </div>`;
+      }).join('');
+
+      // Net P&L
+      const netPnl = pnlData.reduce((s, d) => s + d.pnl, 0);
+      const netEl = document.getElementById('pnlNet');
+      const netValEl = document.getElementById('pnlNetVal');
+      netEl.style.display = 'block';
+      netValEl.textContent = `${netPnl >= 0 ? '+' : ''}${netPnl.toFixed(2)}%`;
+      netValEl.className = 'pnl-net-val ' + (netPnl >= 0 ? 'pos' : 'neg');
     }
 
     function connectPriceWs() {
