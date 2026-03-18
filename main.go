@@ -119,11 +119,14 @@ func main() {
 		http.Error(w, "Missing 'threshold' field", http.StatusBadRequest)
 	})
 
-	// 4. Start HTTP Server
+	// 4. Serve static files (dashboard)
+	http.Handle("/dashboard/", http.StripPrefix("/dashboard/", http.FileServer(http.Dir("./public"))))
+
+	// 5. Start HTTP Server
 	go func() {
 		addr := fmt.Sprintf(":%d", config.AppConfig.Port)
 		log.Printf("[Server] 🚀 Running on http://localhost%s\n", addr)
-		log.Printf("[Server]    Endpoints: GET /health  |  GET /status  |  POST /config/threshold\n\n")
+		log.Printf("[Server]    Endpoints: GET /health  |  GET /status  |  POST /config/threshold  |  GET /dashboard.html\n\n")
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			log.Fatalf("[FATAL] HTTP server failed to start: %v\n", err)
 		}
