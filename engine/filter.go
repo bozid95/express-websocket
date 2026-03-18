@@ -43,6 +43,14 @@ var Stats = StatsData{
 var cooldownMap sync.Map
 var volumeHistory sync.Map
 
+// LatestPrices stores the latest price for each symbol (for dashboard)
+type PriceInfo struct {
+	Price      float64 `json:"price"`
+	ChangePct  float64 `json:"change_pct"`
+}
+
+var LatestPrices sync.Map
+
 func parseFloat(v interface{}) float64 {
 	switch val := v.(type) {
 	case float64:
@@ -62,6 +70,9 @@ func ApplyFilter(ticker TickerData) {
 	lowPrice := parseFloat(ticker.LowPrice)
 	baseVolume := parseFloat(ticker.BaseVolume)
 	quoteVolume := parseFloat(ticker.QuoteVolume)
+
+	// Store latest price for dashboard
+	LatestPrices.Store(ticker.Symbol, PriceInfo{Price: lastPrice, ChangePct: pctChange})
 
 	// Increment total checked
 	Stats.mu.Lock()

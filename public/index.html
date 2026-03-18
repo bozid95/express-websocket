@@ -53,6 +53,16 @@
     .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
     .val { font-size: 13px; font-weight: 500; }
 
+    /* Price Now */
+    .price-now-row { display: flex; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.06); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
+    .price-now-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+    .price-now-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+    .price-now-pnl { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    .price-flash-up { animation: flashUp 0.6s ease-out; }
+    .price-flash-down { animation: flashDown 0.6s ease-out; }
+    @keyframes flashUp { 0% { background: rgba(14, 203, 129, 0.25); } 100% { background: transparent; } }
+    @keyframes flashDown { 0% { background: rgba(246, 70, 93, 0.25); } 100% { background: transparent; } }
+
     .card-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; }
     .side-tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
     .side-buy { background: rgba(14, 203, 129, 0.15); color: var(--buy); }
@@ -236,6 +246,17 @@
                 <div class="data-cell" style="text-align:right"><span class="label">Side</span><span class="val ${side === 'LONG' ? 'pos' : 'neg'}">${side}</span></div>
               </div>
 
+              <div class="price-now-row" data-symbol="${s.symbol}" data-entry="${parseFloat(s.entry_price || 0)}" data-side="${side}">
+                <div>
+                  <div class="price-now-label">💰 Harga Sekarang</div>
+                  <div class="price-now-val">—</div>
+                </div>
+                <div style="text-align:right">
+                  <div class="price-now-label">P&L dari Entry</div>
+                  <div class="price-now-pnl">—</div>
+                </div>
+              </div>
+
               <div class="target-row">
                 <div class="target-item ${isSL ? 'hit-sl' : ''}">
                   <span class="target-label">SL ${isSL ? '❌' : '🛡️'}</span>
@@ -345,8 +366,54 @@
       });
     }
 
+    // ── Live Price Tracker ──
+    let lastPrices = {};
+
+    async function fetchLivePrices() {
+      try {
+        const res = await fetch('/api/prices');
+        if (!res.ok) return;
+        const prices = await res.json();
+
+        document.querySelectorAll('.price-now-row[data-symbol]').forEach(row => {
+          const sym = row.dataset.symbol;
+          const info = prices[sym];
+          if (!info) return;
+
+          const price = info.price;
+          const valEl = row.querySelector('.price-now-val');
+          const pnlEl = row.querySelector('.price-now-pnl');
+          const prec = price < 1 ? 6 : price < 100 ? 4 : 2;
+          valEl.textContent = price.toFixed(prec);
+
+          // Flash animation on price change
+          if (lastPrices[sym] !== undefined && lastPrices[sym] !== price) {
+            const dir = price > lastPrices[sym] ? 'up' : 'down';
+            valEl.style.color = dir === 'up' ? 'var(--buy)' : 'var(--sell)';
+            row.classList.remove('price-flash-up', 'price-flash-down');
+            void row.offsetWidth;
+            row.classList.add(dir === 'up' ? 'price-flash-up' : 'price-flash-down');
+          }
+          lastPrices[sym] = price;
+
+          // P&L from entry
+          const entry = parseFloat(row.dataset.entry);
+          const side = row.dataset.side;
+          if (entry > 0) {
+            let pnl = ((price - entry) / entry) * 100;
+            if (side === 'SHORT') pnl = -pnl;
+            const arrow = pnl >= 0 ? '▲' : '▼';
+            pnlEl.textContent = `${arrow} ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%`;
+            pnlEl.className = 'price-now-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
+          }
+        });
+      } catch (e) { console.warn('Price fetch error:', e); }
+    }
+
     fetchData();
     setInterval(fetchData, 45000);
+    setTimeout(fetchLivePrices, 3000); // First price load after signals render
+    setInterval(fetchLivePrices, 5000);
   </script>
 </body>
 </html>

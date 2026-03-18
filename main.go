@@ -119,7 +119,19 @@ func main() {
 		http.Error(w, "Missing 'threshold' field", http.StatusBadRequest)
 	})
 
-	// 4. Serve static files (dashboard)
+	// 4. Live prices endpoint for dashboard
+	http.HandleFunc("/api/prices", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		prices := make(map[string]engine.PriceInfo)
+		engine.LatestPrices.Range(func(key, value interface{}) bool {
+			prices[key.(string)] = value.(engine.PriceInfo)
+			return true
+		})
+		json.NewEncoder(w).Encode(prices)
+	})
+
+	// 5. Serve static files (dashboard)
 	http.Handle("/dashboard/", http.StripPrefix("/dashboard/", http.FileServer(http.Dir("./public"))))
 
 	// 5. Start HTTP Server
