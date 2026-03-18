@@ -83,6 +83,19 @@
     .pos { color: var(--buy); }
     .neg { color: var(--sell); }
 
+    /* Running Stats Panel */
+    .running-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .running-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .running-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .running-item { text-align: center; padding: 10px 6px; border-radius: 10px; }
+    .running-item.profit { background: rgba(14, 203, 129, 0.08); border: 1px solid rgba(14, 203, 129, 0.2); }
+    .running-item.loss { background: rgba(246, 70, 93, 0.08); border: 1px solid rgba(246, 70, 93, 0.2); }
+    .running-item.accuracy { background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); }
+    .running-num { font-size: 22px; font-weight: 700; }
+    .running-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-top: 2px; }
+    .accuracy-bar { height: 6px; background: rgba(246, 70, 93, 0.3); border-radius: 3px; overflow: hidden; }
+    .accuracy-fill { height: 100%; background: linear-gradient(90deg, var(--buy), #34d399); border-radius: 3px; transition: width 0.5s ease; }
+
     /* Navigation */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); height: 70px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); z-index: 1000; }
     .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; text-decoration: none; width: 33%; opacity: 0.7; }
@@ -93,6 +106,25 @@
     .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
     .panel-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; }
+
+    /* Filter Bar */
+    .filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .filter-search { width: 100%; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
+    .filter-search:focus { border-color: var(--accent); }
+    .filter-search::placeholder { color: var(--text-dim); }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .filter-chip:hover { border-color: var(--accent); color: var(--text); }
+    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .filter-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+
+    /* Pagination */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 16px 0; }
+    .page-btn { padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; transition: all 0.2s; font-family: 'Outfit', sans-serif; }
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .page-info { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+    .signal-count { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 8px; font-weight: 500; }
 
     /* Responsive */
     @media (min-width: 600px) {
@@ -126,6 +158,26 @@
         </div>
       </div>
 
+      <div class="running-panel" id="runningPanel">
+        <div class="running-title">📡 Live Running Signals</div>
+        <div class="running-grid">
+          <div class="running-item profit">
+            <div class="running-num pos" id="runProfit">0</div>
+            <div class="running-label">Profit (+)</div>
+          </div>
+          <div class="running-item loss">
+            <div class="running-num neg" id="runLoss">0</div>
+            <div class="running-label">Loss (-)</div>
+          </div>
+          <div class="running-item accuracy">
+            <div class="running-num" id="runAccuracy" style="color:var(--accent)">—</div>
+            <div class="running-label">Akurasi Sinyal</div>
+          </div>
+        </div>
+        <div class="accuracy-bar"><div class="accuracy-fill" id="accFill" style="width:0%"></div></div>
+        <div style="font-size:10px; color:var(--text-dim); margin-top:6px; text-align:center;" id="runDetail">Menunggu harga live...</div>
+      </div>
+
       <div class="panel">
         <div class="panel-title">Growth Curve</div>
         <canvas id="pnlChart" height="150"></canvas>
@@ -134,10 +186,36 @@
 
     <!-- SINYAL: Riwayat -->
     <div id="tab-signals" class="tab-content">
+      <div class="filter-bar">
+        <input type="text" class="filter-search" id="filterSearch" placeholder="🔍 Cari symbol... (BTCUSDT)">
+        <div>
+          <div class="filter-label">Status</div>
+          <div class="filter-row" id="filterStatus">
+            <button class="filter-chip active" data-val="all">Semua</button>
+            <button class="filter-chip" data-val="active">⌛ Active</button>
+            <button class="filter-chip" data-val="tp">✅ TP Hit</button>
+            <button class="filter-chip" data-val="sl">❌ SL Hit</button>
+          </div>
+        </div>
+        <div>
+          <div class="filter-label">Side</div>
+          <div class="filter-row" id="filterSide">
+            <button class="filter-chip active" data-val="all">Semua</button>
+            <button class="filter-chip" data-val="long">🟢 Long</button>
+            <button class="filter-chip" data-val="short">🔴 Short</button>
+          </div>
+        </div>
+      </div>
+      <div class="signal-count" id="signalCount"></div>
       <div id="signalContainer">
         <div style="text-align:center; padding:100px 20px; color:var(--text-dim); font-size: 13px;">
           Menunggu data dari pasar...
         </div>
+      </div>
+      <div class="pagination" id="pagination" style="display:none;">
+        <button class="page-btn" id="prevPage" onclick="changePage(-1)">← Prev</button>
+        <span class="page-info" id="pageInfo">1 / 1</span>
+        <button class="page-btn" id="nextPage" onclick="changePage(1)">Next →</button>
       </div>
     </div>
 
@@ -183,12 +261,167 @@
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnY3NkcHFjZXVobXBla3NkaHBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MzU0NTMsImV4cCI6MjA4OTQxMTQ1M30.Llo6V1m4qdzXq3b3cB54cp7iEVrhpQ9nipBFbpcaWFQ';
 
     let charts = {};
+    let allSignals = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
+    let filterStatus = 'all';
+    let filterSide = 'all';
+    let filterSearch = '';
 
     function switchTab(id, el) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
       document.getElementById('tab-' + id).classList.add('active');
       el.classList.add('active');
+    }
+
+    // ── Filter Chip Handlers ──
+    document.getElementById('filterStatus').addEventListener('click', e => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      document.querySelectorAll('#filterStatus .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      filterStatus = chip.dataset.val;
+      currentPage = 1;
+      renderSignals();
+    });
+
+    document.getElementById('filterSide').addEventListener('click', e => {
+      const chip = e.target.closest('.filter-chip');
+      if (!chip) return;
+      document.querySelectorAll('#filterSide .filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      filterSide = chip.dataset.val;
+      currentPage = 1;
+      renderSignals();
+    });
+
+    document.getElementById('filterSearch').addEventListener('input', e => {
+      filterSearch = e.target.value.trim().toUpperCase();
+      currentPage = 1;
+      renderSignals();
+    });
+
+    function changePage(dir) {
+      currentPage += dir;
+      renderSignals();
+      // Scroll to top of signals
+      document.getElementById('tab-signals').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getFilteredSignals() {
+      return allSignals.filter(s => {
+        const status = s.status || 'ACTIVE';
+        const side = s.signal === 'STRONG BUY' ? 'long' : 'short';
+
+        // Status filter
+        if (filterStatus === 'active' && status !== 'ACTIVE') return false;
+        if (filterStatus === 'tp' && !status.includes('TP')) return false;
+        if (filterStatus === 'sl' && status !== 'SL_HIT') return false;
+
+        // Side filter
+        if (filterSide !== 'all' && side !== filterSide) return false;
+
+        // Search filter
+        if (filterSearch && !(s.symbol || '').toUpperCase().includes(filterSearch)) return false;
+
+        return true;
+      });
+    }
+
+    function renderSignals() {
+      const filtered = getFilteredSignals();
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageItems = filtered.slice(start, start + PAGE_SIZE);
+
+      // Count label
+      document.getElementById('signalCount').textContent = `Menampilkan ${pageItems.length} dari ${filtered.length} sinyal`;
+
+      // Render cards
+      const container = document.getElementById('signalContainer');
+      if (pageItems.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:60px 20px; color:var(--text-dim); font-size: 13px;">Tidak ada sinyal ditemukan</div>';
+      } else {
+        container.innerHTML = pageItems.map(s => renderCard(s)).join('');
+      }
+
+      // Pagination
+      const pag = document.getElementById('pagination');
+      pag.style.display = totalPages > 1 ? 'flex' : 'none';
+      document.getElementById('pageInfo').textContent = `${currentPage} / ${totalPages}`;
+      document.getElementById('prevPage').disabled = currentPage <= 1;
+      document.getElementById('nextPage').disabled = currentPage >= totalPages;
+
+      // Reconnect price WS with updated symbols
+      if (typeof connectPriceWs === 'function') connectPriceWs();
+    }
+
+    function renderCard(s) {
+      const side = s.signal === 'STRONG BUY' ? 'LONG' : 'SHORT';
+      const pnl = parseFloat(s.profit_pct || 0);
+      const time = new Date(s.sent_at || s.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const date = new Date(s.sent_at || s.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+
+      const status = s.status || 'ACTIVE';
+      const isTP1 = status.includes('TP1');
+      const isTP2 = status.includes('TP2');
+      const isTP3 = status.includes('TP3');
+      const isSL = status === 'SL_HIT';
+
+      return `
+        <div class="signal-card">
+          <div class="card-head">
+            <span class="pair-name">${s.symbol}</span>
+            <span class="time-stamp">${date} • ${time}</span>
+          </div>
+          <div class="data-row" style="margin-bottom: 8px;">
+            <div class="data-cell"><span class="label">Entry</span><span class="val">${parseFloat(s.entry_price || 0).toFixed(4)}</span></div>
+            <div class="data-cell"><span class="label">Score</span><span class="val">${s.score || 0}</span></div>
+            <div class="data-cell" style="text-align:right"><span class="label">Side</span><span class="val ${side === 'LONG' ? 'pos' : 'neg'}">${side}</span></div>
+          </div>
+          <div class="price-now-row" data-symbol="${s.symbol}" data-entry="${parseFloat(s.entry_price || 0)}" data-side="${side}">
+            <div>
+              <div class="price-now-label">💰 Harga Sekarang</div>
+              <div class="price-now-val">—</div>
+            </div>
+            <div style="text-align:right">
+              <div class="price-now-label">P&L dari Entry</div>
+              <div class="price-now-pnl">—</div>
+            </div>
+          </div>
+          <div class="target-row">
+            <div class="target-item ${isSL ? 'hit-sl' : ''}">
+              <span class="target-label">SL ${isSL ? '❌' : '🛡️'}</span>
+              <span class="target-val">${parseFloat(s.sl || 0).toFixed(4)}</span>
+            </div>
+            <div class="target-item ${isTP1 || isTP2 || isTP3 ? 'hit-tp' : ''}">
+              <span class="target-label">TP1 ${isTP1 || isTP2 || isTP3 ? '✅' : '⏳'}</span>
+              <span class="target-val">${parseFloat(s.tp1 || 0).toFixed(4)}</span>
+            </div>
+            <div class="target-item ${isTP2 || isTP3 ? 'hit-tp' : ''}">
+              <span class="target-label">TP2 ${isTP2 || isTP3 ? '✅' : '⏳'}</span>
+              <span class="target-val">${parseFloat(s.tp2 || 0).toFixed(4)}</span>
+            </div>
+            <div class="target-item ${isTP3 ? 'hit-tp' : ''}">
+              <span class="target-label">TP3 ${isTP3 ? '🏆' : '⏳'}</span>
+              <span class="target-val">${parseFloat(s.tp3 || 0).toFixed(4)}</span>
+            </div>
+          </div>
+          <div class="card-foot">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="side-tag ${side === 'LONG' ? 'side-buy' : 'side-sell'}">${side}</span>
+              <span class="status-tag ${status !== 'ACTIVE' ? 'status-hit' : ''}">${status === 'ACTIVE' ? '⌛ WAITING' : '🎯 ' + status}</span>
+            </div>
+            <div class="res-val ${pnl >= 0 ? 'pos' : 'neg'}">
+              ${status === 'ACTIVE' ? '—' : (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%'}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     async function fetchData() {
@@ -199,6 +432,8 @@
         if (!res.ok) throw new Error('Query error');
         const signals = await res.json();
         if (!Array.isArray(signals)) return;
+
+        allSignals = signals;
 
         // Statistics
         const closed = signals.filter(s => s.status !== 'ACTIVE');
@@ -218,82 +453,11 @@
         document.getElementById('mactive').textContent = activeCount;
         document.getElementById('gaugeVal').textContent = winRate + '%';
 
-        // Render Cards
-        const container = document.getElementById('signalContainer');
-        container.innerHTML = signals.map(s => {
-          const side = s.signal === 'STRONG BUY' ? 'LONG' : 'SHORT';
-          const pnl = parseFloat(s.profit_pct || 0);
-          const time = new Date(s.sent_at || s.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-          const date = new Date(s.sent_at || s.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-
-          // Status & Target Styling
-          const status = s.status || 'ACTIVE';
-          const isTP1 = status.includes('TP1');
-          const isTP2 = status.includes('TP2');
-          const isTP3 = status.includes('TP3');
-          const isSL = status === 'SL_HIT';
-
-          return `
-            <div class="signal-card">
-              <div class="card-head">
-                <span class="pair-name">${s.symbol}</span>
-                <span class="time-stamp">${date} • ${time}</span>
-              </div>
-              
-              <div class="data-row" style="margin-bottom: 8px;">
-                <div class="data-cell"><span class="label">Entry</span><span class="val">${parseFloat(s.entry_price || 0).toFixed(4)}</span></div>
-                <div class="data-cell"><span class="label">Score</span><span class="val">${s.score || 0}</span></div>
-                <div class="data-cell" style="text-align:right"><span class="label">Side</span><span class="val ${side === 'LONG' ? 'pos' : 'neg'}">${side}</span></div>
-              </div>
-
-              <div class="price-now-row" data-symbol="${s.symbol}" data-entry="${parseFloat(s.entry_price || 0)}" data-side="${side}">
-                <div>
-                  <div class="price-now-label">💰 Harga Sekarang</div>
-                  <div class="price-now-val">—</div>
-                </div>
-                <div style="text-align:right">
-                  <div class="price-now-label">P&L dari Entry</div>
-                  <div class="price-now-pnl">—</div>
-                </div>
-              </div>
-
-              <div class="target-row">
-                <div class="target-item ${isSL ? 'hit-sl' : ''}">
-                  <span class="target-label">SL ${isSL ? '❌' : '🛡️'}</span>
-                  <span class="target-val">${parseFloat(s.sl || 0).toFixed(4)}</span>
-                </div>
-                <div class="target-item ${isTP1 || isTP2 || isTP3 ? 'hit-tp' : ''}">
-                  <span class="target-label">TP1 ${isTP1 || isTP2 || isTP3 ? '✅' : '⏳'}</span>
-                  <span class="target-val">${parseFloat(s.tp1 || 0).toFixed(4)}</span>
-                </div>
-                <div class="target-item ${isTP2 || isTP3 ? 'hit-tp' : ''}">
-                  <span class="target-label">TP2 ${isTP2 || isTP3 ? '✅' : '⏳'}</span>
-                  <span class="target-val">${parseFloat(s.tp2 || 0).toFixed(4)}</span>
-                </div>
-                <div class="target-item ${isTP3 ? 'hit-tp' : ''}">
-                  <span class="target-label">TP3 ${isTP3 ? '🏆' : '⏳'}</span>
-                  <span class="target-val">${parseFloat(s.tp3 || 0).toFixed(4)}</span>
-                </div>
-              </div>
-
-              <div class="card-foot">
-                <div style="display:flex; gap:8px; align-items:center;">
-                  <span class="side-tag ${side === 'LONG' ? 'side-buy' : 'side-sell'}">${side}</span>
-                  <span class="status-tag ${status !== 'ACTIVE' ? 'status-hit' : ''}">${status === 'ACTIVE' ? '⌛ WAITING' : '🎯 ' + status}</span>
-                </div>
-                <div class="res-val ${pnl >= 0 ? 'pos' : 'neg'}">
-                  ${status === 'ACTIVE' ? '—' : (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%'}
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
+        // Render with current filters
+        renderSignals();
 
         // Refresh Charts
         drawCharts(closed, winRate, signals);
-
-        // Reconnect price WS with updated symbols
-        if (typeof connectPriceWs === 'function') connectPriceWs();
 
       } catch (e) { console.error(e); }
     }
@@ -402,6 +566,44 @@
           pnlEl.className = 'price-now-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
         }
       });
+      // Update running stats on every price tick
+      updateRunningStats();
+    }
+
+    function updateRunningStats() {
+      const active = allSignals.filter(s => (s.status || 'ACTIVE') === 'ACTIVE');
+      if (active.length === 0) {
+        document.getElementById('runProfit').textContent = '0';
+        document.getElementById('runLoss').textContent = '0';
+        document.getElementById('runAccuracy').textContent = '—';
+        document.getElementById('accFill').style.width = '0%';
+        document.getElementById('runDetail').textContent = 'Tidak ada sinyal aktif';
+        return;
+      }
+
+      let profit = 0, loss = 0, noPrice = 0;
+      active.forEach(s => {
+        const price = lastPrices[s.symbol];
+        if (!price) { noPrice++; return; }
+        const entry = parseFloat(s.entry_price || 0);
+        if (entry <= 0) return;
+        const side = s.signal === 'STRONG BUY' ? 'LONG' : 'SHORT';
+        let pnl = ((price - entry) / entry) * 100;
+        if (side === 'SHORT') pnl = -pnl;
+        if (pnl >= 0) profit++; else loss++;
+      });
+
+      const tracked = profit + loss;
+      const acc = tracked > 0 ? ((profit / tracked) * 100).toFixed(0) : '—';
+
+      document.getElementById('runProfit').textContent = profit;
+      document.getElementById('runLoss').textContent = loss;
+      document.getElementById('runAccuracy').textContent = acc !== '—' ? acc + '%' : '—';
+      document.getElementById('accFill').style.width = acc !== '—' ? acc + '%' : '0%';
+
+      let detail = `${profit} profit · ${loss} loss`;
+      if (noPrice > 0) detail += ` · ${noPrice} menunggu harga`;
+      document.getElementById('runDetail').textContent = detail;
     }
 
     function connectPriceWs() {
