@@ -181,7 +181,7 @@ return results;`
         },
         sendBody: true,
         specifyBody: 'json',
-        jsonBody: '={\n  "status": "{{ $json.status }}",\n  "profit_pct": {{ $json.profit_pct }},\n  "hit_time": "{{ $json.hit_time }}",\n  "duration": "{{ $json.duration }}",\n  "current_price": {{ $json.current_price }}\n}',
+        jsonBody: '={{ JSON.stringify({ status: $json.status, profit_pct: $json.profit_pct, hit_time: $json.hit_time, duration: $json.duration, current_price: $json.current_price }) }}',
         options: {}
       }
     },
