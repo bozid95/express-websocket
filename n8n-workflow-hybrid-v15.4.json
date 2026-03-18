@@ -1,0 +1,532 @@
+{
+  "name": "Spike Hunter Pro v15.3 — Dynamic Volume Engine",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2200,
+        800
+      ],
+      "webhookId": "crypto-signal",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "crypto-signal",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Get Klines 1h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1900,
+        800
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/klines",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.body.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "1h"
+            },
+            {
+              "name": "limit",
+              "value": "1500"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n3",
+      "name": "Get Klines 4h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1650,
+        800
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/klines",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "4h"
+            },
+            {
+              "name": "limit",
+              "value": "1500"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Get Klines 1D",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1400,
+        800
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/klines",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "1d"
+            },
+            {
+              "name": "limit",
+              "value": "1500"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Get Funding Rate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1100,
+        500
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/fapi/v1/fundingRate",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n6",
+      "name": "Get OI History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1100,
+        700
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/futures/data/openInterestHist",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "period",
+              "value": "1h"
+            },
+            {
+              "name": "limit",
+              "value": "30"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n7",
+      "name": "Get Long Short Ratio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1100,
+        900
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/futures/data/globalLongShortAccountRatio",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "period",
+              "value": "1h"
+            },
+            {
+              "name": "limit",
+              "value": "30"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n8",
+      "name": "Get Taker Volume",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1100,
+        1100
+      ],
+      "parameters": {
+        "url": "https://fapi.binance.com/futures/data/takerlongshortRatio",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $('Webhook Trigger').first().json.body.symbol }}"
+            },
+            {
+              "name": "period",
+              "value": "1h"
+            },
+            {
+              "name": "limit",
+              "value": "30"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "n9",
+      "name": "Pro Analisa TA v15.4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -650,
+        800
+      ],
+      "parameters": {
+        "jsCode": "// v15.4 PRO CRYPTO FUTURES — MAXIMUM DATA ENGINE + DYNAMIC VOLUME FILTER\n// Data: 1500 candles (1H/4H/1D) + Open Interest + Long/Short Ratio + Taker Buy/Sell + Funding History\n\nconst webhookData = $('Webhook Trigger').first().json.body;\nconst symbol = webhookData.symbol;\nconst wsPctChange = parseFloat(webhookData.priceChangePercent);\nconst wsDirection = webhookData.direction;\nconst dynamicThreshold = webhookData.threshold ? parseFloat(webhookData.threshold) : 2.0;\nconst nowTs = Date.now();\n\n// ═══ FRESHNESS ═══\nconst FRESHNESS_LIMIT_MS = 3 * 60 * 1000;\nif (webhookData.triggeredAt) {\n  const ageSec = Math.round((nowTs - new Date(webhookData.triggeredAt).getTime()) / 1000);\n  if (ageSec > 180) return [{ json: { isHot: false, symbol, rejectReason: '\\u23f0 STALE: ' + ageSec + 's' } }];\n}\n\n// ═══ RATE LIMIT + DEDUP ═══\nconst state = $getWorkflowStaticData('global');\nif (!state.signalCache) state.signalCache = {};\nfor (const key of Object.keys(state.signalCache)) {\n  if (nowTs - state.signalCache[key].ts > 6 * 3600000) delete state.signalCache[key];\n}\nconst dedupKey = symbol + '_' + wsDirection;\nconst lastEntry = state.signalCache[dedupKey];\nif (lastEntry && (nowTs - lastEntry.ts < 600000)) {\n  return [{ json: { isHot: false, symbol, rejectReason: '\\ud83d\\udd04 RATE LIMIT' } }];\n}\n\n// ═══ KLINES PARSING ═══\nfunction parseKlines(nodeName) {\n  try {\n    let raw = $(nodeName).first().json;\n    let data = Array.isArray(raw) ? raw : (typeof raw.data === 'string' ? JSON.parse(raw.data) : raw.data);\n    if (!Array.isArray(data) || data.length < 20) return null;\n    return {\n      open: data.map(function(k){return parseFloat(k[1]);}),\n      high: data.map(function(k){return parseFloat(k[2]);}),\n      low: data.map(function(k){return parseFloat(k[3]);}),\n      close: data.map(function(k){return parseFloat(k[4]);}),\n      volume: data.map(function(k){return parseFloat(k[5]);})\n    };\n  } catch(e) { return null; }\n}\n\nconst tf1h = parseKlines('Get Klines 1h');\nconst tf4h = parseKlines('Get Klines 4h');\nconst tf1d = parseKlines('Get Klines 1D');\nif (!tf1h) return [{ json: { isHot: false, symbol, rejectReason: 'No 1H data' } }];\n\n// ═══ DYNAMIC VOLUME FILTER v15.4 ═══\n// Pro trader approach: tiered volume with penalty instead of hard cutoff\nvar quoteVol = parseFloat(webhookData.quoteVolume || 0);\nvar volTier = 'HIGH'; // default: high liquidity\nvar volPenalty = 0;\nvar volWarning = '';\nif (quoteVol > 0 && quoteVol < 1000000) {\n  // HARD BLOCK: under $1M = too illiquid to trade\n  return [{ json: { isHot: false, symbol, rejectReason: '🚫 Vol ' + (quoteVol/1e6).toFixed(2) + 'M < $1M minimum' } }];\n} else if (quoteVol > 0 && quoteVol < 5000000) {\n  // SOFT PENALTY: $1-5M = tradeable with caution\n  volTier = 'LOW';\n  volPenalty = -10;\n  volWarning = '⚠️ Low Liquidity ($' + (quoteVol/1e6).toFixed(1) + 'M)';\n} else if (quoteVol > 0 && quoteVol < 20000000) {\n  volTier = 'MEDIUM';\n  volPenalty = 0;\n} else {\n  volTier = 'HIGH';\n  volPenalty = 0;\n}\n\n// ═══ FUTURES DATA PARSING ═══\n// Funding Rate History\nlet fundingRate = 0, fundingTrend = 'NEUTRAL', fundingLabel = 'N/A';\ntry {\n  const frArr = $('Get Funding Rate').first().json;\n  const frData = Array.isArray(frArr) ? frArr : (frArr.body ? JSON.parse(frArr.body) : [frArr]);\n  if (Array.isArray(frData) && frData.length > 0) {\n    fundingRate = parseFloat(frData[frData.length-1].fundingRate || 0);\n    const frPct = fundingRate * 100;\n    // Funding trend: average of last 8 vs last 3\n    if (frData.length >= 8) {\n      const recent3 = frData.slice(-3).reduce(function(a,f){return a+parseFloat(f.fundingRate||0);},0)/3;\n      const older8 = frData.slice(-8,-3).reduce(function(a,f){return a+parseFloat(f.fundingRate||0);},0)/5;\n      if (recent3 < older8 - 0.0002) fundingTrend = 'FALLING';\n      else if (recent3 > older8 + 0.0002) fundingTrend = 'RISING';\n    }\n    if (frPct < -0.1) fundingLabel = frPct.toFixed(3) + '% \\ud83d\\udd25 SHORT SQUEEZE (' + fundingTrend + ')';\n    else if (frPct < -0.05) fundingLabel = frPct.toFixed(3) + '% Negative (' + fundingTrend + ')';\n    else if (frPct > 0.1) fundingLabel = '+' + frPct.toFixed(3) + '% \\ud83d\\udd25 LONG LURE (' + fundingTrend + ')';\n    else if (frPct > 0.05) fundingLabel = '+' + frPct.toFixed(3) + '% High (' + fundingTrend + ')';\n    else fundingLabel = (frPct>=0?'+':'') + frPct.toFixed(3) + '% (' + fundingTrend + ')';\n  }\n} catch(e) {}\nconst frPct = fundingRate * 100;\n\n// Open Interest HISTORY (30 periods) — trend analysis\nlet oiValue = 0, oiLabel = 'N/A', oiTrend = 'NEUTRAL', oiChange = 0;\ntry {\n  var oiArr = $('Get OI History').first().json;\n  var oiData = Array.isArray(oiArr) ? oiArr : [oiArr];\n  if (oiData.length >= 5) {\n    var lastOI = parseFloat(oiData[oiData.length-1].sumOpenInterest || oiData[oiData.length-1].openInterest || 0);\n    var prevOI = parseFloat(oiData[oiData.length-5].sumOpenInterest || oiData[oiData.length-5].openInterest || 0);\n    oiValue = lastOI;\n    oiChange = prevOI > 0 ? ((lastOI - prevOI) / prevOI * 100) : 0;\n    if (oiChange > 3) oiTrend = 'RISING';\n    else if (oiChange < -3) oiTrend = 'FALLING';\n    else oiTrend = 'STABLE';\n    var oiStr = lastOI > 1e9 ? (lastOI/1e9).toFixed(2)+'B' : lastOI > 1e6 ? (lastOI/1e6).toFixed(1)+'M' : lastOI > 1e3 ? (lastOI/1e3).toFixed(0)+'K' : lastOI.toFixed(0);\n    oiLabel = oiStr + ' ' + (oiTrend === 'RISING' ? '\\u2191+' : oiTrend === 'FALLING' ? '\\u2193' : '\\u2194') + oiChange.toFixed(1) + '%';\n  } else if (oiData.length > 0) {\n    oiValue = parseFloat(oiData[oiData.length-1].sumOpenInterest || oiData[oiData.length-1].openInterest || 0);\n    oiLabel = oiValue > 1e6 ? (oiValue/1e6).toFixed(1)+'M' : oiValue.toFixed(0);\n  }\n} catch(e) {}\n\n// Long/Short Ratio\nlet lsRatio = 1.0, lsTrend = 'NEUTRAL', lsLabel = 'N/A';\ntry {\n  const lsArr = $('Get Long Short Ratio').first().json;\n  const lsData = Array.isArray(lsArr) ? lsArr : [lsArr];\n  if (lsData.length > 0) {\n    lsRatio = parseFloat(lsData[lsData.length-1].longShortRatio || 1.0);\n    lsLabel = lsRatio.toFixed(2);\n    if (lsData.length >= 5) {\n      const recent = parseFloat(lsData[lsData.length-1].longShortRatio||1);\n      const older = parseFloat(lsData[Math.max(0,lsData.length-5)].longShortRatio||1);\n      if (recent > older + 0.1) { lsTrend = 'LONG_INCREASING'; lsLabel += ' \\u2191 Longs growing'; }\n      else if (recent < older - 0.1) { lsTrend = 'SHORT_INCREASING'; lsLabel += ' \\u2193 Shorts growing'; }\n      else lsLabel += ' Stable';\n    }\n    if (lsRatio > 2.5) lsLabel += ' \\u26a0\\ufe0f CROWDED LONG';\n    else if (lsRatio < 0.5) lsLabel += ' \\u26a0\\ufe0f CROWDED SHORT';\n  }\n} catch(e) {}\n\n// Taker Buy/Sell\nlet takerRatio = 1.0, takerLabel = 'N/A', takerBias = 'NEUTRAL';\ntry {\n  const tkArr = $('Get Taker Volume').first().json;\n  const tkData = Array.isArray(tkArr) ? tkArr : [tkArr];\n  if (tkData.length > 0) {\n    const last = tkData[tkData.length-1];\n    const buyVol = parseFloat(last.buyVol || 0);\n    const sellVol = parseFloat(last.sellVol || 0);\n    takerRatio = sellVol > 0 ? buyVol / sellVol : 1;\n    if (takerRatio > 1.3) { takerBias = 'BUY_AGGRESSIVE'; takerLabel = takerRatio.toFixed(2) + ' \\ud83d\\udfe2 Buyers aggressive'; }\n    else if (takerRatio < 0.7) { takerBias = 'SELL_AGGRESSIVE'; takerLabel = takerRatio.toFixed(2) + ' \\ud83d\\udd34 Sellers aggressive'; }\n    else takerLabel = takerRatio.toFixed(2) + ' Balanced';\n    // Trend over last 5\n    if (tkData.length >= 5) {\n      const recent3 = tkData.slice(-3).reduce(function(a,t){return a+(parseFloat(t.buyVol||0)/Math.max(parseFloat(t.sellVol||1),0.001));},0)/3;\n      const older = tkData.slice(-5,-3).reduce(function(a,t){return a+(parseFloat(t.buyVol||0)/Math.max(parseFloat(t.sellVol||1),0.001));},0)/2;\n      if (recent3 > older + 0.15) takerLabel += ' (trend: BUY\\u2191)';\n      else if (recent3 < older - 0.15) takerLabel += ' (trend: SELL\\u2191)';\n    }\n  }\n} catch(e) {}\n\n// ═══ INDICATOR FUNCTIONS ═══\nfunction calcEMA(p,n){if(p.length<n)return p[p.length-1]||0;var k=2/(n+1),e=p.slice(0,n).reduce(function(a,b){return a+b;})/n;for(var i=n;i<p.length;i++)e=(p[i]-e)*k+e;return e;}\nfunction calcEMAArr(p,n){var k=2/(n+1),e=p.slice(0,n).reduce(function(a,b){return a+b;})/n;var r=new Array(n-1).fill(null);r.push(e);for(var i=n;i<p.length;i++){e=(p[i]-e)*k+e;r.push(e);}return r;}\nfunction calcRSI(p,n){n=n||14;if(p.length<n+1)return 50;var g=0,lo=0;for(var i=1;i<=n;i++){var d=p[i]-p[i-1];d>=0?g+=d:lo-=d;}var ag=g/n,al=lo/n;for(var i=n+1;i<p.length;i++){var d=p[i]-p[i-1];ag=((ag*(n-1))+(d>=0?d:0))/n;al=((al*(n-1))+(d<0?-d:0))/n;}return al===0?100:100-(100/(1+(ag/al)));}\nfunction calcRSIArr(p,n){n=n||14;var r=[];for(var i=0;i<p.length;i++){if(i<n){r.push(null);continue;}r.push(calcRSI(p.slice(0,i+1),n));}return r;}\nfunction calcMACD(p){var e12=calcEMAArr(p,12),e26=calcEMAArr(p,26),ml=[];for(var i=0;i<p.length;i++)if(e12[i]!==null&&e26[i]!==null)ml.push(e12[i]-e26[i]);if(ml.length<9)return{h:0,ph:0,cu:false,cd:false,hist:0};var sl=calcEMAArr(ml,9);var lm=ml[ml.length-1],ls=sl[sl.length-1]||0,pm=ml[ml.length-2]||lm,ps=sl[sl.length-2]||ls;return{h:lm-ls,ph:pm-ps,cu:pm<=ps&&lm>ls,cd:pm>=ps&&lm<ls,hist:lm-ls};}\nfunction calcATR(h,l,c,n){n=n||14;if(h.length<n+1)return 0;var t=[h[0]-l[0]];for(var i=1;i<h.length;i++)t.push(Math.max(h[i]-l[i],Math.abs(h[i]-c[i-1]),Math.abs(l[i]-c[i-1])));var a=t.slice(0,n).reduce(function(x,y){return x+y;})/n;for(var i=n;i<t.length;i++)a=(a*(n-1)+t[i])/n;return a;}\n\nfunction analyzeMarketStructure(h,l,c,lookback) {\n  lookback=lookback||30; var len=c.length; if(len<lookback)return'NEUTRAL';\n  var sh=h.slice(len-lookback),sl=l.slice(len-lookback);\n  var swH=[],swL=[];\n  for(var i=2;i<sh.length-2;i++){\n    if(sh[i]>sh[i-1]&&sh[i]>sh[i-2]&&sh[i]>sh[i+1]&&sh[i]>sh[i+2])swH.push({i:i,v:sh[i]});\n    if(sl[i]<sl[i-1]&&sl[i]<sl[i-2]&&sl[i]<sl[i+1]&&sl[i]<sl[i+2])swL.push({i:i,v:sl[i]});\n  }\n  if(swH.length<2||swL.length<2)return'NEUTRAL';\n  var hh=swH[swH.length-1].v>swH[swH.length-2].v,hl=swL[swL.length-1].v>swL[swL.length-2].v;\n  var lh=swH[swH.length-1].v<swH[swH.length-2].v,ll=swL[swL.length-1].v<swL[swL.length-2].v;\n  if(hh&&hl)return'BULLISH';if(lh&&ll)return'BEARISH';if(hl&&lh)return'TRANSITION_UP';return'CHOPPY';\n}\n\nfunction detectRSIDivergence(c,l,h,rsiArr,lookback) {\n  lookback=lookback||40;var idx=c.length-1;if(idx<lookback||!rsiArr[idx])return{bullish:false,bearish:false};\n  var startIdx=idx-lookback,bullDiv=false,bearDiv=false;\n  for(var i=startIdx+2;i<idx-2;i++){if(!rsiArr[i])continue;\n    var isSwL=l[i]<=l[i-1]&&l[i]<=l[i-2]&&l[i]<=l[i+1]&&l[i]<=l[i+2];\n    if(isSwL&&(l[idx]<l[i]||Math.abs(l[idx]-l[i])/l[i]<0.005)){if(rsiArr[idx]>rsiArr[i]+3){bullDiv=true;break;}}\n  }\n  for(var i=startIdx+2;i<idx-2;i++){if(!rsiArr[i])continue;\n    var isSwH=h[i]>=h[i-1]&&h[i]>=h[i-2]&&h[i]>=h[i+1]&&h[i]>=h[i+2];\n    if(isSwH&&(h[idx]>h[i]||Math.abs(h[idx]-h[i])/h[i]<0.005)){if(rsiArr[idx]<rsiArr[i]-3){bearDiv=true;break;}}\n  }\n  return{bullish:bullDiv,bearish:bearDiv};\n}\n\n// ═══ TIMEFRAME ANALYSIS ═══\nvar c=tf1h.close,h=tf1h.high,l=tf1h.low,o=tf1h.open,v=tf1h.volume;\nvar price=c[c.length-1],idx=c.length-1;\nvar _rsi=calcRSI(c),_rsiArr=calcRSIArr(c,14),_macd=calcMACD(c),_atr=calcATR(h,l,c);\nvar E21=calcEMA(c,21),E50=calcEMA(c,50),E200=calcEMA(c,200);\nvar avgVol=v.slice(-20).reduce(function(a,b){return a+b;})/20;\nvar volRatio=avgVol>0?v[v.length-1]/avgVol:1;\nvar body=Math.abs(c[idx]-o[idx]),range=h[idx]-l[idx];\nvar bodyRatio=range>0?body/range:0;\nvar upperWick=h[idx]-Math.max(c[idx],o[idx]);\nvar lowerWick=Math.min(c[idx],o[idx])-l[idx];\nvar isGreen=c[idx]>o[idx],isRed=!isGreen;\nvar atrPct=price>0?(_atr/price)*100:0;\nvar _ms=analyzeMarketStructure(h,l,c,30);\nvar _rsiDiv=detectRSIDivergence(c,l,h,_rsiArr,40);\nvar trend1h=price>E21&&E21>E50?'UPTREND':price<E21&&E21<E50?'DOWNTREND':'SIDEWAYS';\n\n// Support/Resistance with maximum data (1500 candles!)\nvar res1h=Math.max.apply(null,h.slice(-500));\nvar sup1h=Math.min.apply(null,l.slice(-500));\n\n// Freefall\nvar ffCount=0;\nfor(var k=idx-5;k<=idx;k++){if(k>24){var ll=Math.min.apply(null,l.slice(k-24,k));if(l[k]<ll)ffCount++;}}\n\n// Volume breakout ratio\nvar vol5avg=v.slice(Math.max(0,idx-5),idx).reduce(function(a,b){return a+b;},0)/Math.min(5,idx);\nvar volBreakRatio=vol5avg>0?v[idx]/vol5avg:1;\n\n// 4H Analysis\nvar trend4h='SIDEWAYS',rsi4h=50,bias4h='NEUTRAL',res4h=0;\nif(tf4h){var c4=tf4h.close,h4=tf4h.high;var E21_4=calcEMA(c4,21),E50_4=calcEMA(c4,50);var p4=c4[c4.length-1];rsi4h=calcRSI(c4);res4h=Math.max.apply(null,h4.slice(-200));\n  if(p4>E21_4&&E21_4>E50_4){trend4h='UPTREND';bias4h='BULLISH';}else if(p4<E21_4&&E21_4<E50_4){trend4h='DOWNTREND';bias4h='BEARISH';}}\n\n// 1D Macro (with 1500 candles = ~4 years!)\nvar dailyTrend='NEUTRAL',dailyEMA21=0,dailyEMA50=0,dailyEMA200=0;\nvar weeklyBias='NEUTRAL';\nif(tf1d){var dc=tf1d.close;dailyEMA21=calcEMA(dc,21);dailyEMA50=calcEMA(dc,50);dailyEMA200=calcEMA(dc,200);\n  var dp=dc[dc.length-1];\n  if(dp>dailyEMA21&&dailyEMA21>dailyEMA50)dailyTrend='BULLISH';\n  else if(dp<dailyEMA21&&dailyEMA21<dailyEMA50)dailyTrend='BEARISH';\n  else if(dp>dailyEMA21)dailyTrend='ABOVE_EMA';\n  else dailyTrend='BELOW_EMA';\n  // Weekly bias from daily data (EMA200 = roughly weekly trend)\n  if(dp>dailyEMA200)weeklyBias='ABOVE MA200';\n  else weeklyBias='BELOW MA200';\n}\nvar dailyBearish=dailyTrend==='BEARISH';\nvar dailyBullish=dailyTrend==='BULLISH'||dailyTrend==='ABOVE_EMA';\n\nvar effectiveRes=(res4h>0&&Math.abs(res4h-res1h)/price<0.05)?Math.max(res4h,res1h):(res4h>0?Math.min(res4h,res1h):res1h);\n\n// ════════════════════════════════════════\n// SCORING ENGINE v15.2\n// ════════════════════════════════════════\nvar score=0,signal='NEUTRAL',strategy='WAIT',confidence='LOW';\nvar reasons=[];\n\n// ═══ STRATEGY 1: BUY THE DIP ═══\nif(wsPctChange<=-dynamicThreshold){\n  // HARD GATES\n  if(dailyBearish)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab Daily '+dailyTrend}}];\n  if(_rsi>=50)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab RSI '+_rsi.toFixed(0)+' >=45'}}];\n  if(ffCount>=3)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab FREEFALL'}}];\n  if(!isGreen&&_rsi>=22)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab Red candle RSI '+_rsi.toFixed(0)}}];\n  if(volRatio<1.2)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab Vol '+volRatio.toFixed(1)+'x'}}];\n  if(_ms==='BEARISH')return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab Structure BEARISH'}}];\n  if(atrPct<0.25)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udeab ATR '+atrPct.toFixed(2)+'%'}}];\n\n  // SCORING\n  var absPct=Math.abs(wsPctChange);\n  if(_rsi<20){score+=25;reasons.push('RSI '+_rsi.toFixed(0)+' EXTREME');}\n  else if(_rsi<25){score+=20;reasons.push('RSI '+_rsi.toFixed(0)+' extreme');}\n  else if(_rsi<30){score+=15;reasons.push('RSI '+_rsi.toFixed(0)+' oversold');}\n  else if(_rsi<35){score+=10;reasons.push('RSI '+_rsi.toFixed(0));}\n  else if(_rsi<40){score+=7;reasons.push('RSI '+_rsi.toFixed(0));}\n  else{score+=4;}\n\n  if(absPct>=10){score+=15;reasons.push(absPct.toFixed(1)+'% CRASH');}\n  else if(absPct>=7){score+=12;reasons.push(absPct.toFixed(1)+'% big drop');}\n  else if(absPct>=5){score+=9;reasons.push(absPct.toFixed(1)+'% drop');}\n  else{score+=5;}\n\n  if(volRatio>4){score+=12;reasons.push('Vol '+volRatio.toFixed(1)+'x massive');}\n  else if(volRatio>2.5){score+=8;reasons.push('Vol '+volRatio.toFixed(1)+'x');}\n  else{score+=4;}\n\n  if(bodyRatio>0.6){score+=12;reasons.push('Marubozu');}\n  else if(bodyRatio>0.4){score+=8;reasons.push('Strong green');}\n  else{score+=4;}\n\n  if(_macd.cu){score+=12;reasons.push('MACD Bull Cross');}\n  else if(_macd.h<0&&_macd.h>_macd.ph){score+=7;reasons.push('MACD turning');}\n\n  // Support (using 500 candle range)\n  var sup=Math.min.apply(null,l.slice(Math.max(0,idx-168),idx));\n  var dSup=(price-sup)/price*100;\n  if(dSup<0.5){score+=12;reasons.push('Double Bottom');}\n  else if(dSup<1.5){score+=7;reasons.push('Near support');}\n  else if(dSup<3){score+=3;}\n\n  if(range>0&&lowerWick/range>0.5){score+=7;reasons.push('Buyer wick');}\n  else if(range>0&&lowerWick/range>0.3){score+=4;}\n\n  // Market Structure\n  if(_ms==='BULLISH'){score+=15;reasons.push('Structure HH+HL');}\n  else if(_ms==='TRANSITION_UP'){score+=10;reasons.push('Structure TRANSITION');}\n\n  // NEW v15.2: Funding Rate + Trend\n  if(frPct<-0.1){score+=15;reasons.push('Funding '+frPct.toFixed(3)+'% SHORT SQZ');}\n  else if(frPct<-0.05){score+=10;reasons.push('Funding negative');}\n  else if(frPct>0.05){score-=5;}\n  if(fundingTrend==='FALLING'&&frPct<0){score+=5;reasons.push('FR trend falling');}\n\n  // NEW v15.2: Open Interest analysis\n  // OI data is single snapshot. We can't trend it without history in Code Node.\n  // But we output it for the trader to see.\n\n  // NEW v15.2: Long/Short Ratio — contrarian\n  if(lsRatio>2.5){score+=10;reasons.push('L/S '+lsRatio.toFixed(1)+' CROWDED LONG \\u2192 liquidation risk');}\n  else if(lsRatio>1.8){score+=5;reasons.push('L/S '+lsRatio.toFixed(1)+' long heavy');}\n  else if(lsRatio<0.5){score-=8;reasons.push('L/S '+lsRatio.toFixed(1)+' shorts dominate');}\n  if(lsTrend==='SHORT_INCREASING'){score+=5;reasons.push('Shorts growing \\u2192 squeeze setup');}\n\n  // NEW v15.2: Taker Buy/Sell — smart money\n  if(takerBias==='BUY_AGGRESSIVE'){score+=12;reasons.push('Taker BUY '+takerRatio.toFixed(2)+' \\ud83d\\udfe2');}\n  else if(takerBias==='SELL_AGGRESSIVE'){score-=8;reasons.push('Taker SELL aggressive');}\n\n  // NEW: OI Trend scoring\n  if (oiTrend === 'RISING' && wsPctChange < 0) { score += 10; reasons.push('OI RISING + price drop = squeeze setup'); }\n  else if (oiTrend === 'FALLING' && wsPctChange < 0) { score += 5; reasons.push('OI FALLING = longs closing, bottom near'); }\n\n  // RSI Divergence\n  if(_rsiDiv.bullish){score+=20;reasons.push('RSI BULL DIVERGENCE');}\n\n  // 4H / Daily alignment\n  if(bias4h==='BULLISH'){score+=8;reasons.push('4H UPTREND');}\n  else if(bias4h==='BEARISH'){score-=5;reasons.push('4H downtrend');}\n  if(dailyTrend==='BULLISH'){score+=5;reasons.push('Daily BULLISH');}\n  else if(dailyTrend==='ABOVE_EMA'){score+=3;}\n  else if(dailyTrend==='BELOW_EMA'){score-=8;reasons.push('Daily BELOW EMA');}\n\n  // v15.4: Volume tier penalty\n  if (volPenalty !== 0) { score += volPenalty; reasons.push('LiqPenalty ' + volPenalty); }\n\n  // Classify\n  if(score>=60){signal='STRONG BUY';strategy='LONG (Buy Dip)';confidence=volTier==='LOW'?'HIGH':'VERY HIGH';}\n  else if(score>=48){signal='STRONG BUY';strategy='LONG (Buy Dip)';confidence='HIGH';}\n  else{reasons.push('Score ' + score + ' (min 58)');}\n}\n\n// ═══ STRATEGY 2&3: PUMP (SHORT / BREAKOUT) ═══\nelse if(wsPctChange>=dynamicThreshold){\n  var shortScore=0,breakoutScore=0;\n  var shortReasons=[],breakoutReasons=[];\n\n  // SHORT\n  var hasWickReject=range>0&&upperWick/range>0.3;\n  var shortGate=(_rsi>=60)&&(isRed||(_rsi>=72)||hasWickReject);\n  if(shortGate){\n    if(_rsi>=80){shortScore+=25;shortReasons.push('RSI '+_rsi.toFixed(0)+' EXTREME OB');}\n    else if(_rsi>=75){shortScore+=20;shortReasons.push('RSI '+_rsi.toFixed(0));}\n    else if(_rsi>=70){shortScore+=15;shortReasons.push('RSI '+_rsi.toFixed(0));}\n    else{shortScore+=8;}\n\n    if(wsPctChange>=12){shortScore+=15;shortReasons.push('Pump '+wsPctChange.toFixed(1)+'%');}\n    else if(wsPctChange>=8){shortScore+=12;shortReasons.push('Pump '+wsPctChange.toFixed(1)+'%');}\n    else if(wsPctChange>=5){shortScore+=8;shortReasons.push('Pump '+wsPctChange.toFixed(1)+'%');}\n    else{shortScore+=4;}\n\n    if(isRed&&bodyRatio>0.5){shortScore+=12;shortReasons.push('Strong red');}\n    else if(isRed){shortScore+=7;shortReasons.push('Red candle');}\n    else if(hasWickReject){shortScore+=10;shortReasons.push('Upper wick reject');}\n    else{shortScore+=3;}\n\n    if(range>0&&upperWick/range>0.5){shortScore+=12;shortReasons.push('Long Upper wick');}\n    else if(range>0&&upperWick/range>0.3){shortScore+=6;}\n\n    if(_macd.cd){shortScore+=12;shortReasons.push('MACD Bear Cross');}\n    else if(_macd.h>0&&_macd.h<_macd.ph){shortScore+=6;shortReasons.push('MACD fading');}\n\n    if(_ms==='BEARISH'){shortScore+=12;shortReasons.push('Structure LH+LL');}\n\n    // v15.2: Funding contrarian\n    if(frPct>0.1){shortScore+=15;shortReasons.push('Funding +'+frPct.toFixed(3)+'% LONG LURE');}\n    else if(frPct>0.05){shortScore+=8;shortReasons.push('Funding high');}\n\n    // v15.2: L/S Ratio — crowded longs = good to short\n    if(lsRatio>2.5){shortScore+=12;shortReasons.push('L/S '+lsRatio.toFixed(1)+' CROWDED LONG');}\n    else if(lsRatio>1.8){shortScore+=6;shortReasons.push('L/S long heavy');}\n\n    // v15.2: Taker — sellers aggressive = short confirmation\n    if(takerBias==='SELL_AGGRESSIVE'){shortScore+=10;shortReasons.push('Taker SELL aggressive');}\n\n    // OI trend for SHORT\n    if (oiTrend === 'RISING' && wsPctChange > 0) { shortScore -= 5; shortReasons.push('OI RISING = trend valid, careful short'); }\n    else if (oiTrend === 'FALLING' && wsPctChange > 0) { shortScore += 8; shortReasons.push('OI FALLING = fake pump'); }\n\n    if(_rsiDiv.bearish){shortScore+=20;shortReasons.push('RSI BEAR DIVERGENCE');}\n    if(dailyBearish){shortScore+=8;shortReasons.push('Daily BEAR');}\n    if(bias4h==='BEARISH'){shortScore+=8;shortReasons.push('4H DOWN');}\n  }\n\n  // BREAKOUT\n  var dRes1h=(price-res1h)/price*100;\n  var breakGate=(dRes1h>0||(res4h>0&&price>res4h))&&volBreakRatio>1.1&&dailyBullish&&(range>0&&upperWick/range<0.5);\n  if(breakGate){\n    var prevAboveRes=idx>0&&c[idx-1]>res1h;\n    if(prevAboveRes){breakoutScore+=18;breakoutReasons.push('2-bar close above res');}\n    else{breakoutScore+=10;breakoutReasons.push('Breakout candle');}\n\n    if(volBreakRatio>3){breakoutScore+=20;breakoutReasons.push('Vol '+volBreakRatio.toFixed(1)+'x BREAK');}\n    else if(volBreakRatio>2){breakoutScore+=14;breakoutReasons.push('Vol '+volBreakRatio.toFixed(1)+'x');}\n    else{breakoutScore+=8;}\n\n    if(_rsi>=55&&_rsi<70){breakoutScore+=15;breakoutReasons.push('RSI Momentum '+_rsi.toFixed(0));}\n    else if(_rsi>=50){breakoutScore+=8;}\n    else{breakoutScore-=5;}\n\n    if(isGreen&&bodyRatio>0.7){breakoutScore+=15;breakoutReasons.push('Marubozu breakout');}\n    else if(isGreen&&bodyRatio>0.5){breakoutScore+=8;}\n\n    if(_macd.cu){breakoutScore+=10;breakoutReasons.push('MACD Bull Cross');}\n\n    if(_ms==='BULLISH'){breakoutScore+=12;breakoutReasons.push('Structure HH+HL');}\n\n    // v15.2: Taker buy = confirms breakout\n    if(takerBias==='BUY_AGGRESSIVE'){breakoutScore+=12;breakoutReasons.push('Taker BUY aggressive');}\n    // v15.2: Funding negative = fuel for breakout\n    if(frPct<-0.05){breakoutScore+=12;breakoutReasons.push('Funding neg SHORT SQZ');}\n\n    if(bias4h==='BULLISH'){breakoutScore+=10;breakoutReasons.push('4H UPTREND');}\n    if(dailyTrend==='BULLISH'){breakoutScore+=8;breakoutReasons.push('Daily BULL');}\n  }\n\n  // v15.4: Volume tier penalty for SHORT\n  if (volPenalty !== 0 && shortGate) { shortScore += volPenalty; shortReasons.push('LiqPenalty ' + volPenalty); }\n  if (volPenalty !== 0 && breakGate) { breakoutScore += volPenalty; breakoutReasons.push('LiqPenalty ' + volPenalty); }\n\n  // WINNER\n  var shortOk=shortGate&&shortScore>=50;\n  var breakOk=breakGate&&breakoutScore>=48;\n\n  if(shortOk&&shortScore>=breakoutScore){\n    score=shortScore;reasons.push.apply(reasons,shortReasons);\n    if(score>=75){signal='STRONG SELL';strategy='SHORT (Overbought)';confidence=volTier==='LOW'?'HIGH':'VERY HIGH';}\n    else{signal='STRONG SELL';strategy='SHORT (Overbought)';confidence='HIGH';}\n  } else if(breakOk){\n    score=breakoutScore;reasons.push.apply(reasons,breakoutReasons);\n    if(score>=75){signal='STRONG BUY';strategy='LONG (Breakout)';confidence=volTier==='LOW'?'HIGH':'VERY HIGH';}\n    else{signal='STRONG BUY';strategy='LONG (Breakout)';confidence='HIGH';}\n  } else {\n    reasons.push('Pump '+wsPctChange.toFixed(1)+'%');\n    if(shortGate)reasons.push('SHORT sc:'+shortScore);\n    if(breakGate)reasons.push('BREAK sc:'+breakoutScore);\n  }\n} else {\n  reasons.push('Change '+wsPctChange.toFixed(1)+'% < threshold');\n}\n\n// ═══ SL/TP ═══\nvar sl=0,tp1=0,tp2=0,tp3=0,riskPct='0';\nvar isStrongSignal=signal==='STRONG BUY'||signal==='STRONG SELL';\nif(_atr>0&&isStrongSignal){\n  if(strategy.indexOf('LONG')!==-1){\n    sl=price-(_atr*2);var slDist=price-sl;var meanDist=Math.max(E21-price,_atr*2);\n    tp1=price+Math.max(meanDist*0.4,slDist*1.5);tp2=price+Math.max(meanDist*0.7,slDist*2.5);tp3=price+Math.max(meanDist*1.0,slDist*3.5);\n    riskPct=((slDist/price)*100).toFixed(2);\n  } else {\n    sl=price+(_atr*2);var slDist=sl-price;var meanDist=Math.max(price-E21,_atr*2);\n    tp1=price-Math.max(meanDist*0.4,slDist*1.5);tp2=price-Math.max(meanDist*0.7,slDist*2.5);tp3=price-Math.max(meanDist*1.0,slDist*3.5);\n    riskPct=((slDist/price)*100).toFixed(2);\n  }\n}\nvar estTP1Pct=strategy.indexOf('LONG')!==-1?(tp1-price)/price*100:(price-tp1)/price*100;\nvar estTP2Pct=strategy.indexOf('LONG')!==-1?(tp2-price)/price*100:(price-tp2)/price*100;\nvar estTP3Pct=strategy.indexOf('LONG')!==-1?(tp3-price)/price*100:(price-tp3)/price*100;\nvar estRiskPct=parseFloat(riskPct)||0;\n\n// DEDUP\nif(isStrongSignal&&lastEntry&&(nowTs-lastEntry.ts<10800000)){\n  if(score-lastEntry.score<12)return[{json:{isHot:false,symbol,rejectReason:'\\ud83d\\udd01 DEDUP sc '+lastEntry.score+'\\u2192'+score}}];\n}\nif(isStrongSignal){state.signalCache[dedupKey]={ts:nowTs,score,signal};}\n\nreturn [{json:{\n  symbol, price:price.toFixed(4),\n  wsChange:wsPctChange.toFixed(2)+'%', wsDirection,\n  signal, strategy, confidence, score,\n  reasons:reasons.join(' | '),\n  dailyTrend, weeklyBias,\n  trend4h, trend1h,\n  rsi1h:_rsi.toFixed(1), rsi4h:rsi4h.toFixed(1),\n  marketStructure:_ms,\n  rsiDivergence:_rsiDiv.bullish?'BULL DIV \\ud83d\\udd25':(_rsiDiv.bearish?'BEAR DIV \\ud83d\\udd25':'None'),\n  macdCross:_macd.cu?'BULL CROSS':(_macd.cd?'BEAR CROSS':'None'),\n  macdHist:_macd.hist.toFixed(6),\n  volRatio:volRatio.toFixed(1)+'x', volBreakRatio:volBreakRatio.toFixed(1)+'x',\n  fundingRate:fundingLabel,\n  openInterest:oiLabel, oiTrend:oiTrend,\n  longShortRatio:lsLabel,\n  takerVolume:takerLabel,\n  ema21:E21.toFixed(4), ema200:E200.toFixed(4),\n  macroTrend:price>E200?'ABOVE MA200':'BELOW MA200',\n  resistance:effectiveRes.toFixed(4), support:sup1h.toFixed(4),\n  distResistance:((effectiveRes-price)/price*100).toFixed(2)+'%',\n  distSupport:((price-sup1h)/price*100).toFixed(2)+'%',\n  sl:sl.toFixed(4), tp1:tp1.toFixed(4), tp2:tp2.toFixed(4), tp3:tp3.toFixed(4),\n  riskPct:riskPct+'%', atr:_atr.toFixed(6), atrPct:atrPct.toFixed(2)+'%',\n  estTP1:'+'+estTP1Pct.toFixed(2)+'%', estTP2:'+'+estTP2Pct.toFixed(2)+'%', estTP3:'+'+estTP3Pct.toFixed(2)+'%',\n  estRisk:'-'+estRiskPct.toFixed(2)+'%',\n  estRR1:'1:'+(estTP1Pct/(estRiskPct||1)).toFixed(1),\n  estRR2:'1:'+(estTP2Pct/(estRiskPct||1)).toFixed(1),\n  estRR3:'1:'+(estTP3Pct/(estRiskPct||1)).toFixed(1),\n  volumeTier:volTier, volumeWarning:volWarning,\n  isHot:isStrongSignal,\n  rejectReason:!isStrongSignal?'Score ' + score + '/100. '+reasons.join(', '):'',\n  version:'v15.4',\n}}];"
+      }
+    },
+    {
+      "id": "n10",
+      "name": "Is Hot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -450,
+        800
+      ],
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.isHot }}",
+              "value2": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "n11",
+      "name": "Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        620
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "aNtvHk0oDffDwsLX",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "@cryptospikehunter",
+        "text": "={{ $json.signal === 'STRONG BUY' ? '🟢' : '🔴' }} *{{ $json.symbol }} — {{ $json.signal }}*\n🎯 Confidence: *{{ $json.confidence }}* (Score: {{ $json.score }}/100)\n\n💰 *Entry:* `{{ $json.price }}`\n📉 *WS Trigger:* {{ $json.wsDirection }} {{ $json.wsChange }}\n📈 *Strategy:* {{ $json.strategy }}\n\n*💵 Estimated Profit:*\n├ 🥇 *TP1:* `{{ $json.tp1 }}` ({{ $json.estTP1 }}) — RR {{ $json.estRR1 }}\n├ 🥈 *TP2:* `{{ $json.tp2 }}` ({{ $json.estTP2 }}) — RR {{ $json.estRR2 }}\n├ 🥉 *TP3:* `{{ $json.tp3 }}` ({{ $json.estTP3 }}) — RR {{ $json.estRR3 }}\n├ 🛡️ *SL:* `{{ $json.sl }}` ({{ $json.estRisk }})\n└ 📐 ATR: {{ $json.atr }} ({{ $json.atrPct }})\n\n*📡 Market Intelligence:*\n├ 🌍 Daily: {{ $json.dailyTrend }} | Weekly: {{ $json.weeklyBias }}\n├ 4H: {{ $json.trend4h }} | 1H: {{ $json.trend1h }}\n├ Structure: {{ $json.marketStructure }}\n├ RSI: {{ $json.rsi1h }} | MACD: {{ $json.macdCross }}\n├ Vol: {{ $json.volRatio }}\n└ {{ $json.macroTrend }}\n\n*⚡ Futures Intelligence:*\n├ Funding: {{ $json.fundingRate }}\n├ Open Interest: {{ $json.openInterest }}\n├ L/S Ratio: {{ $json.longShortRatio }}\n└ Taker: {{ $json.takerVolume }}\n\n*Support & Resistance:*\n├ 🔺 Res: `{{ $json.resistance }}` ({{ $json.distResistance }})\n└ 🔻 Sup: `{{ $json.support }}` ({{ $json.distSupport }})\n\n💡 _{{ $json.reasons }}_\n\n📊 _v15.3 Dynamic Volume Engine | 1500 candles | OI+LS+Taker_\n🔗 [Binance](https://www.binance.com/en/futures/{{ $json.symbol }}) | [TV](https://www.tradingview.com/chart/?symbol=BINANCE:{{ $json.symbol }}.P)\n{{ $json.volumeWarning ? \"\\n⚠️ \" + $json.volumeWarning : \"\" }}\\n⏰ {{ $now.setZone('Asia/Jakarta').format('dd MMM HH:mm') }} WIB",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      }
+    },
+    {
+      "id": "n12",
+      "name": "Ntfy Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -200,
+        950
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ntfy.sh/cryptospike-bot-tetot",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Title",
+              "value": "={{ $json.signal === 'STRONG BUY' ? '🟢' : '🔴' }} {{ $json.symbol }} — {{ $json.signal }} ({{ $json.score }})"
+            },
+            {
+              "name": "Tags",
+              "value": "={{ $json.signal === 'STRONG BUY' ? 'green_circle,chart_with_upwards_trend' : 'red_circle,chart_with_downwards_trend' }}"
+            },
+            {
+              "name": "Priority",
+              "value": "={{ $json.confidence === 'VERY HIGH' ? '5' : '4' }}"
+            },
+            {
+              "name": "Actions",
+              "value": "=view, Binance, https://www.binance.com/en/futures/{{ $json.symbol }}; view, TV, https://www.tradingview.com/chart/?symbol=BINANCE:{{ $json.symbol }}.P"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "string",
+        "body": "={{ $json.signal === \"STRONG BUY\" ? \"🟢\" : \"🔴\" }} {{ $json.symbol }} — {{ $json.signal }}\n🎯 {{ $json.confidence }} (Score: {{ $json.score }}/100)\n\n💰 Entry: {{ $json.price }} | {{ $json.wsDirection }} {{ $json.wsChange }}\n📈 {{ $json.strategy }}\n\n💵 TP1: {{ $json.tp1 }} ({{ $json.estTP1 }}) RR {{ $json.estRR1 }}\n💵 TP2: {{ $json.tp2 }} ({{ $json.estTP2 }}) RR {{ $json.estRR2 }}\n💵 TP3: {{ $json.tp3 }} ({{ $json.estTP3 }}) RR {{ $json.estRR3 }}\n🛡️ SL: {{ $json.sl }} ({{ $json.estRisk }})\n\n📡 Market:\n├ Daily: {{ $json.dailyTrend }} | Weekly: {{ $json.weeklyBias }}\n├ 4H: {{ $json.trend4h }} | 1H: {{ $json.trend1h }}\n├ Structure: {{ $json.marketStructure }}\n├ RSI: {{ $json.rsi1h }} | Vol: {{ $json.volRatio }}\n\n⚡ Futures:\n├ Funding: {{ $json.fundingRate }}\n├ OI: {{ $json.openInterest }}\n├ L/S: {{ $json.longShortRatio }}\n└ Taker: {{ $json.takerVolume }}\n\n💡 {{ $json.reasons }}\n📊 v15.2 Max Data Engine\n⏰ {{ $now.setZone(\"Asia/Jakarta\").format(\"dd MMM HH:mm\") }} WIB",
+        "options": {}
+      }
+    },
+    {
+      "id": "n13",
+      "name": "Log Skip",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        1200
+      ],
+      "disabled": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "aNtvHk0oDffDwsLX",
+          "name": "Telegram account"
+        }
+      },
+      "parameters": {
+        "chatId": "@cryptospikehunter",
+        "text": "=📋 *{{ $json.symbol }}* — SKIP\n_{{ $json.rejectReason }}_",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Klines 1h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Klines 1h": {
+      "main": [
+        [
+          {
+            "node": "Get Klines 4h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Klines 4h": {
+      "main": [
+        [
+          {
+            "node": "Get Klines 1D",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Klines 1D": {
+      "main": [
+        [
+          {
+            "node": "Get Funding Rate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get OI History",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Long Short Ratio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Taker Volume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Open Interest": {
+      "main": [
+        [
+          {
+            "node": "Pro Analisa TA v15.3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Hot?": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Ntfy Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Funding Rate": {
+      "main": [
+        [
+          {
+            "node": "Pro Analisa TA v15.3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get OI History": {
+      "main": [
+        [
+          {
+            "node": "Pro Analisa TA v15.3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Long Short Ratio": {
+      "main": [
+        [
+          {
+            "node": "Pro Analisa TA v15.3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Taker Volume": {
+      "main": [
+        [
+          {
+            "node": "Pro Analisa TA v15.3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pro Analisa TA v15.4": {
+      "main": [
+        [
+          {
+            "node": "Is Hot?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
