@@ -292,6 +292,9 @@
         // Refresh Charts
         drawCharts(closed, winRate, signals);
 
+        // Reconnect price WS with updated symbols
+        if (typeof connectPriceWs === 'function') connectPriceWs();
+
       } catch (e) { console.error(e); }
     }
 
@@ -366,81 +369,89 @@
       });
     }
 
-    // ── Live Price Tracker (Direct Binance API) ──
+    // ── Live Price Tracker (Binance Futures WebSocket) ──
     let lastPrices = {};
+    let priceWs = null;
+    let subscribedSymbols = '';
 
-    async function fetchLivePrices() {
-      try {
-        // Collect unique symbols from signal cards
-        const rows = document.querySelectorAll('.price-now-row[data-symbol]');
-        if (rows.length === 0) return;
+    function updatePriceUI(sym, price) {
+      document.querySelectorAll(`.price-now-row[data-symbol="${sym}"]`).forEach(row => {
+        const valEl = row.querySelector('.price-now-val');
+        const pnlEl = row.querySelector('.price-now-pnl');
+        const prec = price < 1 ? 6 : price < 100 ? 4 : 2;
+        valEl.textContent = price.toFixed(prec);
 
-        const symbols = [...new Set([...rows].map(r => r.dataset.symbol))];
-        if (symbols.length === 0) return;
+        // Flash animation on price change
+        if (lastPrices[sym] !== undefined && lastPrices[sym] !== price) {
+          const dir = price > lastPrices[sym] ? 'up' : 'down';
+          valEl.style.color = dir === 'up' ? 'var(--buy)' : 'var(--sell)';
+          row.classList.remove('price-flash-up', 'price-flash-down');
+          void row.offsetWidth;
+          row.classList.add(dir === 'up' ? 'price-flash-up' : 'price-flash-down');
+        }
+        lastPrices[sym] = price;
 
-        // Fetch prices from Binance API for these specific symbols
-        const prices = {};
+        // P&L from entry
+        const entry = parseFloat(row.dataset.entry);
+        const side = row.dataset.side;
+        if (entry > 0) {
+          let pnl = ((price - entry) / entry) * 100;
+          if (side === 'SHORT') pnl = -pnl;
+          const arrow = pnl >= 0 ? '▲' : '▼';
+          pnlEl.textContent = `${arrow} ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%`;
+          pnlEl.className = 'price-now-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
+        }
+      });
+    }
+
+    function connectPriceWs() {
+      // Collect unique symbols from signal cards
+      const rows = document.querySelectorAll('.price-now-row[data-symbol]');
+      if (rows.length === 0) return;
+
+      const symbols = [...new Set([...rows].map(r => r.dataset.symbol))];
+      if (symbols.length === 0) return;
+
+      // Skip if symbols haven't changed
+      const symKey = symbols.sort().join(',');
+      if (symKey === subscribedSymbols && priceWs && priceWs.readyState === WebSocket.OPEN) return;
+      subscribedSymbols = symKey;
+
+      // Close existing WS if any
+      if (priceWs) { try { priceWs.close(); } catch(_){} priceWs = null; }
+
+      // Build combined stream URL: btcusdt@miniTicker/ethusdt@miniTicker/...
+      const streams = symbols.map(s => s.toLowerCase() + '@miniTicker').join('/');
+      const wsUrl = `wss://fstream.binance.com/stream?streams=${streams}`;
+
+      console.log(`[PriceWS] Connecting for ${symbols.length} symbols...`);
+      priceWs = new WebSocket(wsUrl);
+
+      priceWs.onmessage = (evt) => {
         try {
-          const query = symbols.map(s => `"${s}"`).join(',');
-          const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbols=[${query}]`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data)) {
-              data.forEach(item => { prices[item.symbol] = parseFloat(item.price); });
-            }
+          const msg = JSON.parse(evt.data);
+          if (msg.data && msg.data.s && msg.data.c) {
+            const sym = msg.data.s;           // Symbol: "BTCUSDT"
+            const price = parseFloat(msg.data.c); // Close price
+            if (!isNaN(price)) updatePriceUI(sym, price);
           }
-        } catch (_) {}
+        } catch(_) {}
+      };
 
-        // Fallback: fetch individually for symbols not found in batch
-        const missing = symbols.filter(s => !prices[s]);
-        await Promise.allSettled(missing.map(async sym => {
-          try {
-            const r = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
-            if (r.ok) {
-              const d = await r.json();
-              if (d && d.price) prices[d.symbol] = parseFloat(d.price);
-            }
-          } catch (_) {}
-        }));
+      priceWs.onclose = () => {
+        console.log('[PriceWS] Disconnected. Reconnecting in 5s...');
+        setTimeout(connectPriceWs, 5000);
+      };
 
-        rows.forEach(row => {
-          const sym = row.dataset.symbol;
-          const price = prices[sym];
-          if (!price || isNaN(price)) return;
-
-          const valEl = row.querySelector('.price-now-val');
-          const pnlEl = row.querySelector('.price-now-pnl');
-          const prec = price < 1 ? 6 : price < 100 ? 4 : 2;
-          valEl.textContent = price.toFixed(prec);
-
-          // Flash animation on price change
-          if (lastPrices[sym] !== undefined && lastPrices[sym] !== price) {
-            const dir = price > lastPrices[sym] ? 'up' : 'down';
-            valEl.style.color = dir === 'up' ? 'var(--buy)' : 'var(--sell)';
-            row.classList.remove('price-flash-up', 'price-flash-down');
-            void row.offsetWidth;
-            row.classList.add(dir === 'up' ? 'price-flash-up' : 'price-flash-down');
-          }
-          lastPrices[sym] = price;
-
-          // P&L from entry
-          const entry = parseFloat(row.dataset.entry);
-          const side = row.dataset.side;
-          if (entry > 0) {
-            let pnl = ((price - entry) / entry) * 100;
-            if (side === 'SHORT') pnl = -pnl;
-            const arrow = pnl >= 0 ? '▲' : '▼';
-            pnlEl.textContent = `${arrow} ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%`;
-            pnlEl.className = 'price-now-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
-          }
-        });
-      } catch (e) { console.warn('Price fetch error:', e); }
+      priceWs.onerror = () => {
+        console.warn('[PriceWS] Error. Will reconnect on close.');
+      };
     }
 
     fetchData();
     setInterval(fetchData, 45000);
-    setTimeout(fetchLivePrices, 3000); // First price load after signals render
-    setInterval(fetchLivePrices, 5000);
+    // Connect price WS after signals are rendered (give fetchData time)
+    setTimeout(connectPriceWs, 3000);
   </script>
 </body>
 </html>
