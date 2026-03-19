@@ -331,10 +331,11 @@
     function getFilteredSignals() {
       return allSignals.filter(s => {
         const status = s.status || 'ACTIVE';
+        const isActiveOrPartial = ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(status);
         const side = s.signal === 'STRONG BUY' ? 'long' : 'short';
 
         // Status filter
-        if (filterStatus === 'active' && status !== 'ACTIVE') return false;
+        if (filterStatus === 'active' && !isActiveOrPartial) return false;
         if (filterStatus === 'tp' && !status.includes('TP')) return false;
         if (filterStatus === 'sl' && status !== 'SL_HIT') return false;
 
@@ -386,10 +387,19 @@
       const date = new Date(s.sent_at || s.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
 
       const status = s.status || 'ACTIVE';
-      const isTP1 = status.includes('TP1');
-      const isTP2 = status.includes('TP2');
+      const isActiveOrPartial = ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(status);
+      const isTP1 = status.includes('TP1') || status.includes('TP2') || status.includes('TP3');
+      const isTP2 = status.includes('TP2') || status.includes('TP3');
       const isTP3 = status.includes('TP3');
       const isSL = status === 'SL_HIT';
+
+      let statusDisplay = '⌛ WAITING';
+      if (status === 'TP1_HIT') statusDisplay = '🔄 TP1 (Running)';
+      else if (status === 'TP2_HIT') statusDisplay = '🔄 TP2 (Running)';
+      else if (status === 'TP3_HIT') statusDisplay = '🏆 TP3 (Closed)';
+      else if (status === 'SL_HIT') statusDisplay = '❌ SL HIT';
+      else if (status === 'TSL_HIT') statusDisplay = '🛡️ TSL HIT';
+      else if (status === 'EXPIRED') statusDisplay = '⌛ EXPIRED';
 
       return `
         <div class="signal-card">
@@ -433,10 +443,10 @@
           <div class="card-foot">
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="side-tag ${side === 'LONG' ? 'side-buy' : 'side-sell'}">${side}</span>
-              <span class="status-tag ${status !== 'ACTIVE' ? 'status-hit' : ''}">${status === 'ACTIVE' ? '⌛ WAITING' : '🎯 ' + status}</span>
+              <span class="status-tag ${status !== 'ACTIVE' ? 'status-hit' : ''}">${statusDisplay}</span>
             </div>
             <div class="res-val ${pnl >= 0 ? 'pos' : 'neg'}">
-              ${status === 'ACTIVE' ? '—' : (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%'}
+              ${isActiveOrPartial ? '—' : (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%'}
             </div>
           </div>
         </div>
@@ -455,10 +465,11 @@
         allSignals = signals;
 
         // Statistics
-        const closed = signals.filter(s => s.status !== 'ACTIVE');
-        const activeCount = signals.filter(s => s.status === 'ACTIVE').length;
-        const wins = closed.filter(s => s.status.includes('TP'));
-        const losses = closed.filter(s => s.status === 'SL_HIT');
+        const activeSignals = signals.filter(s => ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE'));
+        const closed = signals.filter(s => ['TP3_HIT', 'SL_HIT', 'TSL_HIT', 'EXPIRED'].includes(s.status));
+        const activeCount = activeSignals.length;
+        const wins = closed.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
+        const losses = closed.filter(s => s.status === 'SL_HIT' || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) <= 0));
         
         const winRate = closed.length > 0 ? ((wins.length / closed.length) * 100).toFixed(0) : 0;
         const totalPnl = closed.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
@@ -540,7 +551,7 @@
     }
 
     function updateRunningStats() {
-      const active = allSignals.filter(s => (s.status || 'ACTIVE') === 'ACTIVE');
+      const active = allSignals.filter(s => ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE'));
       if (active.length === 0) {
         document.getElementById('runProfit').textContent = '0';
         document.getElementById('runLoss').textContent = '0';
