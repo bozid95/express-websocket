@@ -6,6 +6,7 @@
   <title>CryptoSpike | Realtime Crypto Signals</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
   <style>
     :root {
       --bg: #0b0e11;
@@ -78,6 +79,29 @@
     
     .hit-tp { background: rgba(14, 203, 129, 0.15); border-color: rgba(14, 203, 129, 0.3); color: var(--buy); }
     .hit-sl { background: rgba(246, 70, 93, 0.15); border-color: rgba(246, 70, 93, 0.3); color: var(--sell); }
+
+    /* Markdown AI Output Styles */
+    .ai-md { font-size:12px; line-height:1.8; color:var(--text); }
+    .ai-md h1,.ai-md h2,.ai-md h3 { color:var(--accent); font-size:13px; margin:12px 0 6px; font-weight:700; }
+    .ai-md p { margin: 4px 0 8px; }
+    .ai-md ul,.ai-md ol { padding-left:18px; margin: 4px 0 8px; }
+    .ai-md li { margin-bottom:3px; }
+    .ai-md strong { color:var(--text); }
+    .ai-md table { width:100%; border-collapse:collapse; font-size:11px; margin:10px 0; }
+    .ai-md th { background:rgba(99,102,241,0.15); color:var(--accent); padding:6px 8px; text-align:left; font-weight:700; border:1px solid rgba(99,102,241,0.2); }
+    .ai-md td { padding:5px 8px; border:1px solid var(--border); color:var(--text); }
+    .ai-md tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+    .ai-md code { background:rgba(255,255,255,0.06); padding:1px 5px; border-radius:4px; font-size:10px; }
+    .ai-md blockquote { border-left:3px solid var(--accent); padding-left:10px; color:var(--text-dim); font-style:italic; margin:6px 0; }
+
+    /* Stats table in Insight tab */
+    .insight-stats-table { width:100%; border-collapse:collapse; font-size:11px; margin-top:8px; }
+    .insight-stats-table th { background:rgba(99,102,241,0.1); color:var(--accent); padding:6px 8px; text-align:left; font-weight:700; border:1px solid rgba(99,102,241,0.15); }
+    .insight-stats-table td { padding:5px 8px; border:1px solid var(--border); }
+    .insight-stats-table tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+    .insight-stats-table .pos { color:var(--buy); font-weight:600; }
+    .insight-stats-table .neg { color:var(--sell); font-weight:600; }
+    .insight-stats-table .dim { color:var(--text-dim); }
 
     .res-val { font-size: 15px; font-weight: 700; }
     .pos { color: var(--buy); }
@@ -365,8 +389,8 @@
               </div>
               <span id="aiTimestamp" style="font-size:9px; color:var(--text-dim);"></span>
             </div>
-            <!-- The actual AI text output -->
-            <div id="proRecommendation" style="font-size:13px; color:var(--text); line-height:1.8; font-weight:400; white-space:pre-wrap;"></div>
+            <!-- AI Markdown output -->
+            <div id="proRecommendation" class="ai-md"></div>
           </div>
 
           <!-- Error State -->
@@ -375,6 +399,12 @@
             <div id="aiErrorMsg" style="font-size:11px; color:var(--sell); line-height:1.5;"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Stats Data Tables (rendered from allSignals) -->
+      <div id="insightStatsTables" style="display:none; margin-bottom:12px;">
+        <div style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">📊 Data Historis</div>
+        <div id="insightTablesContent"></div>
       </div>
 
       <!-- Compact Score Consistency indicator -->
@@ -694,7 +724,89 @@
       document.getElementById('intelGuidance').textContent = guidance;
     }
 
+
+    function renderInsightTables() {
+      const closed = allSignals.filter(s => s.status && !['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
+      const running = allSignals.filter(s => !s.status || ['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
+      if (closed.length < 1 && running.length < 1) return;
+
+      const wins = closed.filter(s => s.status?.includes('TP') || s.status === 'TSL_HIT');
+      const losses = closed.filter(s => s.status === 'SL_HIT');
+      const wr = closed.length > 0 ? ((wins.length / closed.length) * 100).toFixed(1) : '0';
+      const avgW = wins.length ? (wins.map(s=>parseFloat(s.profit_pct)||0).reduce((a,b)=>a+b,0)/wins.length).toFixed(2) : '0';
+      const avgL = losses.length ? (losses.map(s=>parseFloat(s.profit_pct)||0).reduce((a,b)=>a+b,0)/losses.length).toFixed(2) : '0';
+      const avgLAbs = Math.abs(parseFloat(avgL));
+      const rr = avgLAbs > 0 ? (parseFloat(avgW) / avgLAbs).toFixed(2) : 'N/A';
+
+      // Score breakdown
+      const scoreRows = [['90+',90,999],['80-89',80,89],['70-79',70,79],['60-69',60,69],['<60',0,59]].map(([lbl,mn,mx])=>{
+        const g = closed.filter(s=>{ const sc=parseInt(s.score)||0; return sc>=mn && sc<=mx; });
+        if (!g.length) return '';
+        const gw = g.filter(s=>s.status?.includes('TP')||s.status==='TSL_HIT').length;
+        const gwp = ((gw/g.length)*100).toFixed(0);
+        const cls = parseInt(gwp)>=60?'pos':parseInt(gwp)<40?'neg':'';
+        return `<tr><td>${lbl}</td><td>${g.length}</td><td class="${cls}">${gwp}%</td></tr>`;
+      }).join('');
+
+      // Confidence breakdown
+      const confMap = {};
+      closed.forEach(s=>{ const c=(s.confidence||'N/A').toUpperCase(); if(!confMap[c]) confMap[c]={w:0,t:0}; confMap[c].t++; if(s.status?.includes('TP')||s.status==='TSL_HIT') confMap[c].w++; });
+      const confRows = Object.entries(confMap).sort((a,b)=>b[1].t-a[1].t).map(([c,v])=>{
+        const wp=((v.w/v.t)*100).toFixed(0); const cls=parseInt(wp)>=60?'pos':parseInt(wp)<40?'neg':'';
+        return `<tr><td>${c}</td><td>${v.t}</td><td class="${cls}">${wp}%</td></tr>`;
+      }).join('');
+
+      // Running signals table
+      const runningRows = running.map(s=>{
+        const side = (s.signal||'').includes('BUY') ? '<span class="pos">LONG</span>' : '<span class="neg">SHORT</span>';
+        const st = s.status||'ACTIVE';
+        const stLabel = st==='ACTIVE'?'⌛':st==='TP1_HIT'?'🔄 TP1':st==='TP2_HIT'?'🔄 TP2':'?';
+        const dur = s.duration || (s.sent_at ? Math.round((Date.now()-new Date(s.sent_at).getTime())/60000)+'m' : '—');
+        return `<tr><td>${s.symbol}</td><td>${side}</td><td>${s.score}</td><td>${stLabel}</td><td class="dim">${dur}</td></tr>`;
+      }).join('');
+
+      document.getElementById('insightTablesContent').innerHTML = `
+        <div style="margin-bottom:12px;">
+          <div style="font-size:9px;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Ringkasan Performa Historis</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:${parseFloat(wr)>=60?'var(--buy)':'var(--sell)'};">${wr}%</div>
+              <div style="font-size:9px;color:var(--text-dim);">Win Rate</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:var(--accent);">${rr}:1</div>
+              <div style="font-size:9px;color:var(--text-dim);">R:R Ratio</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:var(--text);">${closed.length}</div>
+              <div style="font-size:9px;color:var(--text-dim);">Closed</div>
+            </div>
+          </div>
+          <table class="insight-stats-table">
+            <thead><tr><th>Skor</th><th>Jumlah</th><th>Win Rate</th></tr></thead>
+            <tbody>${scoreRows}</tbody>
+          </table>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:9px;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Per Confidence Level</div>
+          <table class="insight-stats-table">
+            <thead><tr><th>Confidence</th><th>Jumlah</th><th>Win Rate</th></tr></thead>
+            <tbody>${confRows}</tbody>
+          </table>
+        </div>
+        ${runningRows ? `<div>
+          <div style="font-size:9px;color:var(--buy);font-weight:700;text-transform:uppercase;margin-bottom:6px;">🔄 Sinyal Sedang Running (${running.length})</div>
+          <table class="insight-stats-table">
+            <thead><tr><th>Symbol</th><th>Side</th><th>Skor</th><th>Status</th><th>Durasi</th></tr></thead>
+            <tbody>${runningRows}</tbody>
+          </table>
+        </div>` : ''}
+      `;
+      document.getElementById('insightStatsTables').style.display = 'block';
+    }
+
     async function triggerDeepAnalysis() {
+
       const btn = document.getElementById('btnDeepScan');
 
       const setView = (v) => {
@@ -769,33 +881,147 @@
         const avgWin = winProfits.length ? (winProfits.reduce((a,b) => a+b, 0) / winProfits.length).toFixed(2) : '0';
         const avgLoss = lossProfits.length ? (lossProfits.reduce((a,b) => a+b, 0) / lossProfits.length).toFixed(2) : '0';
 
+        // === Risk-Reward Ratio Aktual ===
+        const avgWinAbs = winProfits.length ? winProfits.reduce((a,b)=>a+b,0)/winProfits.length : 0;
+        const avgLossAbs = lossProfits.length ? Math.abs(lossProfits.reduce((a,b)=>a+b,0)/lossProfits.length) : 0;
+        const rrRatio = avgLossAbs > 0 ? (avgWinAbs / avgLossAbs).toFixed(2) : 'N/A';
+        const expectancy = ((wins.length/Math.max(closed.length,1)) * avgWinAbs - (losses.length/Math.max(closed.length,1)) * avgLossAbs).toFixed(2);
+
+        // === Durasi rata-rata per outcome ===
+        const parseDur = (d) => {
+          if (!d) return null;
+          const h = (d.match(/(\d+)h/) || [0,0])[1];
+          const m = (d.match(/(\d+)m/) || [0,0])[1];
+          return parseInt(h)*60 + parseInt(m);
+        };
+        const durWin = wins.map(s=>parseDur(s.duration)).filter(v=>v!==null);
+        const durLoss = losses.map(s=>parseDur(s.duration)).filter(v=>v!==null);
+        const avgDurWin = durWin.length ? Math.round(durWin.reduce((a,b)=>a+b,0)/durWin.length) : 0;
+        const avgDurLoss = durLoss.length ? Math.round(durLoss.reduce((a,b)=>a+b,0)/durLoss.length) : 0;
+        const fmtMin = m => m>=60 ? `${Math.floor(m/60)}j ${m%60}m` : `${m}m`;
+
+        // === TP Progression: setelah TP1, berapa yg lanjut ke TP2/TP3? ===
+        const tp1Total = closed.filter(s=>['TP1_HIT','TP2_HIT','TP3_HIT'].some(x=>s.status===x)).length;
+        const tp2FromTp1 = closed.filter(s=>['TP2_HIT','TP3_HIT'].some(x=>s.status===x)).length;
+        const tp3FromTp2 = closed.filter(s=>s.status==='TP3_HIT').length;
+        const tp1ToTp2Rate = tp1Total>0 ? ((tp2FromTp1/tp1Total)*100).toFixed(1) : '0';
+        const tp2ToTp3Rate = tp2FromTp1>0 ? ((tp3FromTp2/tp2FromTp1)*100).toFixed(1) : '0';
+
+        // === Breakdown per Confidence level ===
+        const confMap = {};
+        closed.forEach(s => {
+          const c = (s.confidence || 'N/A').toUpperCase();
+          if (!confMap[c]) confMap[c] = {w:0,t:0,profits:[]};
+          confMap[c].t++;
+          const isW = s.status?.includes('TP') || s.status==='TSL_HIT';
+          if (isW) { confMap[c].w++; confMap[c].profits.push(parseFloat(s.profit_pct)||0); }
+        });
+        const confStats = Object.entries(confMap).sort((a,b)=>b[1].t-a[1].t).map(([c,v])=>{
+          const wr = ((v.w/v.t)*100).toFixed(1);
+          const avgP = v.profits.length ? (v.profits.reduce((a,b)=>a+b,0)/v.profits.length).toFixed(2) : '0';
+          return `${c}: ${wr}% WR (${v.t} sinyal, avg profit +${avgP}%)`;
+        });
+
+        // === Breakdown per Strategi ===
+        const stratMap = {};
+        closed.forEach(s => {
+          const st = (s.strategy || 'N/A').split('(')[0].trim();
+          if (!stratMap[st]) stratMap[st] = {w:0,t:0};
+          stratMap[st].t++;
+          if (s.status?.includes('TP') || s.status==='TSL_HIT') stratMap[st].w++;
+        });
+        const stratStats = Object.entries(stratMap).sort((a,b)=>b[1].t-a[1].t).map(([st,v])=>{
+          return `${st}: ${((v.w/v.t)*100).toFixed(1)}% WR (${v.t} sinyal)`;
+        });
+
+        // === Analisis Indikator dari field "reasons" (frekuensi kata kunci di winner vs loser) ===
+        const keywords = ['RSI','Vol','MACD','EMA','UPTREND','DOWNTREND','BULL','BEAR','marubozu','DIV','momentum'];
+        const kwWin = {}, kwLoss = {};
+        wins.forEach(s => { keywords.forEach(k => { if((s.reasons||'').includes(k)) kwWin[k]=(kwWin[k]||0)+1; }); });
+        losses.forEach(s => { keywords.forEach(k => { if((s.reasons||'').includes(k)) kwLoss[k]=(kwLoss[k]||0)+1; }); });
+        const kwStats = keywords
+          .filter(k => (kwWin[k]||0)+(kwLoss[k]||0) > 0)
+          .map(k => `${k}: muncul di ${kwWin[k]||0} WIN / ${kwLoss[k]||0} LOSS`)
+          .join('\n');
+
+        // === Top 3 sinyal terbaik & terburuk ===
+        const top3Win = [...wins].sort((a,b)=>(parseFloat(b.profit_pct)||0)-(parseFloat(a.profit_pct)||0)).slice(0,3)
+          .map(s=>`  ${s.symbol} ${s.signal} skor:${s.score} → +${s.profit_pct}% (${s.duration||'?'})`).join('\n');
+        const top3Loss = [...losses].sort((a,b)=>(parseFloat(a.profit_pct)||0)-(parseFloat(b.profit_pct)||0)).slice(0,3)
+          .map(s=>`  ${s.symbol} ${s.signal} skor:${s.score} → ${s.profit_pct}% (${s.duration||'?'})`).join('\n');
+
+        // === Win rate 7 hari terakhir vs sebelumnya ===
+        const now7d = new Date(Date.now() - 7*24*60*60*1000);
+        const recent = closed.filter(s => new Date(s.sent_at||s.created_at) >= now7d);
+        const older  = closed.filter(s => new Date(s.sent_at||s.created_at) < now7d);
+        const recentWR = recent.length ? ((recent.filter(s=>s.status?.includes('TP')||s.status==='TSL_HIT').length/recent.length)*100).toFixed(1) : 'N/A';
+        const olderWR  = older.length  ? ((older.filter(s=>s.status?.includes('TP')||s.status==='TSL_HIT').length/older.length)*100).toFixed(1)  : 'N/A';
+
         // Build structured payload for AI
-        const statsPayload = `=== DATA STATISTIK SINYAL TRADING ===
+        const statsPayload = `=== LAPORAN DATA HISTORIS SINYAL TRADING ===
+Waktu analisa: ${new Date().toLocaleString('id-ID')}
+Total sinyal dalam database: ${allSignals.length}
 
-RINGKASAN DATABASE:
-- Total sinyal: ${allSignals.length}
-- Sinyal aktif: ${active.length}
-- Sinyal selesai: ${closed.length}
+━━━ A. RINGKASAN PERFORMA ━━━
+- Sinyal selesai: ${closed.length} | Aktif: ${active.length}
 - Win rate keseluruhan: ${overallWR}% (${wins.length} profit / ${losses.length} loss / ${tslHit.length} TSL)
-
-BREAKDOWN HASIL:
-- TP1: ${tp1} | TP2: ${tp2} | TP3: ${tp3} | TSL: ${tslHit.length} | SL: ${losses.length}
+- Win rate 7 hari terakhir: ${recentWR}% (${recent.length} sinyal)
+- Win rate sebelum 7 hari: ${olderWR}% (${older.length} sinyal)
 - Avg profit saat menang: +${avgWin}%
 - Avg loss saat kalah: ${avgLoss}%
+- Risk/Reward Ratio aktual: ${rrRatio} : 1
+- Expectancy per sinyal: ${expectancy}%
 
-WIN RATE PER RENTANG SKOR:
+━━━ B. BREAKDOWN HASIL TP ━━━
+- TP1: ${tp1} | TP2: ${tp2} | TP3: ${tp3} | TSL: ${tslHit.length} | SL: ${losses.length}
+- TP1 → TP2 conversion rate: ${tp1ToTp2Rate}% (dari ${tp1Total} sinyal yg hit TP1)
+- TP2 → TP3 conversion rate: ${tp2ToTp3Rate}% (dari ${tp2FromTp1} sinyal yg hit TP2)
+
+━━━ C. ANALISIS DURASI ━━━
+- Rata-rata durasi sinyal profit: ${fmtMin(avgDurWin)}
+- Rata-rata durasi sinyal loss: ${fmtMin(avgDurLoss)}
+
+━━━ D. WIN RATE PER SKOR ━━━
 ${scoreStats.join('\n')}
 
-WIN RATE PER SISI:
-- LONG: ${longWR}% WR (${longs.length} sinyal)
-- SHORT: ${shortWR}% WR (${shorts.length} sinyal)
+━━━ E. WIN RATE PER SISI ━━━
+- LONG (STRONG BUY): ${longWR}% WR (${longs.length} sinyal)
+- SHORT (STRONG SELL): ${shortWR}% WR (${shorts.length} sinyal)
 
-WIN RATE PER GRADE:
+━━━ F. WIN RATE PER CONFIDENCE LEVEL ━━━
+${confStats.join('\n')}
+
+━━━ G. WIN RATE PER STRATEGI ━━━
+${stratStats.join('\n')}
+
+━━━ H. WIN RATE PER GRADE ━━━
 ${gradeStats.join('\n')}
 
-SENTIMEN AKTIF SAAT INI:
+━━━ I. ANALISIS INDIKATOR (REASONS FIELD) ━━━
+Frekuensi kemunculan indikator pada sinyal WIN vs LOSS:
+${kwStats}
+
+━━━ J. TOP 3 SINYAL TERBAIK ━━━
+${top3Win || '  (data belum cukup)'}
+
+━━━ K. TOP 3 SINYAL TERBURUK ━━━
+${top3Loss || '  (data belum cukup)'}
+
+━━━ L. SENTIMEN AKTIF SAAT INI ━━━
 - Long bias: ${document.getElementById('sentLongText').textContent}
-- Short bias: ${document.getElementById('sentShortText').textContent}`;
+- Short bias: ${document.getElementById('sentShortText').textContent}
+
+━━━ M. SINYAL YANG SEDANG BERJALAN (${active.length} sinyal) ━━━
+${active.length > 0 ? active.map(s => {
+  const side = (s.signal||'').includes('BUY') ? 'LONG' : 'SHORT';
+  const dur = s.duration || (s.sent_at ? Math.round((Date.now()-new Date(s.sent_at).getTime())/60000)+'m' : '?');
+  const cp = parseFloat(s.current_price||0);
+  const entry = parseFloat(s.entry_price||0);
+  const pnlLive = entry > 0 && cp > 0 ? ((side==='LONG' ? (cp-entry)/entry : (entry-cp)/entry)*100).toFixed(2)+'%' : 'N/A';
+  return `  ${s.symbol} ${side} | Skor:${s.score} | Status:${s.status||'ACTIVE'} | Durasi:${dur} | P&L live:${pnlLive} | Confidence:${s.confidence||'?'}`;
+}).join('\n') : '  (tidak ada sinyal running)'}
+
+CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimbangkan ini sebagai EKSPOSUR saat ini dalam analisa risiko.`;
 
         const response = await fetch('/api/ai-insight', {
           method: 'POST',
@@ -811,7 +1037,9 @@ SENTIMEN AKTIF SAAT INI:
         const data = await response.json();
         const aiResponse = data.choices[0].message.content;
 
-        document.getElementById('proRecommendation').textContent = aiResponse;
+        // Render AI response as Markdown
+        document.getElementById('proRecommendation').innerHTML =
+          typeof marked !== 'undefined' ? marked.parse(aiResponse) : aiResponse.replace(/\n/g, '<br>');
         document.getElementById('aiTimestamp').textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         setView('aiResult');
 
@@ -1464,6 +1692,11 @@ SENTIMEN AKTIF SAAT INI:
 
     function drawCharts(closed, wr, all) {}
 
+    // Render stats tables in Insight tab whenever data is loaded
+    function afterDataLoad() {
+      renderInsightTables();
+    }
+
     // ── Live Price Tracker (Binance Futures WebSocket) ──
     let lastPrices = {};
     let priceWs = null;
@@ -1601,6 +1834,8 @@ SENTIMEN AKTIF SAAT INI:
       
       // Update Active Insights Panel (Decision Hub)
       updateActiveInsights();
+      // Render stats tables in Insight tab
+      afterDataLoad();
     }
 
     function connectPriceWs() {

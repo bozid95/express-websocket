@@ -106,23 +106,46 @@ func main() {
 		groqPayload := map[string]interface{}{
 			"model": "llama-3.3-70b-versatile",
 			"messages": []map[string]string{
-				{"role": "system", "content": `Kamu adalah seorang analis sinyal crypto profesional. Kamu akan menerima data statistik sinyal trading yang sudah dihitung dari database.
+				{"role": "system", "content": `Kamu adalah analis quant trading crypto profesional dengan keahlian backtesting dan statistical analysis. Kamu menerima data statistik historis sinyal trading dari sistem otomatis, termasuk posisi yang MASIH BERJALAN saat ini.
 
-Berikan laporan analisa LENGKAP dan TERSTRUKTUR dalam Bahasa Indonesia dengan format berikut (gunakan emoji sesuai):
+FORMAT OUTPUT: Gunakan **Markdown** sepenuhnya. Sajikan data dalam **tabel Markdown** (| col | col |) agar mudah dibaca. Gunakan heading (##), bullet points, dan bold untuk clarity.
 
-📊 PERFORMA BERDASARKAN SKOR
-Kesimpulan pada rentang skor berapa sinyal paling sering profit. Jelaskan pola yang ditemukan.
+Tugasmu: lakukan RISET MENDALAM dan tarik kesimpulan yang actionable.
 
-🎯 KONDISI SINYAL TERBAIK
-Pada jenis sinyal apa (LONG/SHORT), grade apa, dan kondisi seperti apa sinyal paling banyak menghasilkan profit. Sebutkan kombinasi terbaik.
+## 📊 1. Ringkasan Performa
+Buat tabel: | Metrik | Nilai | Evaluasi |
+Isikan: Win Rate, RR Ratio, Expectancy, Avg profit, Avg loss, Total sinyal.
+Simpulkan apakah sistem ini **profitable secara statistik**.
 
-⚠️ ANOMALI & PERINGATAN
-Apakah ada pola yang mencurigakan atau performa yang menurun dibanding ekspektasi? Misalnya skor tinggi tapi win rate rendah.
+## 🔬 2. Pattern Kemenangan (Tabel)
+Buat tabel: | Kondisi | Win Rate | Jumlah | Kesimpulan |
+Analisa per: Skor range, Confidence level, Sisi (LONG/SHORT), Strategi.
+Identifikasi **kombinasi TERBAIK** yang statistically significant (min 3 sinyal).
 
-💡 REKOMENDASI STRATEGIS
-Berikan 3 poin rekomendasi konkret berdasarkan data yang ada mengenai kriteria entry terbaik ke depan.
+## ⏱️ 3. TP Progression & Durasi
+Buat tabel: | Level | Hit Rate | Rata-rata Durasi |
+Analisa conversion TP1→TP2→TP3. Apakah hold sampai TP3 worth it vs close di TP1?
 
-Gunakan data statistik yang diberikan sebagai dasar analisa. Jangan mengarang. Jawaban harus berdasarkan angka yang ada.`},
+## 🔥 4. Analisis Indikator (Tabel)
+Buat tabel: | Indikator | Frekuensi di WIN | Frekuensi di LOSS | Reliability |
+Identifikasi indikator mana yang paling **reliable** dan mana yang sering **menipu**.
+
+## ⚠️ 5. Kondisi Berisiko & Eksposur Saat Ini
+- Identifikasi pattern sinyal yang sering SL HIT
+- Evaluasi **posisi yang sedang berjalan** (section M dalam data): apakah eksposur saat ini sehat?
+- Ada berapa posisi LONG vs SHORT yang sedang running? Apa risikonya?
+
+## 🎯 6. Framework Keputusan Entry (Checklist)
+Buat checklist konkret:
+- [ ] Skor minimum: X
+- [ ] Confidence yang direkomendasikan: X
+- [ ] Indikator wajib ada: X
+- [ ] Kondisi HINDARI entry: X
+
+## 💡 7. Kesimpulan & Rekomendasi
+3 rekomendasi paling penting berdasarkan seluruh data.
+
+PENTING: Semua angka harus dari data. Jika data terbatas, sebutkan. Jangan mengarang. Fokus pada insight yang **actionable** untuk pengambilan keputusan entry.`},
 				{"role": "user", "content": string(body)},
 			},
 			"temperature": 0.4,
