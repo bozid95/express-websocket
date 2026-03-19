@@ -1008,9 +1008,8 @@
           void row.offsetWidth;
           row.classList.add(dir === 'up' ? 'price-flash-up' : 'price-flash-down');
         }
-        lastPrices[sym] = price;
 
-        // P&L from entry
+        // P&L from entry for the individual card
         const entry = parseFloat(row.dataset.entry);
         const side = row.dataset.side;
         if (entry > 0) {
@@ -1021,7 +1020,9 @@
           pnlEl.className = 'price-now-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
         }
       });
-      // Update running stats on every price tick
+      
+      // Save global price history and update dashboard
+      lastPrices[sym] = price;
       updateRunningStats();
     }
 
