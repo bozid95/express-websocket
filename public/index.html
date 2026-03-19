@@ -1029,20 +1029,26 @@ SENTIMEN AKTIF SAAT INI:
             <div class="target-item ${isSL ? 'hit-sl' : ''}">
               <span class="target-label">SL ${isSL ? '❌' : '🛡️'}</span>
               <span class="target-val">${parseFloat(s.sl || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--sell);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.sl)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
             </div>
             <div class="target-item ${isTP1 || isTP2 || isTP3 ? 'hit-tp' : ''}">
               <span class="target-label">TP1 ${isTP1 || isTP2 || isTP3 ? '✅' : '⏳'}</span>
               <span class="target-val">${parseFloat(s.tp1 || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--buy);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.tp1)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
             </div>
             <div class="target-item ${isTP2 || isTP3 ? 'hit-tp' : ''}">
               <span class="target-label">TP2 ${isTP2 || isTP3 ? '✅' : '⏳'}</span>
               <span class="target-val">${parseFloat(s.tp2 || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--buy);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.tp2)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
             </div>
             <div class="target-item ${isTP3 ? 'hit-tp' : ''}">
               <span class="target-label">TP3 ${isTP3 ? '🏆' : '⏳'}</span>
               <span class="target-val">${parseFloat(s.tp3 || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--buy);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.tp3)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
             </div>
           </div>
+
+
           <div class="card-foot">
             <div style="display:flex; gap:8px; align-items:center;">
               <span class="side-tag ${side === 'LONG' ? 'side-buy' : 'side-sell'}">${side}</span>
