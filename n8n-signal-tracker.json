@@ -32,17 +32,17 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL + '/rest/v1/signals?status=in.(ACTIVE,TP1_HIT,TP2_HIT)&select=*' }}",
+        "url": "https://hgcsdpqceuhmpeksdhpj.supabase.co/rest/v1/signals?status=in.(ACTIVE,TP1_HIT,TP2_HIT)&select=*",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_KEY }}"
+              "value": "=GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_KEY }}"
+              "value": "=Bearer GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA"
             }
           ]
         },
@@ -73,7 +73,7 @@
         400
       ],
       "parameters": {
-        "jsCode": "const signalsRaw = $('Get Active Signals').first().json;\nconst signals = Array.isArray(signalsRaw) ? signalsRaw : [signalsRaw];\nconst pricesRaw = $('Get Binance Prices').first().json;\nconst prices = Array.isArray(pricesRaw) ? pricesRaw : [pricesRaw];\nconst priceMap = {};\nprices.forEach(p => { if(p.symbol) priceMap[p.symbol] = parseFloat(p.price); });\n\nconst results = [];\nconst now = new Date().toISOString();\n\nfor (const s of signals) {\n  if (!s.symbol || !['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE')) continue;\n  const cp = priceMap[s.symbol];\n  if (!cp) continue;\n\n  const entry = parseFloat(s.entry_price);\n  const tp1 = parseFloat(s.tp1);\n  const tp2 = parseFloat(s.tp2);\n  const tp3 = parseFloat(s.tp3);\n  const sl = parseFloat(s.sl);\n  const isBuy = s.signal === 'STRONG BUY';\n\n  const currentStatus = s.status || 'ACTIVE';\n  let newStatus = currentStatus;\n  let profitPct = isBuy ? ((cp - entry) / entry * 100) : ((entry - cp) / entry * 100);\n\n  undefined\n\n  // Expire after 24h\n  if (newStatus === 'ACTIVE' && s.sent_at) {\n    const ageH = (Date.now() - new Date(s.sent_at).getTime()) / 3600000;\n    if (ageH > 24) newStatus = 'EXPIRED';\n  }\n\n  if (newStatus !== currentStatus) {\n    const mins = s.sent_at ? Math.round((Date.now() - new Date(s.sent_at).getTime()) / 60000) : 0;\n    const dur = mins >= 60 ? Math.floor(mins/60)+'h '+mins%60+'m' : mins+'m';\n    results.push({ json: {\n      id: s.id, symbol: s.symbol, signal: s.signal, signal_type: s.signal_type,\n      entry_price: s.entry_price, tp1: s.tp1, tp2: s.tp2, tp3: s.tp3, sl: s.sl,\n      score: s.score, status: newStatus, profit_pct: Math.round(profitPct*100)/100,\n      hit_time: now, duration: dur, current_price: cp,\n      hitTarget: newStatus.replace('_HIT',''), changed: true\n    }});\n  }\n}\nif (results.length === 0) return [{ json: { changed: false } }];\nreturn results;"
+        "jsCode": "const signalsRaw = $('Get Active Signals').first().json;\nconst signals = Array.isArray(signalsRaw) ? signalsRaw : [signalsRaw];\nconst pricesRaw = $('Get Binance Prices').first().json;\nconst prices = Array.isArray(pricesRaw) ? pricesRaw : [pricesRaw];\nconst priceMap = {};\nprices.forEach(p => { if(p.symbol) priceMap[p.symbol] = parseFloat(p.price); });\n\nconst results = [];\nconst now = new Date().toISOString();\n\nfor (const s of signals) {\n  if (!s.symbol || !['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE')) continue;\n  const cp = priceMap[s.symbol];\n  if (!cp) continue;\n\n  const entry = parseFloat(s.entry_price);\n  const tp1 = parseFloat(s.tp1);\n  const tp2 = parseFloat(s.tp2);\n  const tp3 = parseFloat(s.tp3);\n  const sl = parseFloat(s.sl);\n  const isBuy = s.signal === 'STRONG BUY';\n\n  const currentStatus = s.status || 'ACTIVE';\n  let newStatus = currentStatus;\n  let profitPct = isBuy ? ((cp - entry) / entry * 100) : ((entry - cp) / entry * 100);\n\n  undefined\n\n\n\n  if (newStatus !== currentStatus) {\n    const mins = s.sent_at ? Math.round((Date.now() - new Date(s.sent_at).getTime()) / 60000) : 0;\n    const dur = mins >= 60 ? Math.floor(mins/60)+'h '+mins%60+'m' : mins+'m';\n    results.push({ json: {\n      id: s.id, symbol: s.symbol, signal: s.signal, signal_type: s.signal_type,\n      entry_price: s.entry_price, tp1: s.tp1, tp2: s.tp2, tp3: s.tp3, sl: s.sl,\n      score: s.score, status: newStatus, profit_pct: Math.round(profitPct*100)/100,\n      hit_time: now, duration: dur, current_price: cp,\n      hitTarget: newStatus.replace('_HIT',''), changed: true\n    }});\n  }\n}\nif (results.length === 0) return [{ json: { changed: false } }];\nreturn results;"
       }
     },
     {
@@ -107,17 +107,17 @@
       ],
       "parameters": {
         "method": "PATCH",
-        "url": "={{ $env.SUPABASE_URL + '/rest/v1/signals?id=eq.' + $json.id }}",
+        "url": "={{ 'https://hgcsdpqceuhmpeksdhpj.supabase.co' + '/rest/v1/signals?id=eq.' + $json.id }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_KEY }}"
+              "value": "=GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_KEY }}"
+              "value": "=Bearer GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA"
             },
             {
               "name": "Content-Type",
@@ -187,17 +187,17 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "={{ $env.SUPABASE_URL + '/rest/v1/daily_stats?trade_date=eq.' + $now.setZone('Asia/Jakarta').toFormat('yyyy-MM-dd') + '&select=*' }}",
+        "url": "={{ 'https://hgcsdpqceuhmpeksdhpj.supabase.co/rest/v1/daily_stats?trade_date=eq.' + $now.setZone('Asia/Jakarta').toFormat('yyyy-MM-dd') + '&select=*' }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
             {
               "name": "apikey",
-              "value": "={{ $env.SUPABASE_KEY }}"
+              "value": "=GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA"
             },
             {
               "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_KEY }}"
+              "value": "=Bearer GANTI_DENGAN_SERVICE_ROLE_KEY_ANDA"
             }
           ]
         },
