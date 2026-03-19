@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -74,6 +76,77 @@ func main() {
 	})
 
 	http.HandleFunc("/webhook/saweria", api.SaweriaWebhookHandler)
+
+	http.HandleFunc("/api/ai-insight", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method != "POST" {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		apiKey := os.Getenv("GROQ_API_KEY")
+		if apiKey == "" {
+			log.Println("[AI Proxy] ❌ Error: GROQ_API_KEY is not set in environment.")
+			http.Error(w, "Groq API Key not configured on server", http.StatusInternalServerError)
+			return
+		}
+
+		// Proxy request to Groq
+		body, _ := io.ReadAll(r.Body)
+		log.Printf("[AI Proxy] 🔍 Analyzing data (length: %d chars)...\n", len(body))
+		
+		groqPayload := map[string]interface{}{
+			"model": "llama-3.3-70b-versatile",
+			"messages": []map[string]string{
+				{"role": "system", "content": "You are a Professional Crypto Signal Analyst. Analyze the provided historical data and current signals. Provide a concise, actionable analysis in INDONESIAN language. Max 4 sentences. Focus on which Score and Grade patterns are working best."},
+				{"role": "user", "content": string(body)},
+			},
+			"temperature": 0.5,
+		}
+
+		jsonPayload, _ := json.Marshal(groqPayload)
+		req, err := http.NewRequest("POST", "https://api.groq.com/openai/v1/chat/completions", bytes.NewBuffer(jsonPayload))
+		if err != nil {
+			log.Printf("[AI Proxy] ❌ Error creating request: %v\n", err)
+			http.Error(w, "Failed to create Groq request", http.StatusInternalServerError)
+			return
+		}
+
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("[AI Proxy] ❌ Error calling Groq API: %v\n", err)
+			http.Error(w, "Failed to call Groq API", http.StatusInternalServerError)
+			return
+		}
+		defer resp.Body.Close()
+
+		log.Printf("[AI Proxy] ✅ Groq Response Status: %d\n", resp.StatusCode)
+		
+		if resp.StatusCode != 200 {
+			errBody, _ := io.ReadAll(resp.Body)
+			log.Printf("[AI Proxy] ❌ Groq Error: %s\n", string(errBody))
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(resp.StatusCode)
+			w.Write(errBody)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(resp.StatusCode)
+		io.Copy(w, resp.Body)
+	})
 
 	http.HandleFunc("/config/threshold", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {

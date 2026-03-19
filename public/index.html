@@ -38,14 +38,14 @@
     .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
     .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
     .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
-    .stat-val { font-size: 20px; font-weight: 600; }
+    .stat-val { font-size: 18px; font-weight: 600; }
     .hero-box { grid-column: span 2; padding: 24px; text-align: center; }
-    .hero-pnl { font-size: 32px; font-weight: 700; margin: 4px 0; }
+    .hero-pnl { font-size: 28px; font-weight: 700; margin: 4px 0; }
 
     /* Signal Card - Simpler, cleaner, scanable */
     .signal-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
     .card-head { display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .pair-name { font-size: 16px; font-weight: 600; }
+    .pair-name { font-size: 14px; font-weight: 600; }
     .time-stamp { font-size: 11px; color: var(--text-dim); }
     
     .data-row { display: grid; grid-template-columns: repeat(3, 1fr); margin-bottom: 12px; border-top: 1px solid var(--border); padding-top: 12px; }
@@ -56,7 +56,7 @@
     /* Price Now */
     .price-now-row { display: flex; justify-content: space-between; align-items: center; background: rgba(99, 102, 241, 0.06); border: 1px solid rgba(99, 102, 241, 0.15); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; }
     .price-now-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
-    .price-now-val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; transition: color 0.3s; }
+    .price-now-val { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; transition: color 0.3s; }
     .price-now-pnl { font-size: 11px; font-weight: 600; margin-top: 2px; }
     .price-flash-up { animation: flashUp 0.6s ease-out; }
     .price-flash-down { animation: flashDown 0.6s ease-out; }
@@ -129,16 +129,48 @@
     .panel-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
     .panel-desc { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; }
 
-    /* Filter Bar */
-    .filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .filter-search { width: 100%; padding: 8px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 13px; outline: none; transition: border-color 0.2s; }
-    .filter-search:focus { border-color: var(--accent); }
-    .filter-search::placeholder { color: var(--text-dim); }
-    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; }
-    .filter-chip { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; border: 1px solid var(--border); background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-    .filter-chip:hover { border-color: var(--accent); color: var(--text); }
-    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .filter-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-bottom: 2px; }
+    /* Segmented Filter Bar */
+    .filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 14px; position:relative; overflow:hidden; }
+    .filter-bar::before { content: ''; position: absolute; top:0; left:0; width:4px; height:100%; background:var(--accent); }
+    
+    .filter-search-group { display: flex; gap: 8px; align-items: center; width: 100%; }
+    .search-wrap { position: relative; flex: 1; }
+    .filter-search { width: 100%; padding: 10px 14px 10px 38px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 12px; outline: none; transition: all 0.2s; }
+    .filter-search:focus { border-color: var(--accent); background: rgba(255,255,255,0.06); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-dim); pointer-events: none; opacity: 0.7; }
+    
+    .filter-toggle-btn { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 9px; color: var(--text-dim); cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; }
+    .filter-toggle-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .filter-toggle-btn.active { background: rgba(99,102,241,0.1); border-color: var(--accent); color: var(--accent); }
+    
+    .filter-options-panel { display: none; flex-direction: column; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+    
+    .filter-row { display: flex; align-items: center; gap: 10px; }
+    .filter-label { font-size: 9px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; width: 55px; flex-shrink: 0; letter-spacing: 0.5px; }
+
+    .segmented-control { flex: 1; display: flex; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+    .seg-btn { flex: 1; border: none; background: transparent; color: var(--text-dim); padding: 6px 4px; font-size: 10px; font-weight: 600; border-radius: 7px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    .seg-btn:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+    .seg-btn.active { background: var(--accent); color: #fff; box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4); }
+
+    .filter-reset-btn { position: absolute; right: 16px; top: 16px; padding: 4px 8px; font-size: 10px; font-weight: 700; color: var(--accent); cursor: pointer; background: rgba(99,102,241,0.1); border-radius: 6px; text-transform: uppercase; }
+
+    /* Live Market Intelligence Styles */
+    .market-intel-panel { background: rgba(24,26,32,0.8); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; position: relative; }
+    .sentiment-wrap { margin: 12px 0; }
+    .sentiment-labels { display: flex; justify-content: space-between; font-size: 9px; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+    .sentiment-bar-bg { height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; display: flex; }
+    .sent-long { background: var(--buy); height: 100%; transition: width 0.6s ease; }
+    .sent-short { background: var(--sell); height: 100%; transition: width 0.6s ease; }
+    
+    .intel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .intel-mini-box { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+    .intel-mini-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+    .intel-mini-val { font-size: 14px; font-weight: 700; }
+    
+    .action-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 6px; }
+    .badge-warn { background: rgba(251,191,36,0.15); color: #fbbf24; }
+    .badge-safe { background: rgba(16,185,129,0.15); color: #10b981; }
 
     /* Pagination */
     .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 16px 0; }
@@ -215,22 +247,47 @@
     <!-- SIGNALS: History -->
     <div id="tab-signals" class="tab-content">
       <div class="filter-bar">
-        <input type="text" class="filter-search" id="filterSearch" placeholder="🔍 Search symbol... (BTCUSDT)">
-        <div>
-          <div class="filter-label">Status</div>
-          <div class="filter-row" id="filterStatus">
-            <button class="filter-chip active" data-val="all">All</button>
-            <button class="filter-chip" data-val="active">⌛ Active</button>
-            <button class="filter-chip" data-val="tp">✅ TP Hit</button>
-            <button class="filter-chip" data-val="sl">❌ SL Hit</button>
+        <div id="btnResetFilters" class="filter-reset-btn" style="display:none;" onclick="resetFilters()">Reset</div>
+        
+        <div class="filter-search-group">
+          <div class="search-wrap">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="filter-search" id="filterSearch" placeholder="Search token (e.g. BTC)...">
           </div>
+          <button class="filter-toggle-btn" id="btnToggleFilters" onclick="toggleFilterPanel()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
+            Filter
+          </button>
         </div>
-        <div>
-          <div class="filter-label">Side</div>
-          <div class="filter-row" id="filterSide">
-            <button class="filter-chip active" data-val="all">All</button>
-            <button class="filter-chip" data-val="long">🟢 Long</button>
-            <button class="filter-chip" data-val="short">🔴 Short</button>
+        
+        <div id="filterOptionsPanel" class="filter-options-panel">
+          <div class="filter-row">
+            <div class="filter-label">Status</div>
+            <div id="filterStatus" class="segmented-control">
+              <button class="seg-btn active" data-val="all">ALL</button>
+              <button class="seg-btn" data-val="active">ACTIVE</button>
+              <button class="seg-btn" data-val="tp">TP</button>
+              <button class="seg-btn" data-val="sl">SL</button>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <div class="filter-label">Side</div>
+            <div id="filterSide" class="segmented-control">
+              <button class="seg-btn active" data-val="all">BOTH</button>
+              <button class="seg-btn" data-val="long">LONG</button>
+              <button class="seg-btn" data-val="short">SHORT</button>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <div class="filter-label">Sort</div>
+            <div id="filterSort" class="segmented-control">
+              <button class="seg-btn active" data-val="newest">NEW</button>
+              <button class="seg-btn" data-val="score">SCORE</button>
+              <button class="seg-btn" data-val="profit">ROI</button>
+              <button class="seg-btn" data-val="symbol">A-Z</button>
+            </div>
           </div>
         </div>
       </div>
@@ -247,7 +304,113 @@
       </div>
     </div>
 
-    <!-- ANALYSIS: Strategy Charts -->
+    <!-- INSIGHTS: Decision Center -->
+    <div id="tab-insights" class="tab-content">
+      
+      <!-- Live Market Intelligence (New) -->
+      <div class="market-intel-panel" id="liveIntelPanel" style="display:none;">
+        <div class="panel-title" style="color:var(--accent); font-size:14px; margin-bottom:2px;">🔦 Live Market Intelligence</div>
+        <div class="panel-desc">Real-time analysis based on currently active trades.</div>
+        
+        <div class="sentiment-wrap">
+          <div class="sentiment-labels">
+            <span style="color:var(--buy)">Long Bias <span id="sentLongText">50%</span></span>
+            <span style="color:var(--sell)">Short Bias <span id="sentShortText">50%</span></span>
+          </div>
+          <div class="sentiment-bar-bg">
+            <div id="sentLongBar" class="sent-long" style="width: 50%;"></div>
+            <div id="sentShortBar" class="sent-short" style="width: 50%;"></div>
+          </div>
+        </div>
+
+        <div class="intel-grid">
+          <div class="intel-mini-box">
+            <div class="intel-mini-label">Score Consistency</div>
+            <div id="intelScorePerf" class="intel-mini-val">—</div>
+            <div id="intelScoreSub" style="font-size:8px; color:var(--text-dim); margin-top:2px;">Profit vs. Score correlation</div>
+          </div>
+          <div class="intel-mini-box">
+            <div class="intel-mini-label">Active Guidance</div>
+            <div id="intelGuidance" style="font-size:11px; line-height:1.4; font-weight:500;">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pro Intelligence Hub -->
+      <div class="panel" style="background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(14,203,129,0.05) 100%); border: 1px solid rgba(99,102,241,0.3);">
+        <div class="panel-title" style="display:flex; align-items:center; gap:8px;">💡 Intelligence Hub <span style="font-size:10px; background:var(--accent); color:white; padding:2px 6px; border-radius:4px; text-transform:uppercase;">Alpha</span></div>
+        <div class="panel-desc">Advanced data analytics to optimize your trading decisions.</div>
+        
+        <div id="intelLoading" style="text-align:center; padding:20px; color:var(--text-dim); font-size:12px;">Analysing historical data...</div>
+        
+        <div id="intelContent" style="display:none;">
+          <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; margin-bottom:12px; border:1px solid var(--border); position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">🎯 AI Market Recommendation</div>
+              <button onclick="triggerDeepAnalysis()" id="btnDeepScan" style="font-size:9px; background:rgba(99,102,241,0.15); border:1px solid var(--accent); color:var(--accent); border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:700;">ANALYZE DATABASE</button>
+            </div>
+            <div id="proRecommendation" style="font-size:13px; font-weight:600; line-height:1.5;">—</div>
+            <div id="aiStatus" style="font-size:9px; color:var(--text-dim); margin-top:6px; display:none;">
+              <span class="status-dot" style="background:var(--accent); width:6px; height:6px;"></span> AI is analyzing historical patterns...
+            </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px; border:1px solid var(--border);">
+              <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Safe Entry Score</div>
+              <div id="intelSafeScore" style="font-size:16px; font-weight:700; margin-top:4px; color:var(--buy);">—</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px; border:1px solid var(--border);">
+              <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Optimal Trading Day</div>
+              <div id="intelBestDay" style="font-size:16px; font-weight:700; margin-top:4px; color:var(--accent);">—</div>
+            </div>
+          </div>
+
+          <!-- Win Rate Grid -->
+          <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-bottom:6px;">📈 Win Rate Heatmap</div>
+          <div id="intelWinGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:12px;">
+              <div style="background:rgba(14,203,129,0.05); border:1px solid rgba(14,203,129,0.2); border-radius:8px; padding:8px; text-align:center;">
+                <div style="font-size:8px; color:var(--buy); font-weight:700;">HIGH (80+)</div>
+                <div id="ig_high" style="font-size:14px; font-weight:700;">—</div>
+              </div>
+              <div style="background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.2); border-radius:8px; padding:8px; text-align:center;">
+                <div style="font-size:8px; color:var(--accent); font-weight:700;">MID (70-79)</div>
+                <div id="ig_mid" style="font-size:14px; font-weight:700;">—</div>
+              </div>
+              <div style="background:rgba(246,70,93,0.05); border:1px solid rgba(246,70,93,0.2); border-radius:8px; padding:8px; text-align:center;">
+                <div style="font-size:8px; color:var(--sell); font-weight:700;">LOW (<70)</div>
+                <div id="ig_low" style="font-size:14px; font-weight:700;">—</div>
+              </div>
+          </div>
+
+          <!-- Grade Ranks -->
+          <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-bottom:6px;">🏆 Best Performing Grades</div>
+          <div id="intelGradeRanks" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
+             <!-- Grades injected here -->
+          </div>
+
+          <!-- Day Stats Chart -->
+          <div id="intelDayStats" style="display:flex; gap:4px; margin-top:8px; height:40px; align-items:flex-end;">
+            <!-- Day bars -->
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:8px; color:var(--text-dim); text-transform:uppercase;">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+
+          <!-- Entry Checklist -->
+          <div style="margin-top:16px; background:rgba(99,102,241,0.15); border:1px solid var(--accent); border-radius:12px; padding:12px;">
+             <div style="font-size:10px; color:var(--accent); text-transform:uppercase; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <span style="font-size:14px;">✅</span> Operational Entry Checklist
+             </div>
+             <div id="intelChecklist" style="font-size:11px; color:var(--text); line-height:1.6;">
+                <!-- Checklist items -->
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYSIS: Performance Stats -->
     <div id="tab-charts" class="tab-content">
 
       <!-- Target Hit Summary -->
@@ -330,10 +493,6 @@
              <span style="font-size:12px; color:var(--text-dim); font-weight:600;">Expected Payoff</span>
              <span id="statEp" style="font-size:14px; font-weight:700;">—</span>
            </div>
-           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:8px;">
-             <span style="font-size:12px; color:var(--text-dim); font-weight:600;">High Score (>70) Win Rate</span>
-             <span id="statScoreWr" style="font-size:14px; font-weight:700; color:var(--text);">—</span>
-           </div>
            <div style="display:flex; justify-content:space-between; align-items:center;">
              <span style="font-size:12px; color:var(--text-dim); font-weight:600;">Avg Trade Duration</span>
              <span id="statAvgDur" style="font-size:14px; font-weight:700; color:var(--text);">—</span>
@@ -341,19 +500,6 @@
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-title">🎯 Score Performance</div>
-        <div id="scoreStats" style="display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:220px; overflow-y:auto; padding-right:4px;">
-           <div style="text-align:center; color:var(--text-dim); font-size:12px;">Computing scores...</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title">⭐ Grade Performance</div>
-        <div id="gradeStats" style="display:flex; flex-direction:column; gap:8px; margin-top:12px; max-height:220px; overflow-y:auto; padding-right:4px;">
-           <div style="text-align:center; color:var(--text-dim); font-size:12px;">Computing grades...</div>
-        </div>
-      </div>
     </div>
 
     <!-- ABOUT: Guide -->
@@ -454,6 +600,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
       <span>Signals</span>
     </div>
+    <div class="nav-btn" onclick="switchTab('insights', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+      <span>Insights</span>
+    </div>
     <div class="nav-btn" onclick="switchTab('charts', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
       <span>Stats</span>
@@ -469,6 +619,18 @@
   </nav>
 
   <script>
+    function getTimeAgo(date) {
+      if (!date) return '';
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      return `${days}d ago`;
+    }
+
     const SUPA_URL = 'https://hgcsdpqceuhmpeksdhpj.supabase.co';
     const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnY3NkcHFjZXVobXBla3NkaHBqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4MzU0NTMsImV4cCI6MjA4OTQxMTQ1M30.Llo6V1m4qdzXq3b3cB54cp7iEVrhpQ9nipBFbpcaWFQ';
 
@@ -482,7 +644,130 @@
     const DONATION_PAGE_SIZE = 5;
     let filterStatus = 'all';
     let filterSide = 'all';
+    let filterSort = 'newest';
     let filterSearch = '';
+
+    function updateActiveInsights() {
+      // Sinyal yang sedang berjalan (Active / TP1/2 Running)
+      const active = allSignals.filter(s => {
+        const st = s.status || '';
+        return st.includes('⌛ WAITING') || st.includes('🔄 RUNNING');
+      });
+      
+      const panel = document.getElementById('liveIntelPanel');
+      if (active.length === 0) {
+        panel.style.display = 'none';
+        return;
+      }
+      
+      panel.style.display = 'block';
+
+      // 1. Sentiment: Perbandingan LONG vs SHORT di sinyal aktif
+      const longs = active.filter(s => s.signal.includes('BUY')).length;
+      const shorts = active.filter(s => s.signal.includes('SELL')).length;
+      const total = longs + shorts;
+      
+      if (total > 0) {
+        const lPerc = (longs / total) * 100;
+        const sPerc = 100 - lPerc;
+        document.getElementById('sentLongBar').style.width = lPerc + '%';
+        document.getElementById('sentShortBar').style.width = sPerc + '%';
+        document.getElementById('sentLongText').textContent = lPerc.toFixed(0) + '%';
+        document.getElementById('sentShortText').textContent = sPerc.toFixed(0) + '%';
+      }
+
+      // 2. Score Consistency: Apakah Skor Tinggi (80+) saat ini benar-benar profit?
+      // Analisa 40 sinyal terakhir
+      const recent = allSignals.slice(0, 40);
+      const highScorers = recent.filter(s => (parseFloat(s.score) || 0) >= 80);
+      const lowScorers = recent.filter(s => (parseFloat(s.score) || 0) < 80);
+      
+      const getWr = (set) => {
+        if (set.length === 0) return 0;
+        const wins = set.filter(s => s.status.includes('✅ TP') || s.status.includes('🏆 TP')).length;
+        return (wins / set.length) * 100;
+      };
+
+      const highWr = getWr(highScorers);
+      const lowWr = getWr(lowScorers);
+      
+      const scorePerfEl = document.getElementById('intelScorePerf');
+      const scoreSubEl = document.getElementById('intelScoreSub');
+      
+      if (highWr > lowWr + 5) {
+        scorePerfEl.innerHTML = '<span class="badge-safe action-badge">Skor Tinggi Valid</span>';
+        scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(0)}% (Strong Correlation)`;
+      } else if (lowWr > highWr) {
+        scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Anomali Skor</span>';
+        scoreSubEl.textContent = `Peringatan: Skor rendah malah lebih akurat hari ini (${lowWr.toFixed(0)}% WR).`;
+      } else {
+        scorePerfEl.textContent = 'Stabil';
+        scoreSubEl.textContent = 'Korelasi skor & profit dalam kondisi normal.';
+      }
+
+      // 3. Guidance
+      let guidance = "";
+      if (longs > shorts * 2) guidance = "Sentimen: OVERBOUGHT. Hati-hati entry LONG baru, pasar sedang jenuh beli.";
+      else if (shorts > longs * 2) guidance = "Sentimen: OVERSOLD. Sinyal SHORT mendominasi, cari sinyal dengan Grade A saja.";
+      else guidance = "Pasar Seimbang. Fokus pada sinyal koin individu dengan skor >75.";
+      
+      if (lowWr > highWr) guidance += " [System Note: Analisa data menunjukkan skor rendah sedang outlier/akurat saat ini.]";
+      
+      document.getElementById('intelGuidance').textContent = guidance;
+    }
+
+    async function triggerDeepAnalysis() {
+      const btn = document.getElementById('btnDeepScan');
+      const statusEl = document.getElementById('aiStatus');
+      const recEl = document.getElementById('proRecommendation');
+      
+      if (allSignals.length < 5) {
+        recEl.textContent = "Data tidak mencukupi untuk analisa mendalam (min 5 sinyal).";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = 'ANALYZING...';
+      statusEl.style.display = 'block';
+      recEl.style.opacity = '0.5';
+
+      try {
+        const summary = allSignals.slice(0, 50).map(s => ({
+          sym: s.symbol,
+          score: s.score,
+          grade: s.grade,
+          status: s.status,
+          pnl: s.pnl_percent
+        }));
+
+        const response = await fetch('/api/ai-insight', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            history: summary,
+            sentiment: document.getElementById('sentLongText').textContent + " Long Bias"
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.error?.message || errData.message || `Server Error ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const aiResponse = data.choices[0].message.content;
+        
+        recEl.textContent = aiResponse;
+        recEl.style.color = 'var(--text)';
+      } catch (e) {
+        recEl.textContent = `Error: ${e.message}. (Pastikan Bridge Go sudah di-restart)`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'ANALYZE DATABASE';
+        statusEl.style.display = 'none';
+        recEl.style.opacity = '1';
+      }
+    }
 
     function switchTab(id, el) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -498,32 +783,74 @@
       if (tabEl) switchTab(savedTab, tabEl);
     }
 
+    function toggleFilterPanel() {
+      const panel = document.getElementById('filterOptionsPanel');
+      const btn = document.getElementById('btnToggleFilters');
+      const isVisible = panel.style.display === 'flex';
+      panel.style.display = isVisible ? 'none' : 'flex';
+      btn.classList.toggle('active', !isVisible);
+    }
+
     // ── Filter Chip Handlers ──
     document.getElementById('filterStatus').addEventListener('click', e => {
-      const chip = e.target.closest('.filter-chip');
+      const chip = e.target.closest('.seg-btn');
       if (!chip) return;
-      document.querySelectorAll('#filterStatus .filter-chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#filterStatus .seg-btn').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       filterStatus = chip.dataset.val;
       currentPage = 1;
+      updateResetBtn();
       renderSignals();
     });
 
     document.getElementById('filterSide').addEventListener('click', e => {
-      const chip = e.target.closest('.filter-chip');
+      const chip = e.target.closest('.seg-btn');
       if (!chip) return;
-      document.querySelectorAll('#filterSide .filter-chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#filterSide .seg-btn').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       filterSide = chip.dataset.val;
       currentPage = 1;
+      updateResetBtn();
+      renderSignals();
+    });
+
+    document.getElementById('filterSort').addEventListener('click', e => {
+      const chip = e.target.closest('.seg-btn');
+      if (!chip) return;
+      document.querySelectorAll('#filterSort .seg-btn').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      filterSort = chip.dataset.val;
+      currentPage = 1;
+      updateResetBtn();
       renderSignals();
     });
 
     document.getElementById('filterSearch').addEventListener('input', e => {
       filterSearch = e.target.value.trim().toUpperCase();
       currentPage = 1;
+      updateResetBtn();
       renderSignals();
     });
+
+    function resetFilters() {
+      filterStatus = 'all';
+      filterSide = 'all';
+      filterSort = 'newest';
+      filterSearch = '';
+      
+      document.getElementById('filterSearch').value = '';
+      document.querySelectorAll('.seg-btn').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('[data-val="all"], [data-val="newest"]').forEach(c => c.classList.add('active'));
+      
+      updateResetBtn();
+      currentPage = 1;
+      renderSignals();
+    }
+
+    function updateResetBtn() {
+      const isFiltered = filterStatus !== 'all' || filterSide !== 'all' || filterSort !== 'newest' || filterSearch !== '';
+      document.getElementById('btnResetFilters').style.display = isFiltered ? 'block' : 'none';
+    }
 
     function changePage(dir) {
       currentPage += dir;
@@ -533,7 +860,7 @@
     }
 
     function getFilteredSignals() {
-      return allSignals.filter(s => {
+      const filtered = allSignals.filter(s => {
         const status = s.status || 'ACTIVE';
         const isActiveOrPartial = ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(status);
         const side = s.signal === 'STRONG BUY' ? 'long' : 'short';
@@ -551,6 +878,20 @@
 
         return true;
       });
+
+      // Apply Sorting
+      if (filterSort === 'score') {
+        filtered.sort((a, b) => (parseInt(b.score) || 0) - (parseInt(a.score) || 0));
+      } else if (filterSort === 'profit') {
+        filtered.sort((a, b) => (parseFloat(b.profit_pct) || 0) - (parseFloat(a.profit_pct) || 0));
+      } else if (filterSort === 'symbol') {
+        filtered.sort((a, b) => (a.symbol || '').localeCompare(b.symbol || ''));
+      } else {
+        // Default: Newest
+        filtered.sort((a, b) => new Date(b.sent_at) - new Date(a.sent_at));
+      }
+
+      return filtered;
     }
 
     function renderSignals() {
@@ -587,8 +928,10 @@
     function renderCard(s) {
       const side = s.signal === 'STRONG BUY' ? 'LONG' : 'SHORT';
       const pnl = parseFloat(s.profit_pct || 0);
-      const time = new Date(s.sent_at || s.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const date = new Date(s.sent_at || s.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+      const pastDate = new Date(s.sent_at || s.created_at);
+      const time = pastDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      const date = pastDate.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+      const timeAgo = getTimeAgo(pastDate);
 
       const status = s.status || 'ACTIVE';
       const isActiveOrPartial = ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(status);
@@ -609,7 +952,7 @@
         <div class="signal-card">
           <div class="card-head">
             <span class="pair-name">${s.symbol}</span>
-            <span class="time-stamp">${date} • ${time}</span>
+            <span class="time-stamp">${date} • ${time} <span style="color:var(--accent); font-weight:600;">(${timeAgo})</span></span>
           </div>
           <div class="data-row" style="margin-bottom: 8px;">
             <div class="data-cell"><span class="label">Entry</span><span class="val">${parseFloat(s.entry_price || 0).toFixed(4)}</span></div>
@@ -827,8 +1170,7 @@
         // Render with current filters
         renderSignals();
 
-        // Refresh Charts & Stats
-        drawCharts(closed, winRate, signals);
+        // Refresh Stats
         drawAdvancedStats(closed);
 
       } catch (e) { console.error(e); }
@@ -853,8 +1195,34 @@
       let highScWins = 0, highScTotal = 0;
       let totalMins = 0, validDurations = 0;
 
+      // Intelligence Vars
+      const days = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 }; // Sun-Sat winrate
+      const dayTotals = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0 };
+      const scoreWins = {}; // Per 10-score bracket
+      const scoreTotals = {};
+      const gradeWins = {};
+      const gradeTotals = {};
+
       closed.forEach(s => {
         const pnl = parseFloat(s.profit_pct || 0);
+        const isWin = pnl > 0 || s.status.includes('TP');
+
+        // Intelligence: Day of Week (0 is Sunday in JS, but let's map it clearly)
+        const date = new Date(s.sent_at);
+        const day = date.getDay();
+        dayTotals[day]++;
+        if (isWin) days[day]++;
+
+        // Intelligence: Score Correlation
+        const sc = parseInt(s.score || 0);
+        const bracket = Math.floor(sc / 10) * 10;
+        scoreTotals[bracket] = (scoreTotals[bracket] || 0) + 1;
+        if (isWin) scoreWins[bracket] = (scoreWins[bracket] || 0) + 1;
+
+        // Intelligence: Grade Correlation
+        const gr = (s.signal_type || 'Unknown').trim();
+        gradeTotals[gr] = (gradeTotals[gr] || 0) + 1;
+        if (isWin) gradeWins[gr] = (gradeWins[gr] || 0) + 1;
 
         // Best / Worst
         if (pnl > maxWin.pnl) maxWin = { pnl, sym: s.symbol.replace('USDT','') };
@@ -873,7 +1241,6 @@
 
         // Side & Win definition
         const side = s.signal === 'STRONG BUY' ? 'LONG' : 'SHORT';
-        const isWin = pnl > 0 || s.status.includes('TP');
         if (side === 'LONG') {
           longTotal++;
           if (isWin) longWins++;
@@ -882,9 +1249,8 @@
           if (isWin) shortWins++;
         }
 
-        // Score Correlation
-        const score = parseInt(s.score || 0);
-        if (score > 70) {
+        // Score Correlation Stats (High Level)
+        if (sc > 70) {
            highScTotal++;
            if (isWin) highScWins++;
         }
@@ -899,6 +1265,97 @@
            if (m > 0) { totalMins += m; validDurations++; }
         }
       });
+
+      // --- RENDER INTELLIGENCE HUB ---
+      const intelContent = document.getElementById('intelContent');
+      const intelLoading = document.getElementById('intelLoading');
+      if (intelContent) {
+         if (closed.length < 1) {
+            intelLoading.textContent = "Butuh sinyal selesai (Closed) untuk memulai analisa data.";
+            return;
+         }
+         intelLoading.style.display = 'none';
+         intelContent.style.display = 'block';
+
+         // Find Safe Score (> 60% winrate)
+         let bestBracket = 0;
+         let maxWr = 0;
+         Object.keys(scoreTotals).forEach(b => {
+            const wr = (scoreWins[b] || 0) / scoreTotals[b];
+            if (wr >= maxWr && scoreTotals[b] >= 2) { maxWr = wr; bestBracket = b; }
+         });
+         document.getElementById('intelSafeScore').textContent = `Score > ${bestBracket}`;
+
+         // Find Best Day
+         const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+         let bestDayIdx = 1;
+         let maxDayWr = 0;
+         let dayBarsHtml = '';
+         
+         // Fix day order for UI: Mon(1) to Sun(0)
+         [1,2,3,4,5,6,0].forEach(d => {
+            const wr = dayTotals[d] > 0 ? (days[d] / dayTotals[d]) : 0;
+            if (wr >= maxDayWr && dayTotals[d] >= 2) { maxDayWr = wr; bestDayIdx = d; }
+            const h = Math.max(10, wr * 100);
+            const color = wr >= 0.6 ? 'var(--buy)' : (wr >= 0.4 ? 'var(--accent)' : 'var(--sell)');
+            dayBarsHtml += `<div style="flex:1; height:${h}%; background:${color}; border-radius:2px 2px 0 0; opacity:0.8; min-height:4px;"></div>`;
+         });
+         document.getElementById('intelBestDay').textContent = dayNames[bestDayIdx];
+         document.getElementById('intelDayStats').innerHTML = dayBarsHtml;
+
+         // Recommendation Logic
+         let bestGrade = 'N/A';
+         let maxGridWr = 0;
+         Object.keys(gradeTotals).forEach(g => {
+            const wr = (gradeWins[g]||0) / gradeTotals[g];
+            if (wr > maxGridWr) { maxGridWr = wr; bestGrade = g; }
+         });
+
+         const recEl = document.getElementById('proRecommendation');
+         let recText = `Analyzed ${closed.length} signals: **Grade ${bestGrade}** is currently the most effective. `;
+         if (maxWr >= 0.7) recText += `Priority: entries with **Score > ${bestBracket}** (${Math.round(maxWr*100)}% accuracy). `;
+         if (bestDayIdx === 0 || bestDayIdx === 6) recText += `Weekend trading exhibits stability.`;
+         else recText += `Optimal performance detected on **${dayNames[bestDayIdx]}s**.`;
+         
+         recEl.innerHTML = recText.replace(/\*\*(.*?)\*\*/g, '<span style="color:var(--accent)">$1</span>');
+
+         // Render Win Grid Detail
+         const brackets = { high: [80, 100], mid: [70, 79], low: [0, 69] };
+         Object.entries(brackets).forEach(([key, range]) => {
+            let win=0, tot=0;
+            Object.keys(scoreTotals).forEach(b => {
+               if (parseInt(b) >= range[0] && parseInt(b) <= range[1]) {
+                  tot += scoreTotals[b];
+                  win += (scoreWins[b]||0);
+               }
+            });
+            const wr = tot > 0 ? ((win/tot)*100).toFixed(0) : 0;
+            document.getElementById(`ig_${key}`).textContent = tot > 0 ? wr + '%' : '—';
+         });
+
+         // Render Grade Ranking (Top 3)
+         const gradeRankArr = Object.entries(gradeTotals).map(([g, t]) => {
+            const wr = (gradeWins[g]||0) / t;
+            return { g, wr, t };
+         }).sort((a,b) => b.wr - a.wr).slice(0, 3);
+
+         document.getElementById('intelGradeRanks').innerHTML = gradeRankArr.map((r, i) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); padding:6px 10px; border-radius:6px; border:1px solid var(--border);">
+               <div style="font-size:11px; font-weight:600;"><span style="color:var(--text-dim)">#${i+1}</span> ${r.g}</div>
+               <div style="font-size:11px; font-weight:700; color:${r.wr >= 0.6 ? 'var(--buy)' : 'var(--text)'}">${Math.round(r.wr*100)}% <span style="font-size:8px; font-weight:400; color:var(--text-dim)">(${r.t} Trades)</span></div>
+            </div>
+         `).join('');
+
+         // Final Operational Checklist
+         const checkEl = document.getElementById('intelChecklist');
+         let checkHtml = `
+            <div style="margin-bottom:4px;">1. Only enter if **Score > ${bestBracket}**.</div>
+            <div style="margin-bottom:4px;">2. Prioritize **Grade ${bestGrade}** signals.</div>
+            <div style="margin-bottom:4px;">3. Target **${dayNames[bestDayIdx]}** sessions for maximum ROI.</div>
+            <div style="font-size:9px; color:rgba(255,255,255,0.6); margin-top:8px; font-style:italic;">*System detected ${(maxWr*100).toFixed(0)}% combined signal confidence.</div>
+         `;
+         checkEl.innerHTML = checkHtml.replace(/\*\*(.*?)\*\*/g, '<span style="color:var(--accent); font-weight:700;">$1</span>');
+      }
 
       // Update UI Counters
       document.getElementById('c_tp3').textContent = tp3;
@@ -933,7 +1390,6 @@
       epEl.className = ep >= 0 ? 'pos' : 'neg';
 
       const hsWr = highScTotal > 0 ? ((highScWins / highScTotal) * 100).toFixed(0) + '%' : '—';
-      document.getElementById('statScoreWr').textContent = `${hsWr} (${highScWins}/${highScTotal})`;
 
       if (validDurations > 0) {
          const avgMins = Math.round(totalMins / validDurations);
@@ -944,100 +1400,7 @@
       }
     }
 
-    function drawCharts(closed, wr, all) {
-      // 1. Score Performance (Replaced Donut Chart)
-      const scores = {
-         '90 - 100': { win: 0, loss: 0, order: 1 },
-         '80 - 89': { win: 0, loss: 0, order: 2 },
-         '70 - 79': { win: 0, loss: 0, order: 3 },
-         '60 - 69': { win: 0, loss: 0, order: 4 },
-         '< 60': { win: 0, loss: 0, order: 5 }
-      };
-
-      closed.forEach(s => {
-         const score = parseInt(s.score || 0);
-         let group = '< 60';
-         if (score >= 90) group = '90 - 100';
-         else if (score >= 80) group = '80 - 89';
-         else if (score >= 70) group = '70 - 79';
-         else if (score >= 60) group = '60 - 69';
-
-         const isWin = s.status.includes('TP') || parseFloat(s.profit_pct || 0) > 0;
-         if (isWin) scores[group].win++;
-         else scores[group].loss++;
-      });
-
-      const scoreArr = Object.entries(scores)
-         .filter(([_, stat]) => (stat.win + stat.loss) > 0)
-         .map(([name, stat]) => {
-           const total = stat.win + stat.loss;
-           const winRate = total > 0 ? ((stat.win / total) * 100).toFixed(0) : 0;
-           return { name, ...stat, total, order: stat.order, wr: parseInt(winRate) };
-         });
-      
-      // Sort by score bracket (High to Low)
-      scoreArr.sort((a,b) => a.order - b.order);
-
-      const scoreEl = document.getElementById('scoreStats');
-      if (charts.donut) { charts.donut.destroy(); charts.donut = null; }
-      
-      if (scoreArr.length === 0) {
-         scoreEl.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12px; padding:20px;">No historical data.</div>';
-      } else {
-         scoreEl.innerHTML = scoreArr.map(g => `
-          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px 12px; border-radius:10px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <div style="width:36px; height:36px; border-radius:8px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text);">${g.name.split(' ')[0]}</div>
-              <div>
-                <div style="font-weight:700; font-size:14px; color:var(--text); margin-bottom:2px;">Score ${g.name}</div>
-                <div style="font-size:11px; color:var(--text-dim);">${g.win} Win • ${g.loss} Loss</div>
-              </div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-weight:700; font-size:16px; color:${g.wr >= 50 ? 'var(--buy)' : 'var(--sell)'};">${g.wr}%</div>
-              <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase;">Win Rate</div>
-            </div>
-          </div>
-         `).join('');
-      }
-
-      // 3. Grades Performance (Wins/Losses per Grade/Type)
-      const grades = {};
-      closed.forEach(s => {
-         let gt = (s.signal_type || 'Unknown').trim();
-         if (gt.length > 18) gt = gt.substring(0, 18) + '...';
-
-         if (!grades[gt]) grades[gt] = { win: 0, loss: 0 };
-         if (s.status.includes('TP') || parseFloat(s.profit_pct) > 0) grades[gt].win++;
-         else grades[gt].loss++;
-      });
-
-      const gradeArr = Object.entries(grades).map(([name, stat]) => {
-         const total = stat.win + stat.loss;
-         const winRate = total > 0 ? ((stat.win / total) * 100).toFixed(0) : 0;
-         return { name, ...stat, total, wr: parseInt(winRate) };
-      });
-      // Sort by total trades descending
-      gradeArr.sort((a,b) => b.total - a.total);
-
-      const gradeEl = document.getElementById('gradeStats');
-      if (gradeArr.length === 0) {
-         gradeEl.innerHTML = '<div style="text-align:center; color:var(--text-dim); font-size:12px; padding:20px;">No historical data.</div>';
-      } else {
-         gradeEl.innerHTML = gradeArr.map(g => `
-          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px 12px; border-radius:10px;">
-            <div>
-              <div style="font-weight:700; font-size:14px; color:var(--text); margin-bottom:2px;">${g.name}</div>
-              <div style="font-size:11px; color:var(--text-dim);">${g.win} Win • ${g.loss} Loss</div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-weight:700; font-size:16px; color:${g.wr >= 50 ? 'var(--buy)' : 'var(--sell)'};">${g.wr}%</div>
-              <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase;">Win Rate</div>
-            </div>
-          </div>
-         `).join('');
-      }
-    }
+    function drawCharts(closed, wr, all) {}
 
     // ── Live Price Tracker (Binance Futures WebSocket) ──
     let lastPrices = {};
@@ -1173,6 +1536,9 @@
       netEl.style.display = 'block';
       netValEl.textContent = `${netPnl >= 0 ? '+' : ''}${netPnl.toFixed(2)}%`;
       netValEl.className = 'pnl-net-val ' + (netPnl >= 0 ? 'pos' : 'neg');
+      
+      // Update Active Insights Panel (Decision Hub)
+      updateActiveInsights();
     }
 
     function connectPriceWs() {
@@ -1229,6 +1595,7 @@
     fetchDonations();
     setInterval(fetchData, 45000);
     setInterval(fetchDonations, 60000);
+    setInterval(renderSignals, 60000);
     // Connect price WS after signals are rendered (give fetchData time)
     setTimeout(connectPriceWs, 3000);
   </script>
