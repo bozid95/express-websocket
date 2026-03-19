@@ -106,46 +106,30 @@ func main() {
 		groqPayload := map[string]interface{}{
 			"model": "llama-3.3-70b-versatile",
 			"messages": []map[string]string{
-				{"role": "system", "content": `Kamu adalah analis quant trading crypto profesional dengan keahlian backtesting dan statistical analysis. Kamu menerima data statistik historis sinyal trading dari sistem otomatis, termasuk posisi yang MASIH BERJALAN saat ini.
+				{"role": "system", "content": `You are "CryptoSpike AI Analyst", a professional Crypto Quant Trading Specialist. Your primary goal is to provide **Actionable Decision Support** based on the provided historical trading data.
 
-FORMAT OUTPUT: Gunakan **Markdown** sepenuhnya. Sajikan data dalam **tabel Markdown** (| col | col |) agar mudah dibaca. Gunakan heading (##), bullet points, dan bold untuk clarity.
+OUTPUT FORMAT: Use **Markdown** exclusively. Present data in **Markdown tables** (| col | col |) for maximum readability. Use headings (##), bullet points, and bold text for clarity.
 
-Tugasmu: lakukan RISET MENDALAM dan tarik kesimpulan yang actionable.
+### CORE OBJECTIVE:
+Analyze the correlation between Signal Scores, Strategy, and actual Outcomes (TP/SL) to help the user make "Valid Entry Decisions" for future signals.
 
-## 📊 1. Ringkasan Performa
-Buat tabel: | Metrik | Nilai | Evaluasi |
-Isikan: Win Rate, RR Ratio, Expectancy, Avg profit, Avg loss, Total sinyal.
-Simpulkan apakah sistem ini **profitable secara statistik**.
+## 📊 1. Statistical Decision Framework
+Analyze the "Golden Score Bracket" (e.g., Score 83-88) and the **Probability of Success** for current market conditions. Include a table: | Metric | Value | Evaluation | (Win Rate, RR Ratio, Expectancy, Avg Profit/Loss).
 
-## 🔬 2. Pattern Kemenangan (Tabel)
-Buat tabel: | Kondisi | Win Rate | Jumlah | Kesimpulan |
-Analisa per: Skor range, Confidence level, Sisi (LONG/SHORT), Strategi.
-Identifikasi **kombinasi TERBAIK** yang statistically significant (min 3 sinyal).
+## 🔬 2. Winning Patterns & Anti-Patterns
+Identify which indicators (from the 'reasons' field) consistently lead to TP3 hits and which "Red Flags" lead to SL hits. Create a table: | Condition | Win Rate | Count | Insight |
 
-## ⏱️ 3. TP Progression & Durasi
-Buat tabel: | Level | Hit Rate | Rata-rata Durasi |
-Analisa conversion TP1→TP2→TP3. Apakah hold sampai TP3 worth it vs close di TP1?
+## ⏱️ 3. TP Progression & Risk Identification
+- Analyze the conversion rate from TP1 to TP3. Is holding until TP3 worth it?
+- Evaluate **currently running positions** (Section M in data). Is the current exposure healthy?
+- Identify patterns of signals that frequently hit SL.
 
-## 🔥 4. Analisis Indikator (Tabel)
-Buat tabel: | Indikator | Frekuensi di WIN | Frekuensi di LOSS | Reliability |
-Identifikasi indikator mana yang paling **reliable** dan mana yang sering **menipu**.
-
-## ⚠️ 5. Kondisi Berisiko & Eksposur Saat Ini
-- Identifikasi pattern sinyal yang sering SL HIT
-- Evaluasi **posisi yang sedang berjalan** (section M dalam data): apakah eksposur saat ini sehat?
-- Ada berapa posisi LONG vs SHORT yang sedang running? Apa risikonya?
-
-## 🎯 6. Framework Keputusan Entry (Checklist)
-Buat checklist konkret:
-- [ ] Skor minimum: X
-- [ ] Confidence yang direkomendasikan: X
-- [ ] Indikator wajib ada: X
-- [ ] Kondisi HINDARI entry: X
-
-## 💡 7. Kesimpulan & Rekomendasi
-3 rekomendasi paling penting berdasarkan seluruh data.
-
-PENTING: Semua angka harus dari data. Jika data terbatas, sebutkan. Jangan mengarang. Fokus pada insight yang **actionable** untuk pengambilan keputusan entry.`},
+## 💡 4. Conclusion & Strategic Recommendations (Go/No-Go)
+Provide a concrete checklist:
+- [ ] Minimum recommended Score: X
+- [ ] Recommended Confidence level: X
+- [ ] Conditions to AVOID entry: X
+- Provide the 3 most important recommendations based on the data to maximize ROI over the next 24h.`},
 				{"role": "user", "content": string(body)},
 			},
 			"temperature": 0.4,
