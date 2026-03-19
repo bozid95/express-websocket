@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Hunter Pro | Dashboard</title>
+  <title>CryptoSpike | Realtime Crypto Signals</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
@@ -111,7 +111,7 @@
 
     /* Navigation */
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--nav-bg); height: 70px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); z-index: 1000; }
-    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; text-decoration: none; width: 33%; opacity: 0.7; }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-dim); font-size: 10px; text-decoration: none; width: 25%; opacity: 0.7; }
     .nav-btn.active { color: var(--accent); opacity: 1; }
     .nav-btn svg { width: 20px; height: 20px; }
 
@@ -147,7 +147,7 @@
 </head>
 <body>
   <header class="header">
-    <div class="brand">Hunter <span>Pro</span></div>
+    <div class="brand">Crypto<span>Spike</span></div>
     <div class="status"><div class="status-dot"></div>Signals Active</div>
   </header>
 
@@ -258,6 +258,37 @@
       </div>
     </div>
 
+    <!-- ABOUT: Guide -->
+    <div id="tab-about" class="tab-content">
+      <div class="panel">
+        <div class="panel-title" style="color:var(--accent); font-size:18px;">📚 Dashboard Guide</div>
+        <div class="panel-desc" style="margin-bottom:24px;">A comprehensive guide to interpreting CryptoSpike signal statuses and performance metrics.</div>
+        
+        <div style="margin-bottom: 18px;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+             <span class="status-dot" style="background:#34d399; box-shadow:0 0 6px #34d399"></span> Active Signals (Live)
+          </div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>⌛ WAITING :</b> The signal has been initiated but has not yet reached any designated targets. Profit/Loss fluctuates in real-time.</div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>🔄 TP1 / TP2 (Running) :</b> The signal has successfully reached Target 1 or 2. It remains dynamically tracked as it progresses towards the maximum target.</div>
+        </div>
+
+        <div style="margin-bottom: 18px; border-top: 1px solid var(--border); padding-top:16px;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+             <span class="status-dot" style="background:var(--sell); box-shadow:0 0 6px var(--sell)"></span> Closed Signals (History)
+          </div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>🏆 TP3 (Closed) :</b> The final target has been achieved. The signal is successfully concluded with maximum profit.</div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>❌ SL HIT :</b> The price hit the initial Stop Loss before reaching any targets. The signal is concluded with a loss.</div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>🛡️ TSL HIT :</b> Trailing Stop Loss. The signal initially reached a profitable target (TP1/TP2) but subsequently reversed and hit the ascending protective stop. The position is closed at a breakeven or partial profit.</div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top:16px;">
+          <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:#6366f1;">📊 Profit & Loss Tracking</div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>Total Performance (Realized P&L):</b> Located at the very top of the dashboard. This represents your <b>actual, finalized profit</b>. It exclusively and permanently records the final percentage sum from all closed historical trades (TP3, SL, or TSL).</div>
+          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>Net Unrealized P&L (Floating):</b> Located under live signals. This represents <b>temporary "paper" profit</b>. It dynamically tracks the real-time profit of all currently active signals, which may fluctuate until the signal is formally closed.</div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <nav class="bottom-nav">
@@ -272,6 +303,10 @@
     <div class="nav-btn" onclick="switchTab('charts', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
       <span>Stats</span>
+    </div>
+    <div class="nav-btn" onclick="switchTab('about', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+      <span>Guide</span>
     </div>
   </nav>
 
