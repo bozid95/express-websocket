@@ -345,7 +345,7 @@
           <div id="aiIdle" style="text-align:center; padding:32px 16px;">
             <div style="font-size:32px; margin-bottom:10px;">🧠</div>
             <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px;">Ready to Analyze</div>
-            <div style="font-size:11px; color:var(--text-dim); line-height:1.6;">Klik <strong style="color:var(--accent)">Analyze Now</strong> untuk mendapatkan analisa mendalam berbasis data historis Supabase Anda.</div>
+            <div style="font-size:11px; color:var(--text-dim); line-height:1.6;">Klik <strong style="color:var(--accent)">Analyze Now</strong> untuk mendapatkan analisa mendalam berbasis data historis</div>
           </div>
 
           <!-- Loading State -->
@@ -715,26 +715,97 @@
       setView('aiLoading');
 
       try {
-        const summary = allSignals.slice(0, 50).map(s => ({
-          sym: s.symbol,
-          score: s.score,
-          grade: s.grade,
-          status: s.status,
-          pnl: s.pnl_percent
-        }));
+        // === PRE-COMPUTE COMPREHENSIVE STATISTICS ===
+        const closed = allSignals.filter(s => s.status && !['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
+        const active = allSignals.filter(s => !s.status || ['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
+        const wins = closed.filter(s => s.status && (s.status.includes('TP') || s.status === 'TSL_HIT'));
+        const losses = closed.filter(s => s.status === 'SL_HIT');
+        const tslHit = closed.filter(s => s.status === 'TSL_HIT');
+        const overallWR = closed.length > 0 ? ((wins.length / closed.length) * 100).toFixed(1) : '0';
+
+        // Win rate by score range
+        const scoreGroups = { '90+': [], '80-89': [], '70-79': [], '60-69': [], '<60': [] };
+        closed.forEach(s => {
+          const sc = parseInt(s.score) || 0;
+          const isWin = s.status && (s.status.includes('TP') || s.status === 'TSL_HIT');
+          if (sc >= 90) scoreGroups['90+'].push(isWin);
+          else if (sc >= 80) scoreGroups['80-89'].push(isWin);
+          else if (sc >= 70) scoreGroups['70-79'].push(isWin);
+          else if (sc >= 60) scoreGroups['60-69'].push(isWin);
+          else scoreGroups['<60'].push(isWin);
+        });
+        const scoreStats = Object.entries(scoreGroups).map(([range, arr]) => {
+          if (!arr.length) return null;
+          const wr = ((arr.filter(Boolean).length / arr.length) * 100).toFixed(1);
+          return `${range}: ${wr}% WR (${arr.length} sinyal)`;
+        }).filter(Boolean);
+
+        // Win rate by side
+        const longs = closed.filter(s => s.signal === 'STRONG BUY');
+        const shorts = closed.filter(s => s.signal !== 'STRONG BUY');
+        const longWR = longs.length ? ((longs.filter(s => s.status?.includes('TP') || s.status === 'TSL_HIT').length / longs.length) * 100).toFixed(1) : '0';
+        const shortWR = shorts.length ? ((shorts.filter(s => s.status?.includes('TP') || s.status === 'TSL_HIT').length / shorts.length) * 100).toFixed(1) : '0';
+
+        // Win rate by grade
+        const gradeMap = {};
+        closed.forEach(s => {
+          const g = s.grade || 'N/A';
+          if (!gradeMap[g]) gradeMap[g] = { w: 0, t: 0 };
+          gradeMap[g].t++;
+          if (s.status?.includes('TP') || s.status === 'TSL_HIT') gradeMap[g].w++;
+        });
+        const gradeStats = Object.entries(gradeMap)
+          .sort((a, b) => b[1].t - a[1].t)
+          .map(([g, v]) => `Grade ${g}: ${((v.w / v.t) * 100).toFixed(1)}% WR (${v.t} sinyal)`);
+
+        // TP level breakdown
+        const tp1 = closed.filter(s => s.status === 'TP1_HIT').length;
+        const tp2 = closed.filter(s => s.status === 'TP2_HIT').length;
+        const tp3 = closed.filter(s => s.status === 'TP3_HIT').length;
+
+        // Best avg profit
+        const winProfits = wins.map(s => parseFloat(s.profit_pct) || 0);
+        const lossProfits = losses.map(s => parseFloat(s.profit_pct) || 0);
+        const avgWin = winProfits.length ? (winProfits.reduce((a,b) => a+b, 0) / winProfits.length).toFixed(2) : '0';
+        const avgLoss = lossProfits.length ? (lossProfits.reduce((a,b) => a+b, 0) / lossProfits.length).toFixed(2) : '0';
+
+        // Build structured payload for AI
+        const statsPayload = `=== DATA STATISTIK SINYAL TRADING ===
+
+RINGKASAN DATABASE:
+- Total sinyal: ${allSignals.length}
+- Sinyal aktif: ${active.length}
+- Sinyal selesai: ${closed.length}
+- Win rate keseluruhan: ${overallWR}% (${wins.length} profit / ${losses.length} loss / ${tslHit.length} TSL)
+
+BREAKDOWN HASIL:
+- TP1: ${tp1} | TP2: ${tp2} | TP3: ${tp3} | TSL: ${tslHit.length} | SL: ${losses.length}
+- Avg profit saat menang: +${avgWin}%
+- Avg loss saat kalah: ${avgLoss}%
+
+WIN RATE PER RENTANG SKOR:
+${scoreStats.join('\n')}
+
+WIN RATE PER SISI:
+- LONG: ${longWR}% WR (${longs.length} sinyal)
+- SHORT: ${shortWR}% WR (${shorts.length} sinyal)
+
+WIN RATE PER GRADE:
+${gradeStats.join('\n')}
+
+SENTIMEN AKTIF SAAT INI:
+- Long bias: ${document.getElementById('sentLongText').textContent}
+- Short bias: ${document.getElementById('sentShortText').textContent}`;
 
         const response = await fetch('/api/ai-insight', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            history: summary,
-            sentiment: document.getElementById('sentLongText').textContent + ' Long Bias'
-          })
+          body: statsPayload
         });
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error?.message || errData.message || `Server Error ${response.status}`);
+          throw new Error(errData.error?.message || `Server Error ${response.status}`);
         }
 
         const data = await response.json();
