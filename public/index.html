@@ -1124,11 +1124,17 @@
     }
 
     function connectPriceWs() {
-      // Collect unique symbols from signal cards
-      const rows = document.querySelectorAll('.price-now-row[data-symbol]');
-      if (rows.length === 0) return;
+      // Collect symbols from active signals (for the dashboard P&L cards)
+      const activeSignals = allSignals.filter(s => ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE'));
+      const activeSymbols = activeSignals.map(s => s.symbol || '');
 
-      const symbols = [...new Set([...rows].map(r => r.dataset.symbol))];
+      // Also collect symbols currently visible on the active signals page (could be closed history)
+      const rows = document.querySelectorAll('.price-now-row[data-symbol]');
+      const visibleSymbols = [...rows].map(r => r.dataset.symbol);
+
+      const combined = [...activeSymbols, ...visibleSymbols].filter(Boolean);
+      const symbols = [...new Set(combined)];
+
       if (symbols.length === 0) return;
 
       // Skip if symbols haven't changed
