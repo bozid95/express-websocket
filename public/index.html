@@ -95,6 +95,7 @@
     .running-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 600; margin-top: 2px; }
     .accuracy-bar { height: 6px; background: rgba(246, 70, 93, 0.3); border-radius: 3px; overflow: hidden; }
     .accuracy-fill { height: 100%; background: linear-gradient(90deg, var(--buy), #34d399); border-radius: 3px; transition: width 0.5s ease; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
     /* Mini P&L Cards */
     .pnl-cards-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
@@ -267,6 +268,7 @@
               <button class="seg-btn active" data-val="all">ALL</button>
               <button class="seg-btn" data-val="active">ACTIVE</button>
               <button class="seg-btn" data-val="tp">TP</button>
+              <button class="seg-btn" data-val="tsl">TSL</button>
               <button class="seg-btn" data-val="sl">SL</button>
             </div>
           </div>
@@ -304,108 +306,84 @@
       </div>
     </div>
 
-    <!-- INSIGHTS: Decision Center -->
+    <!-- INSIGHTS: AI Output Center -->
     <div id="tab-insights" class="tab-content">
-      
-      <!-- Live Market Intelligence (New) -->
-      <div class="market-intel-panel" id="liveIntelPanel" style="display:none;">
-        <div class="panel-title" style="color:var(--accent); font-size:14px; margin-bottom:2px;">🔦 Live Market Intelligence</div>
-        <div class="panel-desc">Real-time analysis based on currently active trades.</div>
-        
-        <div class="sentiment-wrap">
-          <div class="sentiment-labels">
-            <span style="color:var(--buy)">Long Bias <span id="sentLongText">50%</span></span>
-            <span style="color:var(--sell)">Short Bias <span id="sentShortText">50%</span></span>
+
+      <!-- Compact Sentiment Strip -->
+      <div id="liveIntelPanel" style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+          <span style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; white-space:nowrap;">Market Bias</span>
+          <div style="flex:1; height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; display:flex;">
+            <div id="sentLongBar" class="sent-long" style="width:50%;"></div>
+            <div id="sentShortBar" class="sent-short" style="width:50%;"></div>
           </div>
-          <div class="sentiment-bar-bg">
-            <div id="sentLongBar" class="sent-long" style="width: 50%;"></div>
-            <div id="sentShortBar" class="sent-short" style="width: 50%;"></div>
+          <span style="font-size:10px; color:var(--buy); font-weight:700;">L <span id="sentLongText">50%</span></span>
+          <span style="font-size:10px; color:var(--sell); font-weight:700;">S <span id="sentShortText">50%</span></span>
+        </div>
+      </div>
+
+      <!-- Main AI Analysis Card -->
+      <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(14,203,129,0.04) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius:16px; overflow:hidden; margin-bottom:12px;">
+
+        <!-- Card Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid rgba(99,102,241,0.15);">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:32px; height:32px; background:rgba(99,102,241,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px;">🤖</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; color:var(--text);">AI Signal Analyst</div>
+              <div style="font-size:10px; color:var(--text-dim);">Powered by Groq · Llama 3.3</div>
+            </div>
           </div>
+          <button onclick="triggerDeepAnalysis()" id="btnDeepScan" style="font-size:10px; background:var(--accent); border:none; color:white; border-radius:8px; padding:6px 14px; cursor:pointer; font-weight:700; font-family:inherit; display:flex; align-items:center; gap:6px; transition:opacity 0.2s;">
+            <span>⚡</span> Analyze Now
+          </button>
         </div>
 
-        <div class="intel-grid">
-          <div class="intel-mini-box">
-            <div class="intel-mini-label">Score Consistency</div>
-            <div id="intelScorePerf" class="intel-mini-val">—</div>
-            <div id="intelScoreSub" style="font-size:8px; color:var(--text-dim); margin-top:2px;">Profit vs. Score correlation</div>
+        <!-- AI Output Body -->
+        <div style="padding:16px;">
+          <!-- Idle State -->
+          <div id="aiIdle" style="text-align:center; padding:32px 16px;">
+            <div style="font-size:32px; margin-bottom:10px;">🧠</div>
+            <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px;">Ready to Analyze</div>
+            <div style="font-size:11px; color:var(--text-dim); line-height:1.6;">Klik <strong style="color:var(--accent)">Analyze Now</strong> untuk mendapatkan analisa mendalam berbasis data historis Supabase Anda.</div>
           </div>
-          <div class="intel-mini-box">
-            <div class="intel-mini-label">Active Guidance</div>
-            <div id="intelGuidance" style="font-size:11px; line-height:1.4; font-weight:500;">—</div>
+
+          <!-- Loading State -->
+          <div id="aiLoading" style="display:none; text-align:center; padding:32px 16px;">
+            <div style="font-size:28px; margin-bottom:12px; animation: spin 1.5s linear infinite; display:inline-block;">⚙️</div>
+            <div style="font-size:13px; font-weight:600; color:var(--accent); margin-bottom:4px;">Analyzing Database...</div>
+            <div style="font-size:10px; color:var(--text-dim);">AI sedang mempelajari pola dari sinyal terbaru Anda</div>
+          </div>
+
+          <!-- Result State -->
+          <div id="aiResult" style="display:none;">
+            <!-- Timestamp -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <div style="width:6px; height:6px; border-radius:50%; background:var(--buy);"></div>
+                <span style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Analysis Result</span>
+              </div>
+              <span id="aiTimestamp" style="font-size:9px; color:var(--text-dim);"></span>
+            </div>
+            <!-- The actual AI text output -->
+            <div id="proRecommendation" style="font-size:13px; color:var(--text); line-height:1.8; font-weight:400; white-space:pre-wrap;"></div>
+          </div>
+
+          <!-- Error State -->
+          <div id="aiError" style="display:none; text-align:center; padding:24px;">
+            <div style="font-size:24px; margin-bottom:8px;">⚠️</div>
+            <div id="aiErrorMsg" style="font-size:11px; color:var(--sell); line-height:1.5;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Pro Intelligence Hub -->
-      <div class="panel" style="background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(14,203,129,0.05) 100%); border: 1px solid rgba(99,102,241,0.3);">
-        <div class="panel-title" style="display:flex; align-items:center; gap:8px;">💡 Intelligence Hub <span style="font-size:10px; background:var(--accent); color:white; padding:2px 6px; border-radius:4px; text-transform:uppercase;">Alpha</span></div>
-        <div class="panel-desc">Advanced data analytics to optimize your trading decisions.</div>
-        
-        <div id="intelLoading" style="text-align:center; padding:20px; color:var(--text-dim); font-size:12px;">Analysing historical data...</div>
-        
-        <div id="intelContent" style="display:none;">
-          <div style="background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; margin-bottom:12px; border:1px solid var(--border); position:relative;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">🎯 AI Market Recommendation</div>
-              <button onclick="triggerDeepAnalysis()" id="btnDeepScan" style="font-size:9px; background:rgba(99,102,241,0.15); border:1px solid var(--accent); color:var(--accent); border-radius:4px; padding:2px 8px; cursor:pointer; font-weight:700;">ANALYZE DATABASE</button>
-            </div>
-            <div id="proRecommendation" style="font-size:13px; font-weight:600; line-height:1.5;">—</div>
-            <div id="aiStatus" style="font-size:9px; color:var(--text-dim); margin-top:6px; display:none;">
-              <span class="status-dot" style="background:var(--accent); width:6px; height:6px;"></span> AI is analyzing historical patterns...
-            </div>
-          </div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
-            <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px; border:1px solid var(--border);">
-              <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Safe Entry Score</div>
-              <div id="intelSafeScore" style="font-size:16px; font-weight:700; margin-top:4px; color:var(--buy);">—</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.03); border-radius:10px; padding:10px; border:1px solid var(--border);">
-              <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Optimal Trading Day</div>
-              <div id="intelBestDay" style="font-size:16px; font-weight:700; margin-top:4px; color:var(--accent);">—</div>
-            </div>
-          </div>
-
-          <!-- Win Rate Grid -->
-          <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-bottom:6px;">📈 Win Rate Heatmap</div>
-          <div id="intelWinGrid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; margin-bottom:12px;">
-              <div style="background:rgba(14,203,129,0.05); border:1px solid rgba(14,203,129,0.2); border-radius:8px; padding:8px; text-align:center;">
-                <div style="font-size:8px; color:var(--buy); font-weight:700;">HIGH (80+)</div>
-                <div id="ig_high" style="font-size:14px; font-weight:700;">—</div>
-              </div>
-              <div style="background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.2); border-radius:8px; padding:8px; text-align:center;">
-                <div style="font-size:8px; color:var(--accent); font-weight:700;">MID (70-79)</div>
-                <div id="ig_mid" style="font-size:14px; font-weight:700;">—</div>
-              </div>
-              <div style="background:rgba(246,70,93,0.05); border:1px solid rgba(246,70,93,0.2); border-radius:8px; padding:8px; text-align:center;">
-                <div style="font-size:8px; color:var(--sell); font-weight:700;">LOW (<70)</div>
-                <div id="ig_low" style="font-size:14px; font-weight:700;">—</div>
-              </div>
-          </div>
-
-          <!-- Grade Ranks -->
-          <div style="font-size:10px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-bottom:6px;">🏆 Best Performing Grades</div>
-          <div id="intelGradeRanks" style="display:flex; flex-direction:column; gap:4px; margin-bottom:12px;">
-             <!-- Grades injected here -->
-          </div>
-
-          <!-- Day Stats Chart -->
-          <div id="intelDayStats" style="display:flex; gap:4px; margin-top:8px; height:40px; align-items:flex-end;">
-            <!-- Day bars -->
-          </div>
-          <div style="display:flex; justify-content:space-between; margin-top:4px; font-size:8px; color:var(--text-dim); text-transform:uppercase;">
-            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-          </div>
-
-          <!-- Entry Checklist -->
-          <div style="margin-top:16px; background:rgba(99,102,241,0.15); border:1px solid var(--accent); border-radius:12px; padding:12px;">
-             <div style="font-size:10px; color:var(--accent); text-transform:uppercase; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-                <span style="font-size:14px;">✅</span> Operational Entry Checklist
-             </div>
-             <div id="intelChecklist" style="font-size:11px; color:var(--text); line-height:1.6;">
-                <!-- Checklist items -->
-             </div>
-          </div>
+      <!-- Compact Score Consistency indicator -->
+      <div id="aiScorePanel" style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:12px;">
+        <div style="font-size:9px; color:var(--text-dim); font-weight:700; text-transform:uppercase; margin-bottom:6px;">Score Effectiveness (Last 40 Signals)</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div id="intelScorePerf" style="font-size:13px; font-weight:700;">—</div>
+          <div id="intelScoreSub" style="font-size:10px; color:var(--text-dim); flex:1;">Profit vs. Score correlation</div>
+          <div id="intelGuidance" style="display:none;"></div>
         </div>
       </div>
     </div>
@@ -718,18 +696,23 @@
 
     async function triggerDeepAnalysis() {
       const btn = document.getElementById('btnDeepScan');
-      const statusEl = document.getElementById('aiStatus');
-      const recEl = document.getElementById('proRecommendation');
-      
+
+      const setView = (v) => {
+        ['aiIdle','aiLoading','aiResult','aiError'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = id === v ? 'block' : 'none';
+        });
+      };
+
       if (allSignals.length < 5) {
-        recEl.textContent = "Data tidak mencukupi untuk analisa mendalam (min 5 sinyal).";
+        setView('aiError');
+        document.getElementById('aiErrorMsg').textContent = 'Data tidak mencukupi untuk analisa (min 5 sinyal). Tunggu beberapa sinyal masuk terlebih dahulu.';
         return;
       }
 
       btn.disabled = true;
-      btn.innerHTML = 'ANALYZING...';
-      statusEl.style.display = 'block';
-      recEl.style.opacity = '0.5';
+      btn.innerHTML = '⏳ Analyzing...';
+      setView('aiLoading');
 
       try {
         const summary = allSignals.slice(0, 50).map(s => ({
@@ -745,7 +728,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             history: summary,
-            sentiment: document.getElementById('sentLongText').textContent + " Long Bias"
+            sentiment: document.getElementById('sentLongText').textContent + ' Long Bias'
           })
         });
 
@@ -753,19 +736,20 @@
           const errData = await response.json().catch(() => ({}));
           throw new Error(errData.error?.message || errData.message || `Server Error ${response.status}`);
         }
-        
+
         const data = await response.json();
         const aiResponse = data.choices[0].message.content;
-        
-        recEl.textContent = aiResponse;
-        recEl.style.color = 'var(--text)';
+
+        document.getElementById('proRecommendation').textContent = aiResponse;
+        document.getElementById('aiTimestamp').textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        setView('aiResult');
+
       } catch (e) {
-        recEl.textContent = `Error: ${e.message}. (Pastikan Bridge Go sudah di-restart)`;
+        setView('aiError');
+        document.getElementById('aiErrorMsg').textContent = `${e.message}. Pastikan server Bridge Go sudah aktif dan GROQ_API_KEY sudah di-set.`;
       } finally {
         btn.disabled = false;
-        btn.innerHTML = 'ANALYZE DATABASE';
-        statusEl.style.display = 'none';
-        recEl.style.opacity = '1';
+        btn.innerHTML = '⚡ Analyze Now';
       }
     }
 
@@ -868,6 +852,7 @@
         // Status filter
         if (filterStatus === 'active' && !isActiveOrPartial) return false;
         if (filterStatus === 'tp' && !status.includes('TP')) return false;
+        if (filterStatus === 'tsl' && status !== 'TSL_HIT') return false;
         if (filterStatus === 'sl' && status !== 'SL_HIT') return false;
 
         // Side filter
