@@ -324,20 +324,33 @@
       </div>
 
       <div class="panel" style="margin-top: 16px;">
-        <div class="panel-title" style="margin-bottom: 12px; display:flex; gap:6px; align-items:center;">
-          ⭐ Recent Supporters
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button id="btnRecentDons" onclick="switchDonationView('recent')" style="flex:1; padding:10px; border-radius:12px; border:1px solid var(--accent); background:rgba(99,102,241,0.1); color:var(--accent); font-weight:600; cursor:pointer;">🆕 Recent</button>
+          <button id="btnTopDons" onclick="switchDonationView('top')" style="flex:1; padding:10px; border-radius:12px; border:1px solid var(--border); background:var(--bg); color:var(--text-dim); font-weight:600; cursor:pointer;">🏆 Top 10</button>
         </div>
-        <div class="signal-count" id="donatorCount" style="text-align:left; margin-bottom:12px;"></div>
-        <div id="donatorsList">
-          <div style="text-align:center; padding:20px; color:var(--text-dim); font-size: 13px;">
-            Loading supporters...
+
+        <div id="viewRecentDons">
+          <div class="signal-count" id="donatorCount" style="text-align:left; margin-bottom:12px;"></div>
+          <div id="donatorsList">
+            <div style="text-align:center; padding:20px; color:var(--text-dim); font-size: 13px;">
+              Loading supporters...
+            </div>
+          </div>
+          <div class="pagination" id="donationPagination" style="display:none; padding-top:16px; border-top:1px solid var(--border); margin-top:12px;">
+            <button class="page-btn" id="prevDonationPage" onclick="changeDonationPage(-1)">← Prev</button>
+            <span class="page-info" id="donationPageInfo">1 / 1</span>
+            <button class="page-btn" id="nextDonationPage" onclick="changeDonationPage(1)">Next →</button>
           </div>
         </div>
-        <div class="pagination" id="donationPagination" style="display:none; padding-top:16px; border-top:1px solid var(--border); margin-top:12px;">
-          <button class="page-btn" id="prevDonationPage" onclick="changeDonationPage(-1)">← Prev</button>
-          <span class="page-info" id="donationPageInfo">1 / 1</span>
-          <button class="page-btn" id="nextDonationPage" onclick="changeDonationPage(1)">Next →</button>
+
+        <div id="viewTopDons" style="display:none;">
+          <div id="topDonatorsList">
+            <div style="text-align:center; padding:20px; color:var(--text-dim); font-size: 13px;">
+              Calculating leaderboard...
+            </div>
+          </div>
         </div>
+
       </div>
     </div>
 
@@ -616,14 +629,71 @@
       renderDonations();
     }
 
+    function renderTopDonators() {
+      const container = document.getElementById('topDonatorsList');
+      if (!Array.isArray(allDonations) || allDonations.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-dim); font-size: 13px;">No data yet.</div>';
+        return;
+      }
+
+      const grouped = {};
+      allDonations.forEach(d => {
+        const name = d.donator_name.trim().toUpperCase();
+        if(!grouped[name]) grouped[name] = { name: d.donator_name, total: 0, count: 0 };
+        grouped[name].total += Number(d.amount);
+        grouped[name].count++;
+      });
+
+      const top10 = Object.values(grouped).sort((a,b) => b.total - a.total).slice(0, 10);
+      const formatIdr = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+      
+      let html = '';
+      top10.forEach((d, i) => {
+        let badge = `<div style="width:24px; height:24px; border-radius:12px; background:var(--bg); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--text-dim);">${i+1}</div>`;
+        if(i === 0) badge = `<div style="font-size:20px; margin-right:-2px;">👑</div>`;
+        if(i === 1) badge = `<div style="font-size:20px; margin-right:-2px;">🥈</div>`;
+        if(i === 2) badge = `<div style="font-size:20px; margin-right:-2px;">🥉</div>`;
+        
+        html += `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              ${badge}
+              <div>
+                <div style="font-weight:600; font-size:14px; color:var(--text); margin-bottom:2px;">${d.name}</div>
+                <div style="font-size:11px; color:var(--text-dim);">${d.count}x donations</div>
+              </div>
+            </div>
+            <div style="text-align:right; font-weight:700; font-size:14px; color:#ffb52d;">
+              ${formatIdr(d.total)}
+            </div>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+
+    function switchDonationView(view) {
+      document.getElementById('btnRecentDons').style.background = view === 'recent' ? 'rgba(99,102,241,0.1)' : 'var(--bg)';
+      document.getElementById('btnRecentDons').style.color = view === 'recent' ? 'var(--accent)' : 'var(--text-dim)';
+      document.getElementById('btnRecentDons').style.border = view === 'recent' ? '1px solid var(--accent)' : '1px solid var(--border)';
+      
+      document.getElementById('btnTopDons').style.background = view === 'top' ? 'rgba(99,102,241,0.1)' : 'var(--bg)';
+      document.getElementById('btnTopDons').style.color = view === 'top' ? 'var(--accent)' : 'var(--text-dim)';
+      document.getElementById('btnTopDons').style.border = view === 'top' ? '1px solid var(--accent)' : '1px solid var(--border)';
+
+      document.getElementById('viewRecentDons').style.display = view === 'recent' ? 'block' : 'none';
+      document.getElementById('viewTopDons').style.display = view === 'top' ? 'block' : 'none';
+    }
+
     async function fetchDonations() {
       try {
-        const res = await fetch(SUPA_URL + '/rest/v1/donations?select=*&order=created_at.desc&limit=1000', { 
+        const res = await fetch(SUPA_URL + '/rest/v1/donations?select=*&order=created_at.desc&limit=10000', { 
           headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY } 
         });
         if (!res.ok) return;
         allDonations = await res.json();
         renderDonations();
+        renderTopDonators();
       } catch (e) {
         console.error("Donations fetch error:", e);
       }
