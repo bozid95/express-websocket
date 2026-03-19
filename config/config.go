@@ -35,6 +35,9 @@ type Config struct {
 	VolumeSpikeMultiplier float64
 	CooldownMs            int
 	Pairs                 []string
+	SaweriaSecret         string
+	SupabaseURL           string
+	SupabaseKey           string
 }
 
 // Global config instance
@@ -51,6 +54,9 @@ func LoadConfig() {
 		VolumeSpikeMultiplier: getEnvAsFloat("VOLUME_SPIKE_MULTIPLIER", 0.0),
 		CooldownMs:            getEnvAsInt("COOLDOWN_MS", 300000),
 		Pairs:                 getPairs(),
+		SaweriaSecret:         os.Getenv("SAWERIA_SECRET"),
+		SupabaseURL:           os.Getenv("SUPABASE_URL"),
+		SupabaseKey:           os.Getenv("SUPABASE_KEY"),
 	}
 }
 

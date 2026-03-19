@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"syscall"
 
+	"express-websocket/api"
 	"express-websocket/binance"
 	"express-websocket/config"
 	"express-websocket/engine"
@@ -71,6 +72,8 @@ func main() {
 			"pairsMonitored": len(config.AppConfig.Pairs),
 		})
 	})
+
+	http.HandleFunc("/webhook/saweria", api.SaweriaWebhookHandler)
 
 	http.HandleFunc("/config/threshold", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "POST" {
@@ -138,7 +141,7 @@ func main() {
 	go func() {
 		addr := fmt.Sprintf(":%d", config.AppConfig.Port)
 		log.Printf("[Server] 🚀 Running on http://localhost%s\n", addr)
-		log.Printf("[Server]    Endpoints: GET /health  |  GET /status  |  POST /config/threshold  |  GET /dashboard.html\n\n")
+		log.Printf("[Server]    Endpoints: GET /health  |  GET /status  |  POST /config/threshold  |  POST /webhook/saweria  |  GET /dashboard.html\n\n")
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			log.Fatalf("[FATAL] HTTP server failed to start: %v\n", err)
 		}
