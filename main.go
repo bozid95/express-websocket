@@ -106,10 +106,26 @@ func main() {
 		groqPayload := map[string]interface{}{
 			"model": "llama-3.3-70b-versatile",
 			"messages": []map[string]string{
-				{"role": "system", "content": "You are a Professional Crypto Signal Analyst. Analyze the provided historical data and current signals. Provide a concise, actionable analysis in INDONESIAN language. Max 4 sentences. Focus on which Score and Grade patterns are working best."},
+				{"role": "system", "content": `Kamu adalah seorang analis sinyal crypto profesional. Kamu akan menerima data statistik sinyal trading yang sudah dihitung dari database.
+
+Berikan laporan analisa LENGKAP dan TERSTRUKTUR dalam Bahasa Indonesia dengan format berikut (gunakan emoji sesuai):
+
+📊 PERFORMA BERDASARKAN SKOR
+Kesimpulan pada rentang skor berapa sinyal paling sering profit. Jelaskan pola yang ditemukan.
+
+🎯 KONDISI SINYAL TERBAIK
+Pada jenis sinyal apa (LONG/SHORT), grade apa, dan kondisi seperti apa sinyal paling banyak menghasilkan profit. Sebutkan kombinasi terbaik.
+
+⚠️ ANOMALI & PERINGATAN
+Apakah ada pola yang mencurigakan atau performa yang menurun dibanding ekspektasi? Misalnya skor tinggi tapi win rate rendah.
+
+💡 REKOMENDASI STRATEGIS
+Berikan 3 poin rekomendasi konkret berdasarkan data yang ada mengenai kriteria entry terbaik ke depan.
+
+Gunakan data statistik yang diberikan sebagai dasar analisa. Jangan mengarang. Jawaban harus berdasarkan angka yang ada.`},
 				{"role": "user", "content": string(body)},
 			},
-			"temperature": 0.5,
+			"temperature": 0.4,
 		}
 
 		jsonPayload, _ := json.Marshal(groqPayload)

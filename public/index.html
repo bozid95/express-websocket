@@ -746,7 +746,7 @@
 
       } catch (e) {
         setView('aiError');
-        document.getElementById('aiErrorMsg').textContent = `${e.message}. Pastikan server Bridge Go sudah aktif dan GROQ_API_KEY sudah di-set.`;
+        document.getElementById('aiErrorMsg').textContent = 'Failed to generate analyze. Please try again later.';
       } finally {
         btn.disabled = false;
         btn.innerHTML = '⚡ Analyze Now';
