@@ -489,6 +489,13 @@
       document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
       document.getElementById('tab-' + id).classList.add('active');
       el.classList.add('active');
+      localStorage.setItem('activeCryptoTab', id);
+    }
+
+    const savedTab = localStorage.getItem('activeCryptoTab');
+    if (savedTab) {
+      const tabEl = document.querySelector(`.nav-btn[onclick*="'${savedTab}'"]`);
+      if (tabEl) switchTab(savedTab, tabEl);
     }
 
     // ── Filter Chip Handlers ──
