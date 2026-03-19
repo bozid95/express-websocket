@@ -205,121 +205,13 @@
     .page-info { font-size: 12px; color: var(--text-dim); font-weight: 500; }
     .signal-count { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 8px; font-weight: 500; }
 
-    /* Sidebar Styles (Desktop) */
-    .sidebar { display: none; }
-    
-    @media (min-width: 1024px) {
-      body { padding-bottom: 0; }
-      .app-layout { display: flex; align-items: flex-start; min-height: 100vh; }
-      
-      .sidebar { 
-        display: flex; flex-direction: column; 
-        width: 260px; height: 100vh; position: sticky; top: 0; 
-        background: var(--nav-bg); border-right: 1px solid var(--border);
-        padding: 24px 0; z-index: 1001; 
-      }
-      .sidebar-brand { padding: 0 24px 32px; font-size: 22px; font-weight: 700; color: var(--text); }
-      .sidebar-brand span { color: var(--accent); }
-      .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 4px; padding: 0 12px; }
-      .side-nav-item { 
-        display: flex; align-items: center; gap: 12px; padding: 12px 16px; 
-        border-radius: 10px; color: var(--text-dim); cursor: pointer; 
-        transition: all 0.2s; font-weight: 500; font-size: 14px;
-      }
-      .side-nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
-      .side-nav-item.active { background: rgba(99,102,241,0.1); color: var(--accent); }
-      
-      .main-wrapper { flex: 1; min-width: 0; }
-      .header, .bottom-nav { display: none; }
-      .container { max-width: 1200px; margin: 0 auto; padding: 32px 40px; }
-      
-      .summary-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
-      .pnl-cards-grid { grid-template-columns: repeat(8, 1fr); gap: 10px; }
-
-      /* Premium 3-Column Signal Card (Desktop) */
-      .signal-card {
-        display: grid;
-        grid-template-columns: 200px 1fr 260px;
-        gap: 32px;
-        align-items: center;
-        padding: 24px 28px;
-        background: var(--panel-bg);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-      }
-      .signal-card:hover { transform: translateY(-2px); border-color: rgba(99,102,241,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
-      
-      .card-head { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
-      .card-body { border-left: 1px solid var(--border); border-right: 1px solid var(--border); padding: 0 32px; display: flex; flex-direction: column; gap: 16px; }
-      .card-foot { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-      
-      .price-now-row { background: rgba(255,255,255,0.03) !important; border: 1px solid rgba(255,255,255,0.05) !important; padding: 16px 20px !important; border-radius: 14px !important; }
-    }
-
-    /* Signal Card Components */
-    .pair-name { font-size: 20px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
-    .time-stamp { font-size: 11px; color: var(--text-dim); }
-    .status-badge { display: inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: rgba(255,255,255,0.05); }
-
-    /* Insights Scorecard Styling */
-    .perf-scorecard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .scorecard-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; padding: 16px; text-align: center; transition: background 0.2s; }
-    .scorecard-item:hover { background: rgba(255,255,255,0.04); }
-    .scorecard-val { font-size: 20px; font-weight: 800; margin-bottom: 4px; font-family: 'Outfit', sans-serif; }
-    .scorecard-label { font-size: 9px; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
-
-    .visual-indicator-box { background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 12px; }
-    .visual-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .visual-label { font-size: 11px; font-weight: 600; color: var(--text-dim); }
-    .visual-bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; flex: 1; margin: 0 16px; }
-    .visual-bar-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-
-    /* Small Desktop / Tablet */
-    @media (min-width: 600px) and (max-width: 1023px) {
-      .container { max-width: 600px; margin: 0 auto; }
-      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    /* Responsive */
+    @media (min-width: 600px) {
+      .container { max-width: 500px; margin: 0 auto; }
     }
   </style>
 </head>
 <body>
-  <div class="app-layout">
-    <!-- Desktop Sidebar -->
-    <aside class="sidebar">
-      <div class="sidebar-brand">Crypto<span>Spike</span></div>
-      <div class="sidebar-nav">
-        <div class="side-nav-item active" onclick="switchTab('home', this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-          <span>Dashboard</span>
-        </div>
-        <div class="side-nav-item" onclick="switchTab('signals', this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-          <span>Signals</span>
-        </div>
-        <div class="side-nav-item" onclick="switchTab('insights', this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-          <span>Insights</span>
-        </div>
-        <div class="side-nav-item" onclick="switchTab('about', this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
-          <span>Guide</span>
-        </div>
-        <div class="side-nav-item side-donation" onclick="switchTab('donation', this)">
-          <svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-          <span>Donation</span>
-        </div>
-      </div>
-      <div class="sidebar-footer">
-        <div class="status">
-          <div class="status-dot"></div>
-          <span>System Active</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content Wrapper -->
-    <div class="main-wrapper">
-
   <header class="header">
     <div class="brand">Crypto<span>Spike</span></div>
     <div class="status"><div class="status-dot"></div>Signals Active</div>
@@ -444,7 +336,7 @@
       <!-- Compact Sentiment Strip -->
       <div id="liveIntelPanel" style="display:none; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
-              <div style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Last Insight Analysis</div>
+          <span style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; white-space:nowrap;">Market Bias</span>
           <div style="flex:1; height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; display:flex;">
             <div id="sentLongBar" class="sent-long" style="width:50%;"></div>
             <div id="sentShortBar" class="sent-short" style="width:50%;"></div>
@@ -477,14 +369,14 @@
           <div id="aiIdle" style="text-align:center; padding:32px 16px;">
             <div style="font-size:32px; margin-bottom:10px;">🧠</div>
             <div style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px;">Ready to Analyze</div>
-            <div style="font-size:11px; color:var(--text-dim); line-height:1.6;">Click <strong style="color:var(--accent)">Analyze Now</strong> to generate deep insights based on your historical signal performance.</div>
+            <div style="font-size:11px; color:var(--text-dim); line-height:1.6;">Klik <strong style="color:var(--accent)">Analyze Now</strong> untuk mendapatkan analisa mendalam berbasis data historis</div>
           </div>
 
           <!-- Loading State -->
           <div id="aiLoading" style="display:none; text-align:center; padding:32px 16px;">
             <div style="font-size:28px; margin-bottom:12px; animation: spin 1.5s linear infinite; display:inline-block;">⚙️</div>
             <div style="font-size:13px; font-weight:600; color:var(--accent); margin-bottom:4px;">Analyzing Database...</div>
-            <div style="font-size:10px; color:var(--text-dim);">AI is studying patterns from your latest signal history</div>
+            <div style="font-size:10px; color:var(--text-dim);">AI sedang mempelajari pola dari sinyal terbaru Anda</div>
           </div>
 
           <!-- Result State -->
@@ -509,8 +401,9 @@
         </div>
       </div>
 
-          <!-- Stats Data Tables (rendered from allSignals) -->
+      <!-- Stats Data Tables (rendered from allSignals) -->
       <div id="insightStatsTables" style="display:none; margin-bottom:12px;">
+        <div style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; margin-bottom:8px; letter-spacing:0.5px;">📊 Data Historis</div>
         <div id="insightTablesContent"></div>
       </div>
 
@@ -524,6 +417,96 @@
         </div>
       </div>
     </div>
+
+    <!-- ANALYSIS: Performance Stats -->
+    <div id="tab-charts" class="tab-content">
+
+      <!-- Target Hit Summary -->
+      <div class="panel">
+        <div class="panel-title">🎯 Target Hit Summary</div>
+        <div class="panel-desc" style="margin-bottom:12px;">Breakdown of all closed signal outcomes.</div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px; border-radius:10px; text-align:center;">
+             <div style="font-size:18px; font-weight:700; color:#fbbf24;" id="c_tp3">0</div>
+             <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:600; margin-top:2px;">🏆 TP3 Hit</div>
+           </div>
+           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px; border-radius:10px; text-align:center;">
+             <div style="font-size:18px; font-weight:700; color:var(--buy);" id="c_tp2">0</div>
+             <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:600; margin-top:2px;">✅ TP2 Hit</div>
+           </div>
+           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px; border-radius:10px; text-align:center;">
+             <div style="font-size:18px; font-weight:700; color:#34d399;" id="c_tp1">0</div>
+             <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:600; margin-top:2px;">✅ TP1 Hit</div>
+           </div>
+           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px; border-radius:10px; text-align:center; grid-column: span 1;">
+             <div style="font-size:18px; font-weight:700; color:#94a3b8;" id="c_tsl">0</div>
+             <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:600; margin-top:2px;">🛡️ TSL Hit</div>
+           </div>
+           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px; border-radius:10px; text-align:center; grid-column: span 2;">
+             <div style="font-size:18px; font-weight:700; color:var(--sell);" id="c_sl">0</div>
+             <div style="font-size:9px; color:var(--text-dim); text-transform:uppercase; font-weight:600; margin-top:2px;">❌ SL Hit</div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Trading Performance -->
+      <div class="panel">
+        <div class="panel-title">⚡ Trading Performance</div>
+        <div style="display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-top:12px;">
+           <div class="stat-box" style="padding:12px;">
+              <div class="stat-label">Best Trade</div>
+              <div class="stat-val pos" id="statBest" style="font-size:14px;">—</div>
+           </div>
+           <div class="stat-box" style="padding:12px;">
+              <div class="stat-label">Worst Trade</div>
+              <div class="stat-val neg" id="statWorst" style="font-size:14px;">—</div>
+           </div>
+           <div class="stat-box" style="padding:12px;">
+              <div class="stat-label">Avg Win</div>
+              <div class="stat-val pos" id="statAvgWin" style="font-size:16px;">—</div>
+           </div>
+           <div class="stat-box" style="padding:12px;">
+              <div class="stat-label">Avg Loss</div>
+              <div class="stat-val neg" id="statAvgLoss" style="font-size:16px;">—</div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Side Performance -->
+      <div class="panel">
+        <div class="panel-title">⚖️ Side Performance</div>
+        <div style="display:flex; gap:12px; margin-top:12px;">
+           <div style="flex:1; background:rgba(14,203,129,0.05); border:1px solid rgba(14,203,129,0.2); padding:12px; border-radius:12px; text-align:center;">
+             <div style="font-size:10px; color:var(--buy); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Long Win Rate</div>
+             <div id="statLongWr" style="font-size:20px; font-weight:700; color:var(--text);">—</div>
+             <div id="statLongCount" style="font-size:10px; color:var(--text-dim); margin-top:2px;">—</div>
+           </div>
+           <div style="flex:1; background:rgba(246,70,93,0.05); border:1px solid rgba(246,70,93,0.2); padding:12px; border-radius:12px; text-align:center;">
+             <div style="font-size:10px; color:var(--sell); font-weight:700; text-transform:uppercase; margin-bottom:4px;">Short Win Rate</div>
+             <div id="statShortWr" style="font-size:20px; font-weight:700; color:var(--text);">—</div>
+             <div id="statShortCount" style="font-size:10px; color:var(--text-dim); margin-top:2px;">—</div>
+           </div>
+        </div>
+      </div>
+
+      <!-- Advanced Insights -->
+      <div class="panel">
+        <div class="panel-title">🧠 AI Trade Insights</div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:8px;">
+             <span style="font-size:12px; color:var(--text-dim); font-weight:600;">Profit Factor</span>
+             <span id="statPf" style="font-size:14px; font-weight:700; color:var(--text);">—</span>
+           </div>
+           <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:8px;">
+             <span style="font-size:12px; color:var(--text-dim); font-weight:600;">Expected Payoff</span>
+             <span id="statEp" style="font-size:14px; font-weight:700;">—</span>
+           </div>
+           <div style="display:flex; justify-content:space-between; align-items:center;">
+             <span style="font-size:12px; color:var(--text-dim); font-weight:600;">Avg Trade Duration</span>
+             <span id="statAvgDur" style="font-size:14px; font-weight:700; color:var(--text);">—</span>
+           </div>
+        </div>
+      </div>
 
     </div>
 
@@ -614,9 +597,7 @@
       </div>
     </div>
 
-    </div><!-- End main-wrapper -->
-  </div><!-- End app-layout -->
-
+  </main>
 
   <nav class="bottom-nav">
     <div class="nav-btn active" onclick="switchTab('home', this)">
@@ -630,6 +611,10 @@
     <div class="nav-btn" onclick="switchTab('insights', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
       <span>Insights</span>
+    </div>
+    <div class="nav-btn" onclick="switchTab('charts', this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+      <span>Stats</span>
     </div>
     <div class="nav-btn" onclick="switchTab('about', this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
@@ -671,7 +656,7 @@
     let filterSearch = '';
 
     function updateActiveInsights() {
-      // Signals currently running (Active / TP1/2 Hit)
+      // Sinyal yang sedang berjalan (Active / TP1/2 Running)
       const active = allSignals.filter(s => {
         const st = s.status || '';
         return st.includes('⌛ WAITING') || st.includes('🔄 RUNNING');
@@ -699,8 +684,8 @@
         document.getElementById('sentShortText').textContent = sPerc.toFixed(0) + '%';
       }
 
-      // Score Consistency: Are High-Score signals (80+) actually profitable?
-      // Analyze last 40 signals
+      // 2. Score Consistency: Apakah Skor Tinggi (80+) saat ini benar-benar profit?
+      // Analisa 40 sinyal terakhir
       const recent = allSignals.slice(0, 40);
       const highScorers = recent.filter(s => (parseFloat(s.score) || 0) >= 80);
       const lowScorers = recent.filter(s => (parseFloat(s.score) || 0) < 80);
@@ -718,23 +703,23 @@
       const scoreSubEl = document.getElementById('intelScoreSub');
       
       if (highWr > lowWr + 5) {
-        scorePerfEl.innerHTML = '<span class="badge-safe action-badge">High Score Valid</span>';
+        scorePerfEl.innerHTML = '<span class="badge-safe action-badge">Skor Tinggi Valid</span>';
         scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(0)}% (Strong Correlation)`;
       } else if (lowWr > highWr) {
-        scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Score Anomaly</span>';
-        scoreSubEl.textContent = `Warning: Low-score signals are more accurate today (${lowWr.toFixed(0)}% WR).`;
+        scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Anomali Skor</span>';
+        scoreSubEl.textContent = `Peringatan: Skor rendah malah lebih akurat hari ini (${lowWr.toFixed(0)}% WR).`;
       } else {
-        scorePerfEl.textContent = 'Stable';
-        scoreSubEl.textContent = 'Score & Profit correlation is normal.';
+        scorePerfEl.textContent = 'Stabil';
+        scoreSubEl.textContent = 'Korelasi skor & profit dalam kondisi normal.';
       }
 
       // 3. Guidance
       let guidance = "";
-      if (longs > shorts * 2) guidance = "Sentiment: OVERBOUGHT. Be cautious with new LONG entries, market is overextended.";
-      else if (shorts > longs * 2) guidance = "Sentiment: OVERSOLD. Short signals dominate, look for Grade A signals only.";
-      else guidance = "Balanced Market. Focus on individual coin signals with Score > 75.";
+      if (longs > shorts * 2) guidance = "Sentimen: OVERBOUGHT. Hati-hati entry LONG baru, pasar sedang jenuh beli.";
+      else if (shorts > longs * 2) guidance = "Sentimen: OVERSOLD. Sinyal SHORT mendominasi, cari sinyal dengan Grade A saja.";
+      else guidance = "Pasar Seimbang. Fokus pada sinyal koin individu dengan skor >75.";
       
-      if (lowWr > highWr) guidance += " [System Note: Statistical data shows low-score signals are currently outperforming/outliers.]";
+      if (lowWr > highWr) guidance += " [System Note: Analisa data menunjukkan skor rendah sedang outlier/akurat saat ini.]";
       
       document.getElementById('intelGuidance').textContent = guidance;
     }
@@ -753,87 +738,69 @@
       const avgLAbs = Math.abs(parseFloat(avgL));
       const rr = avgLAbs > 0 ? (parseFloat(avgW) / avgLAbs).toFixed(2) : 'N/A';
 
-      // 1. Performance Dash (Scorecards)
-      const dashHtml = `
-        <div class="perf-scorecard">
-           <div class="scorecard-item">
-              <div class="scorecard-val" style="color:${parseFloat(wr)>=60?'var(--buy)':'var(--sell)'}">${wr}%</div>
-              <div class="scorecard-label">Overall Win Rate</div>
-           </div>
-           <div class="scorecard-item">
-              <div class="scorecard-val" style="color:var(--accent)">${rr}:1</div>
-              <div class="scorecard-label">R:R Ratio</div>
-           </div>
-           <div class="scorecard-item">
-              <div class="scorecard-val">${closed.length}</div>
-              <div class="scorecard-label">Total Closed</div>
-           </div>
-        </div>
-      `;
-
-      // 2. Score Correlation (Visual Bars)
-      const scoreVisuals = [['90+',90,999],['80-89',80,89],['70-79',70,79],['60-69',60,69],['<60',0,59]].map(([lbl,mn,mx])=>{
+      // Score breakdown
+      const scoreRows = [['90+',90,999],['80-89',80,89],['70-79',70,79],['60-69',60,69],['<60',0,59]].map(([lbl,mn,mx])=>{
         const g = closed.filter(s=>{ const sc=parseInt(s.score)||0; return sc>=mn && sc<=mx; });
         if (!g.length) return '';
         const gw = g.filter(s=>s.status?.includes('TP')||s.status==='TSL_HIT').length;
         const gwp = ((gw/g.length)*100).toFixed(0);
-        return `
-          <div class="visual-row">
-            <div class="visual-label" style="width:40px">${lbl}</div>
-            <div class="visual-bar-bg"><div class="visual-bar-fill" style="width:${gwp}%; background:${parseInt(gwp)>=60?'var(--buy)':(parseInt(gwp)<40?'var(--sell)':'var(--accent)')}"></div></div>
-            <div class="visual-label" style="width:40px; text-align:right">${gwp}%</div>
-          </div>
-        `;
+        const cls = parseInt(gwp)>=60?'pos':parseInt(gwp)<40?'neg':'';
+        return `<tr><td>${lbl}</td><td>${g.length}</td><td class="${cls}">${gwp}%</td></tr>`;
       }).join('');
 
-      // 3. Confidence Visuals
+      // Confidence breakdown
       const confMap = {};
       closed.forEach(s=>{ const c=(s.confidence||'N/A').toUpperCase(); if(!confMap[c]) confMap[c]={w:0,t:0}; confMap[c].t++; if(s.status?.includes('TP')||s.status==='TSL_HIT') confMap[c].w++; });
-      const confVisuals = Object.entries(confMap).sort((a,b)=>b[1].t-a[1].t).map(([c,v])=>{
-        const wp=((v.w/v.t)*100).toFixed(0);
-        return `
-          <div class="visual-row">
-            <div class="visual-label" style="width:70px">${c}</div>
-            <div class="visual-bar-bg"><div class="visual-bar-fill" style="width:${wp}%; background:${parseInt(wp)>=60?'var(--buy)':(parseInt(wp)<40?'var(--sell)':'var(--accent)')}"></div></div>
-            <div class="visual-label" style="width:30px; text-align:right">${wp}%</div>
-          </div>
-        `;
+      const confRows = Object.entries(confMap).sort((a,b)=>b[1].t-a[1].t).map(([c,v])=>{
+        const wp=((v.w/v.t)*100).toFixed(0); const cls=parseInt(wp)>=60?'pos':parseInt(wp)<40?'neg':'';
+        return `<tr><td>${c}</td><td>${v.t}</td><td class="${cls}">${wp}%</td></tr>`;
       }).join('');
 
-      // 4. Running Signals (Elegant List)
-      const runningHtml = running.map(s=>{
-        const side = (s.signal||'').includes('BUY') ? 'LONG' : 'SHORT';
+      // Running signals table
+      const runningRows = running.map(s=>{
+        const side = (s.signal||'').includes('BUY') ? '<span class="pos">LONG</span>' : '<span class="neg">SHORT</span>';
         const st = s.status||'ACTIVE';
-        const stLabel = st==='ACTIVE'?'WAITING':st==='TP1_HIT'?'TP1 HIT':st==='TP2_HIT'?'TP2 HIT':'?';
+        const stLabel = st==='ACTIVE'?'⌛':st==='TP1_HIT'?'🔄 TP1':st==='TP2_HIT'?'🔄 TP2':'?';
         const dur = s.duration || (s.sent_at ? Math.round((Date.now()-new Date(s.sent_at).getTime())/60000)+'m' : '—');
-        return `
-          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.02); padding:10px 14px; border-radius:10px; border:1px solid var(--border); margin-bottom:6px;">
-             <div style="font-weight:700; font-size:13px;">${s.symbol} <span style="font-size:9px; color:var(--text-dim); font-weight:400; margin-left:4px;">${side}</span></div>
-             <div style="font-size:10px; color:${st==='ACTIVE'?'var(--text-dim)':'var(--buy)'}; font-weight:700;">${stLabel}</div>
-             <div style="font-size:11px; font-weight:600;">Score ${s.score} <span style="font-size:9px; color:var(--text-dim); font-weight:400; margin-left:8px;">${dur}</span></div>
-          </div>
-        `;
+        return `<tr><td>${s.symbol}</td><td>${side}</td><td>${s.score}</td><td>${stLabel}</td><td class="dim">${dur}</td></tr>`;
       }).join('');
 
       document.getElementById('insightTablesContent').innerHTML = `
-        ${dashHtml}
-        
-        <div class="visual-indicator-box">
-          <div style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; margin-bottom:12px;">Win Rate vs Signal Score</div>
-          ${scoreVisuals}
-        </div>
-
-        <div class="visual-indicator-box">
-          <div style="font-size:10px; color:var(--text-dim); font-weight:700; text-transform:uppercase; margin-bottom:12px;">Win Rate vs Confidence</div>
-          ${confVisuals}
-        </div>
-
-        ${runningHtml ? `
-          <div style="margin-top:20px;">
-            <div style="font-size:10px; color:var(--buy); font-weight:700; text-transform:uppercase; margin-bottom:10px;">🔄 Currently Running (${running.length})</div>
-            ${runningHtml}
+        <div style="margin-bottom:12px;">
+          <div style="font-size:9px;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Ringkasan Performa Historis</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:${parseFloat(wr)>=60?'var(--buy)':'var(--sell)'};">${wr}%</div>
+              <div style="font-size:9px;color:var(--text-dim);">Win Rate</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:var(--accent);">${rr}:1</div>
+              <div style="font-size:9px;color:var(--text-dim);">R:R Ratio</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;">
+              <div style="font-size:16px;font-weight:700;color:var(--text);">${closed.length}</div>
+              <div style="font-size:9px;color:var(--text-dim);">Closed</div>
+            </div>
           </div>
-        ` : ''}
+          <table class="insight-stats-table">
+            <thead><tr><th>Skor</th><th>Jumlah</th><th>Win Rate</th></tr></thead>
+            <tbody>${scoreRows}</tbody>
+          </table>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div style="font-size:9px;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-bottom:6px;">Per Confidence Level</div>
+          <table class="insight-stats-table">
+            <thead><tr><th>Confidence</th><th>Jumlah</th><th>Win Rate</th></tr></thead>
+            <tbody>${confRows}</tbody>
+          </table>
+        </div>
+        ${runningRows ? `<div>
+          <div style="font-size:9px;color:var(--buy);font-weight:700;text-transform:uppercase;margin-bottom:6px;">🔄 Sinyal Sedang Running (${running.length})</div>
+          <table class="insight-stats-table">
+            <thead><tr><th>Symbol</th><th>Side</th><th>Skor</th><th>Status</th><th>Durasi</th></tr></thead>
+            <tbody>${runningRows}</tbody>
+          </table>
+        </div>` : ''}
       `;
       document.getElementById('insightStatsTables').style.display = 'block';
     }
@@ -851,7 +818,7 @@
 
       if (allSignals.length < 5) {
         setView('aiError');
-        document.getElementById('aiErrorMsg').textContent = 'Insufficient data for analysis (min 5 signals). Please wait for more signals to be recorded before analyzing.';
+        document.getElementById('aiErrorMsg').textContent = 'Data tidak mencukupi untuk analisa (min 5 sinyal). Tunggu beberapa sinyal masuk terlebih dahulu.';
         return;
       }
 
@@ -991,70 +958,70 @@
         const olderWR  = older.length  ? ((older.filter(s=>s.status?.includes('TP')||s.status==='TSL_HIT').length/older.length)*100).toFixed(1)  : 'N/A';
 
         // Build structured payload for AI
-        const statsPayload = `=== HISTORICAL SIGNAL DATA REPORT ===
-Analysis time: ${new Date().toLocaleString('en-US')}
-Total signals in database: ${allSignals.length}
+        const statsPayload = `=== LAPORAN DATA HISTORIS SINYAL TRADING ===
+Waktu analisa: ${new Date().toLocaleString('id-ID')}
+Total sinyal dalam database: ${allSignals.length}
 
-━━━ A. PERFORMANCE SUMMARY ━━━
-- Closed signals: ${closed.length} | Active: ${active.length}
-- Overall Win Rate: ${overallWR}% (${wins.length} profit / ${losses.length} loss / ${tslHit.length} TSL)
-- Last 7 days win rate: ${recentWR}% (${recent.length} signals)
-- Before 7 days win rate: ${olderWR}% (${older.length} signals)
-- Avg profit (Win): +${avgWin}%
-- Avg loss (Loss): ${avgLoss}%
-- Actual Risk/Reward Ratio: ${rrRatio} : 1
-- Expectancy per signal: ${expectancy}%
+━━━ A. RINGKASAN PERFORMA ━━━
+- Sinyal selesai: ${closed.length} | Aktif: ${active.length}
+- Win rate keseluruhan: ${overallWR}% (${wins.length} profit / ${losses.length} loss / ${tslHit.length} TSL)
+- Win rate 7 hari terakhir: ${recentWR}% (${recent.length} sinyal)
+- Win rate sebelum 7 hari: ${olderWR}% (${older.length} sinyal)
+- Avg profit saat menang: +${avgWin}%
+- Avg loss saat kalah: ${avgLoss}%
+- Risk/Reward Ratio aktual: ${rrRatio} : 1
+- Expectancy per sinyal: ${expectancy}%
 
-━━━ B. TP TARGET BREAKDOWN ━━━
+━━━ B. BREAKDOWN HASIL TP ━━━
 - TP1: ${tp1} | TP2: ${tp2} | TP3: ${tp3} | TSL: ${tslHit.length} | SL: ${losses.length}
-- TP1 → TP2 conversion rate: ${tp1ToTp2Rate}% (from ${tp1Total} TP1 hits)
-- TP2 → TP3 conversion rate: ${tp2ToTp3Rate}% (from ${tp2FromTp1} TP2 hits)
+- TP1 → TP2 conversion rate: ${tp1ToTp2Rate}% (dari ${tp1Total} sinyal yg hit TP1)
+- TP2 → TP3 conversion rate: ${tp2ToTp3Rate}% (dari ${tp2FromTp1} sinyal yg hit TP2)
 
-━━━ C. DURATION ANALYSIS ━━━
-- Avg duration (winning signals): ${fmtMin(avgDurWin)}
-- Avg duration (losing signals): ${fmtMin(avgDurLoss)}
+━━━ C. ANALISIS DURASI ━━━
+- Rata-rata durasi sinyal profit: ${fmtMin(avgDurWin)}
+- Rata-rata durasi sinyal loss: ${fmtMin(avgDurLoss)}
 
-━━━ D. WIN RATE BY SCORE ━━━
+━━━ D. WIN RATE PER SKOR ━━━
 ${scoreStats.join('\n')}
 
-━━━ E. WIN RATE BY SIDE ━━━
-- LONG (STRONG BUY): ${longWR}% WR (${longs.length} signals)
-- SHORT (STRONG SELL): ${shortWR}% WR (${shorts.length} signals)
+━━━ E. WIN RATE PER SISI ━━━
+- LONG (STRONG BUY): ${longWR}% WR (${longs.length} sinyal)
+- SHORT (STRONG SELL): ${shortWR}% WR (${shorts.length} sinyal)
 
-━━━ F. WIN RATE BY CONFIDENCE LEVEL ━━━
+━━━ F. WIN RATE PER CONFIDENCE LEVEL ━━━
 ${confStats.join('\n')}
 
-━━━ G. WIN RATE BY STRATEGY ━━━
+━━━ G. WIN RATE PER STRATEGI ━━━
 ${stratStats.join('\n')}
 
-━━━ H. WIN RATE BY GRADE ━━━
+━━━ H. WIN RATE PER GRADE ━━━
 ${gradeStats.join('\n')}
 
-━━━ I. INDICATOR ANALYSIS (REASONS) ━━━
-Frequency of indicators in WIN vs LOSS signals:
+━━━ I. ANALISIS INDIKATOR (REASONS FIELD) ━━━
+Frekuensi kemunculan indikator pada sinyal WIN vs LOSS:
 ${kwStats}
 
-━━━ J. TOP 3 BEST SIGNALS ━━━
-${top3Win || '  (insufficient data)'}
+━━━ J. TOP 3 SINYAL TERBAIK ━━━
+${top3Win || '  (data belum cukup)'}
 
-━━━ K. TOP 3 WORST SIGNALS ━━━
-${top3Loss || '  (insufficient data)'}
+━━━ K. TOP 3 SINYAL TERBURUK ━━━
+${top3Loss || '  (data belum cukup)'}
 
-━━━ L. CURRENT MARKET SENTIMENT ━━━
+━━━ L. SENTIMEN AKTIF SAAT INI ━━━
 - Long bias: ${document.getElementById('sentLongText').textContent}
 - Short bias: ${document.getElementById('sentShortText').textContent}
 
-━━━ M. LIVE RUNNING SIGNALS (${active.length} signals) ━━━
+━━━ M. SINYAL YANG SEDANG BERJALAN (${active.length} sinyal) ━━━
 ${active.length > 0 ? active.map(s => {
   const side = (s.signal||'').includes('BUY') ? 'LONG' : 'SHORT';
   const dur = s.duration || (s.sent_at ? Math.round((Date.now()-new Date(s.sent_at).getTime())/60000)+'m' : '?');
   const cp = parseFloat(s.current_price||0);
   const entry = parseFloat(s.entry_price||0);
   const pnlLive = entry > 0 && cp > 0 ? ((side==='LONG' ? (cp-entry)/entry : (entry-cp)/entry)*100).toFixed(2)+'%' : 'N/A';
-  return `  ${s.symbol} ${side} | Score:${s.score} | Status:${s.status||'ACTIVE'} | Duration:${dur} | live P&L:${pnlLive} | Confidence:${s.confidence||'?'}`;
-}).join('\n') : '  (no active signals)'}
+  return `  ${s.symbol} ${side} | Skor:${s.score} | Status:${s.status||'ACTIVE'} | Durasi:${dur} | P&L live:${pnlLive} | Confidence:${s.confidence||'?'}`;
+}).join('\n') : '  (tidak ada sinyal running)'}
 
-NOTE: The running signals above are still OPEN. Consider this as CURRENT EXPOSURE in your risk analysis.`;
+CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimbangkan ini sebagai EKSPOSUR saat ini dalam analisa risiko.`;
 
         const response = await fetch('/api/ai-insight', {
           method: 'POST',
@@ -1078,7 +1045,7 @@ NOTE: The running signals above are still OPEN. Consider this as CURRENT EXPOSUR
 
       } catch (e) {
         setView('aiError');
-        document.getElementById('aiErrorMsg').textContent = 'Failed to generate analysis. Please try again later.';
+        document.getElementById('aiErrorMsg').textContent = 'Failed to generate analyze. Please try again later.';
       } finally {
         btn.disabled = false;
         btn.innerHTML = '⚡ Analyze Now';
@@ -1086,22 +1053,18 @@ NOTE: The running signals above are still OPEN. Consider this as CURRENT EXPOSUR
     }
 
     function switchTab(id, el) {
-      if (id === 'charts') id = 'home';
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.nav-btn, .side-nav-item').forEach(n => n.classList.remove('active'));
-      
-      const targetTab = document.getElementById('tab-' + id);
-      if (targetTab) targetTab.classList.add('active');
-      
-      // Highlight matching buttons in both navs
-      document.querySelectorAll(`.nav-btn[onclick*="'${id}'"], .side-nav-item[onclick*="'${id}'"]`).forEach(n => n.classList.add('active'));
-      
+      document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      el.classList.add('active');
       localStorage.setItem('activeCryptoTab', id);
     }
 
-    // Initial Tab Load
-    const savedTab = localStorage.getItem('activeCryptoTab') || 'home';
-    switchTab(savedTab);
+    const savedTab = localStorage.getItem('activeCryptoTab');
+    if (savedTab) {
+      const tabEl = document.querySelector(`.nav-btn[onclick*="'${savedTab}'"]`);
+      if (tabEl) switchTab(savedTab, tabEl);
+    }
 
     function toggleFilterPanel() {
       const panel = document.getElementById('filterOptionsPanel');
@@ -1271,59 +1234,56 @@ NOTE: The running signals above are still OPEN. Consider this as CURRENT EXPOSUR
 
       return `
         <div class="signal-card">
-          <!-- Left: Asset Info -->
           <div class="card-head">
-            <div class="pair-name">${s.symbol}</div>
-            <div class="time-stamp">${date} • ${time} <span style="color:var(--accent);font-weight:600;">(${timeAgo})</span></div>
-            <div style="margin-top:8px; display:flex; gap:6px;">
-              <span class="status-badge" style="background:${side === 'LONG' ? 'rgba(14,203,129,0.1)' : 'rgba(246,70,93,0.1)'}; color:${side === 'LONG' ? 'var(--buy)' : 'var(--sell)'}">
-                ${side}
-              </span>
-              <span class="status-badge">SCORE ${s.score || 0}</span>
+            <span class="pair-name">${s.symbol}</span>
+            <span class="time-stamp">${date} • ${time} <span style="color:var(--accent); font-weight:600;">(${timeAgo})</span></span>
+          </div>
+          <div class="data-row" style="margin-bottom: 8px;">
+            <div class="data-cell"><span class="label">Entry</span><span class="val">${parseFloat(s.entry_price || 0).toFixed(4)}</span></div>
+            <div class="data-cell"><span class="label">Score</span><span class="val">${s.score || 0}</span></div>
+            <div class="data-cell" style="text-align:right"><span class="label">Side</span><span class="val ${side === 'LONG' ? 'pos' : 'neg'}">${side}</span></div>
+          </div>
+          <div class="price-now-row" data-symbol="${s.symbol}" data-entry="${parseFloat(s.entry_price || 0)}" data-side="${side}">
+            <div>
+              <div class="price-now-label">💰 Current Price</div>
+              <div class="price-now-val">—</div>
+            </div>
+            <div style="text-align:right">
+              <div class="price-now-label">P&L from Entry</div>
+              <div class="price-now-pnl">—</div>
             </div>
           </div>
-          
-          <!-- Center: Execution Zone -->
-          <div class="card-body">
-            <div class="price-now-row" data-symbol="${s.symbol}" data-entry="${parseFloat(s.entry_price || 0)}" data-side="${side}">
-              <div class="execution-zone">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <div>
-                    <div class="exec-label">💰 Market Price</div>
-                    <div class="exec-val price-now-val">—</div>
-                  </div>
-                  <div style="text-align:right">
-                    <div class="exec-label">📈 P&L from Entry</div>
-                    <div class="exec-val price-now-pnl">—</div>
-                  </div>
-                </div>
-              </div>
+          <div class="target-row">
+            <div class="target-item ${isSL ? 'hit-sl' : ''}">
+              <span class="target-label">SL ${isSL ? '❌' : '🛡️'}</span>
+              <span class="target-val">${parseFloat(s.sl || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--sell);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.sl)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); padding:0 4px; text-transform:uppercase; font-weight:700;">
-              <span>Entry: <b style="color:var(--text)">${parseFloat(s.entry_price || 0).toFixed(4)}</b></span>
-              <span>Strategy: <b style="color:var(--text)">${(s.signal_type || 'PRO').toUpperCase()}</b></span>
+            <div class="target-item ${isTP1 || isTP2 || isTP3 ? 'hit-tp' : ''}">
+              <span class="target-label">TP1 ${isTP1 || isTP2 || isTP3 ? '✅' : '⏳'}</span>
+              <span class="target-val">${parseFloat(s.tp1 || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--buy);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.tp1)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
+            </div>
+            <div class="target-item ${isTP2 || isTP3 ? 'hit-tp' : ''}">
+              <span class="target-label">TP2 ${isTP2 || isTP3 ? '✅' : '⏳'}</span>
+              <span class="target-val">${parseFloat(s.tp2 || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--buy);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.tp2)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
+            </div>
+            <div class="target-item ${isTP3 ? 'hit-tp' : ''}">
+              <span class="target-label">TP3 ${isTP3 ? '🏆' : '⏳'}</span>
+              <span class="target-val">${parseFloat(s.tp3 || 0).toFixed(4)}</span>
+              <span style="font-size:9px; color:var(--buy);">${(() => { const e=parseFloat(s.entry_price)||0; const v=parseFloat(s.tp3)||0; if(!e) return ''; const pct = side==='LONG' ? (v-e)/e*100 : (e-v)/e*100; return (pct>=0?'+':'')+pct.toFixed(1)+'%'; })()}</span>
             </div>
           </div>
 
-          <!-- Right: Targets & Status -->
+
           <div class="card-foot">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-               <div style="font-size:10px; font-weight:700; color:var(--text-dim); text-transform:uppercase;">Target Progress</div>
-               <div class="status-badge" style="background:var(--accent); color:#fff; border:none;">${statusDisplay}</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span class="side-tag ${side === 'LONG' ? 'side-buy' : 'side-sell'}">${side}</span>
+              <span class="status-tag ${status !== 'ACTIVE' ? 'status-hit' : ''}">${statusDisplay}</span>
             </div>
-            <div class="target-grid">
-               <div class="target-chip ${isSL ? 'hit' : ''}" style="grid-column: span 2; border-style:dashed;">
-                 <span style="color:var(--text-dim)">SL</span> <span style="color:var(--sell);font-weight:700;">${parseFloat(s.sl || 0).toFixed(4)}</span>
-               </div>
-               <div class="target-chip ${isTP1 ? 'hit' : ''}">
-                 <span style="color:var(--text-dim)">TP1</span> <span style="color:var(--buy);font-weight:700;">${parseFloat(s.tp1 || 0).toFixed(4)}</span>
-               </div>
-               <div class="target-chip ${isTP2 ? 'hit' : ''}">
-                 <span style="color:var(--text-dim)">TP2</span> <span style="color:var(--buy);font-weight:700;">${parseFloat(s.tp2 || 0).toFixed(4)}</span>
-               </div>
-               <div class="target-chip ${isTP3 ? 'hit' : ''}" style="grid-column: span 2;">
-                 <span style="color:var(--text-dim)">TP3</span> <span style="color:var(--buy);font-weight:700;">${parseFloat(s.tp3 || 0).toFixed(4)}</span>
-               </div>
+            <div class="res-val ${pnl >= 0 ? 'pos' : 'neg'}">
+              ${isActiveOrPartial ? '—' : (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + '%'}
             </div>
           </div>
         </div>
