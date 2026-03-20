@@ -4,7 +4,7 @@ let insightSortCol = 'newest';
 let insightFilterStatus = 'all';
 
 function renderInsightTables() {
-  const closed = allSignals.filter(s => s.status && !['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
+  const statsSignals = allSignals.filter(s => s.status && !['ACTIVE', '⌛ WAITING', 'EXPIRED'].includes(s.status));
   const running = allSignals.filter(s => !s.status || ['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
   
   const ist = document.getElementById('insightStatsTables');
@@ -13,9 +13,9 @@ function renderInsightTables() {
       return;
   }
 
-  const wins = closed.filter(s => s.status?.includes('TP') || s.status === 'TSL_HIT');
-  const losses = closed.filter(s => s.status === 'SL_HIT');
-  const wr = closed.length > 0 ? ((wins.length / closed.length) * 100).toFixed(1) : '0';
+  const wins = statsSignals.filter(s => s.status?.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
+  const losses = statsSignals.filter(s => s.status === 'SL_HIT' || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) <= 0));
+  const wr = statsSignals.length > 0 ? ((wins.length / statsSignals.length) * 100).toFixed(1) : '0';
   
   const avgW = wins.length ? (wins.map(s=>parseFloat(s.profit_pct)||0).reduce((a,b)=>a+b,0)/wins.length).toFixed(2) : '0';
   const avgL = losses.length ? (losses.map(s=>parseFloat(s.profit_pct)||0).reduce((a,b)=>a+b,0)/losses.length).toFixed(2) : '0';
@@ -26,16 +26,29 @@ function renderInsightTables() {
   let longWins = 0, longTotal = 0;
   let shortWins = 0, shortTotal = 0;
 
-  closed.forEach(s => {
+  statsSignals.forEach(s => {
     const pnl = parseFloat(s.profit_pct || 0);
     const st = s.status;
+    const entry = parseFloat(s.entry_price || 0);
+    const tp1 = parseFloat(s.tp1 || 0);
+    const tp2 = parseFloat(s.tp2 || 0);
+    const side = (s.signal || '').includes('BUY') ? 'LONG' : 'SHORT';
+
     if (st === 'TP3_HIT') tp3++;
     else if (st === 'TP2_HIT') tp2_c++;
     else if (st === 'TP1_HIT') tp1_c++;
     else if (st === 'SL_HIT') sl++;
-    else if (st === 'TSL_HIT') tsl++;
+    else if (st === 'TSL_HIT') {
+      tsl++;
+      // Also count in TP bins if they reached them before TSL
+      if (entry > 0) {
+        const tp1_pnl = side === 'LONG' ? ((tp1 - entry) / entry * 100) : ((entry - tp1) / entry * 100);
+        const tp2_pnl = side === 'LONG' ? ((tp2 - entry) / entry * 100) : ((entry - tp2) / entry * 100);
+        if (pnl >= tp2_pnl - 0.5) tp2_c++; 
+        else if (pnl >= tp1_pnl - 0.5) tp1_c++;
+      }
+    }
 
-    const side = (s.signal || '').includes('BUY') ? 'LONG' : 'SHORT';
     const isWin = pnl > 0 || st.includes('TP');
     if (side === 'LONG') { longTotal++; if (isWin) longWins++; }
     else { shortTotal++; if (isWin) shortWins++; }
@@ -45,9 +58,9 @@ function renderInsightTables() {
   const shortWr = shortTotal > 0 ? ((shortWins / shortTotal) * 100).toFixed(0) : '—';
 
   const scoreRows = [['90+',90,999],['80-89',80,89],['70-79',70,79],['60-69',60,69],['<60',0,59]].map(([lbl,mn,mx])=>{
-    const g = closed.filter(s=>{ const sc=parseInt(s.score)||0; return sc>=mn && sc<=mx; });
+    const g = statsSignals.filter(s=>{ const sc=parseInt(s.score)||0; return sc>=mn && sc<=mx; });
     if (!g.length) return '';
-    const gw = g.filter(s=>s.status?.includes('TP')||s.status==='TSL_HIT').length;
+    const gw = g.filter(s=>s.status?.includes('TP')||(s.status==='TSL_HIT' && parseFloat(s.profit_pct) > 0)).length;
     const gwp = ((gw/g.length)*100).toFixed(0);
     const cls = parseInt(gwp)>=60?'pos':parseInt(gwp)<40?'neg':'';
     return `<tr><td>${lbl}</td><td>${g.length}</td><td class="${cls}">${gwp}%</td></tr>`;
@@ -119,8 +132,8 @@ function renderInsightTables() {
               <div style="font-size:8px; color:var(--text-dim); text-transform:uppercase;">R:R Ratio</div>
             </div>
             <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:8px; text-align:center;">
-              <div style="font-size:16px; font-weight:700; color:var(--text);">${closed.length}</div>
-              <div style="font-size:8px; color:var(--text-dim); text-transform:uppercase;">Closed signals</div>
+              <div style="font-size:16px; font-weight:700; color:var(--text);">${statsSignals.length}</div>
+              <div style="font-size:8px; color:var(--text-dim); text-transform:uppercase;">Recapped signals</div>
             </div>
           </div>
 
@@ -242,18 +255,18 @@ async function triggerDeepAnalysis() {
   setView('aiLoading');
 
   try {
-    const closed = allSignals.filter(s => s.status && !['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
+    const statsSignals = allSignals.filter(s => s.status && !['ACTIVE', '⌛ WAITING', 'EXPIRED'].includes(s.status));
     const active = allSignals.filter(s => !s.status || ['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
-    const wins = closed.filter(s => s.status && (s.status.includes('TP') || s.status === 'TSL_HIT'));
-    const losses = closed.filter(s => s.status === 'SL_HIT');
-    const overallWR = closed.length > 0 ? ((wins.length / closed.length) * 100).toFixed(1) : '0';
+    const wins = statsSignals.filter(s => s.status && (s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0)));
+    const losses = statsSignals.filter(s => s.status === 'SL_HIT' || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) <= 0));
+    const overallWR = statsSignals.length > 0 ? ((wins.length / statsSignals.length) * 100).toFixed(1) : '0';
 
     const winProfits = wins.map(s => parseFloat(s.profit_pct) || 0);
     const lossProfits = losses.map(s => parseFloat(s.profit_pct) || 0);
     const avgWin = winProfits.length ? (winProfits.reduce((a,b) => a+b, 0) / winProfits.length).toFixed(2) : '0';
     const avgLoss = lossProfits.length ? (lossProfits.reduce((a,b) => a+b, 0) / lossProfits.length).toFixed(2) : '0';
 
-    const statsPayload = `=== RAPOR DATA HISTORIS === Total:${allSignals.length} | Closed:${closed.length} | WR:${overallWR}% | AvgW:+${avgWin}% | AvgL:${avgLoss}% | Active:${active.length}`;
+    const statsPayload = `=== RAPOR DATA HISTORIS === Total:${allSignals.length} | Scored:${statsSignals.length} | WR:${overallWR}% | AvgW:+${avgWin}% | AvgL:${avgLoss}% | Active:${active.length}`;
 
     const response = await fetch('/api/ai-insight', {
       method: 'POST',

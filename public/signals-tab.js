@@ -114,19 +114,38 @@ function renderCard(s) {
   const timeAgo = getTimeAgo(pastDate);
 
   const status = s.status || 'ACTIVE';
-  const isActiveOrPartial = ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(status);
-  const isTP1 = status.includes('TP1') || status.includes('TP2') || status.includes('TP3');
-  const isTP2 = status.includes('TP2') || status.includes('TP3');
-  const isTP3 = status.includes('TP3');
+  const entry = parseFloat(s.entry_price || 0);
+  const tp1 = parseFloat(s.tp1 || 0);
+  const tp2 = parseFloat(s.tp2 || 0);
+  
+  let reachedTP1 = status.includes('TP1') || status.includes('TP2') || status.includes('TP3');
+  let reachedTP2 = status.includes('TP2') || status.includes('TP3');
+  let reachedTP3 = status.includes('TP3');
+
+  if (status === 'TSL_HIT' && entry > 0) {
+    const tp1_pnl = side === 'LONG' ? ((tp1 - entry) / entry * 100) : ((entry - tp1) / entry * 100);
+    const tp2_pnl = side === 'LONG' ? ((tp2 - entry) / entry * 100) : ((entry - tp2) / entry * 100);
+    if (pnl >= tp2_pnl - 0.5) { reachedTP1 = true; reachedTP2 = true; }
+    else if (pnl >= tp1_pnl - 0.5) { reachedTP1 = true; }
+  }
+
+  const isTP1 = reachedTP1;
+  const isTP2 = reachedTP2;
+  const isTP3 = reachedTP3;
   const isSL = status === 'SL_HIT';
+  const isActiveOrPartial = ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(status);
 
   let statusDisplay = '⌛ WAITING';
   if (status === 'TP1_HIT') statusDisplay = '🔄 TP1 (Running)';
   else if (status === 'TP2_HIT') statusDisplay = '🔄 TP2 (Running)';
   else if (status === 'TP3_HIT') statusDisplay = '🏆 TP3 (Closed)';
-  else if (status === 'SL_HIT') statusDisplay = '❌ SL HIT';
-  else if (status === 'TSL_HIT') statusDisplay = '🛡️ TSL HIT';
-  else if (status === 'EXPIRED') statusDisplay = '⌛ EXPIRED';
+  else if (status === 'SL_HIT') statusDisplay = '❌ SL (Closed)';
+  else if (status === 'TSL_HIT') {
+    if (isTP2) statusDisplay = '🛡️ TSL @ TP2 (Closed)';
+    else if (isTP1) statusDisplay = '🛡️ TSL @ TP1 (Closed)';
+    else statusDisplay = '🛡️ TSL (Closed)';
+  }
+  else if (status === 'EXPIRED') statusDisplay = '⌛ EXPIRED (Closed)';
 
   return `
     <div class="signal-card">

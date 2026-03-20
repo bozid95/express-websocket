@@ -31,13 +31,14 @@ async function fetchData() {
 
     allSignals = signals;
 
-    // Statistics Calculation
+    // Statistics Calculation: Include TP1/TP2 hits as they are already "wins"
     const activeSignals = signals.filter(s => ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE'));
-    const closed = signals.filter(s => ['TP3_HIT', 'SL_HIT', 'TSL_HIT', 'EXPIRED'].includes(s.status));
+    const resolvedSignals = signals.filter(s => s.status && !['ACTIVE', '⌛ WAITING', 'EXPIRED'].includes(s.status));
     const activeCount = activeSignals.length;
-    const wins = closed.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
-    const winRate = closed.length > 0 ? ((wins.length / closed.length) * 100).toFixed(0) : 0;
-    const totalPnl = closed.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
+    
+    const wins = resolvedSignals.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
+    const winRate = resolvedSignals.length > 0 ? ((wins.length / resolvedSignals.length) * 100).toFixed(0) : 0;
+    const totalPnl = resolvedSignals.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
 
     // Initial UI Update (Home Tab specifically)
     if (typeof updateRunningStats === 'function') updateRunningStats();
@@ -52,7 +53,7 @@ async function fetchData() {
     if (heroBox) heroBox.className = 'stat-box hero-box ' + (totalPnl >= 0 ? 'pos' : 'neg');
     
     const hwin = document.getElementById('hwin');
-    if (hwin) hwin.textContent = `Closed: ${closed.length} | Running: ${activeCount}`;
+    if (hwin) hwin.textContent = `Scored: ${resolvedSignals.length} | Running: ${activeCount}`;
     
     const macc = document.getElementById('macc');
     if (macc) macc.textContent = winRate + '%';
