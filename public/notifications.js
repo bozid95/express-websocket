@@ -1,0 +1,261 @@
+// ===========================
+// CryptoSpike Notification System — Supabase backed
+// Notifikasi disimpan di DB, persisten lintas sesi
+// ===========================
+
+const NotifManager = (() => {
+  // ─── State ──────────────────────────────────────────────────
+  let notifications = [];       // local cache dari Supabase
+  let lastFetchedAt = null;     // timestamp fetch terakhir (untuk incremental poll)
+  let pollTimer = null;
+  let panelOpen = false;
+  const MAX_LOCAL = 100;
+  const POLL_MS   = 15000;  // poll tiap 15 detik
+  const HOURS_BACK = 48;    // ambil notif 48 jam terakhir saat first load
+
+  // ─── Supabase helpers ──────────────────────────────────────
+  function supaHeaders() {
+    return { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY, 'Content-Type': 'application/json' };
+  }
+
+  // ─── Format helpers ────────────────────────────────────────
+  function fmtPrice(v) {
+    const n = parseFloat(v) || 0;
+    if (!n) return '—';
+    return n < 1 ? n.toFixed(6) : n < 100 ? n.toFixed(4) : n.toFixed(2);
+  }
+  function fmtPct(v) {
+    const n = parseFloat(v) || 0;
+    return (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+  }
+  function timeAgo(date) {
+    const s = Math.floor((Date.now() - new Date(date)) / 1000);
+    if (s < 60)  return 'just now';
+    const m = Math.floor(s / 60);
+    if (m < 60)  return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24)  return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  // ─── Build display data from a raw DB row ──────────────────
+  function buildDisplay(row) {
+    const type = row.type || '';
+    const sym  = row.symbol || '?';
+    const side = row.side   || '';
+    const pct  = parseFloat(row.profit_pct) || 0;
+    const price = parseFloat(row.price) || 0;
+
+    let icon, title, subtitle;
+
+    switch (type) {
+      case 'NEW_SIGNAL':
+        icon     = '🆕';
+        title    = `New Signal — ${sym}`;
+        subtitle = `${side} • Entry @ ${fmtPrice(price)}`;
+        break;
+      case 'TP1_HIT':
+        icon     = '✅';
+        title    = `TP1 Hit — ${sym}`;
+        subtitle = `${side} • TP1 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`;
+        break;
+      case 'TP2_HIT':
+        icon     = '🟢';
+        title    = `TP2 Hit — ${sym}`;
+        subtitle = `${side} • TP2 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`;
+        break;
+      case 'TP3_HIT':
+        icon     = '🏆';
+        title    = `TP3 Hit — ${sym}`;
+        subtitle = `${side} • TP3 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`;
+        break;
+      case 'TSL_HIT':
+        icon     = pct >= 0 ? '🛡️' : '🛑';
+        title    = `TSL Hit — ${sym}`;
+        subtitle = pct ? `${side} • Trailing SL • ${fmtPct(pct)}` : `${side} • Trailing SL triggered`;
+        break;
+      case 'SL_HIT':
+        icon     = '❌';
+        title    = `SL Hit — ${sym}`;
+        subtitle = `${side} • SL @ ${fmtPrice(price)} • ${fmtPct(Math.abs(pct) > 0 ? -Math.abs(pct) : pct)} loss`;
+        break;
+      default:
+        icon     = '📋';
+        title    = `${type} — ${sym}`;
+        subtitle = side;
+    }
+
+    const notifType = type === 'NEW_SIGNAL' ? 'new'
+      : type === 'TP3_HIT' ? 'tp3'
+      : type.includes('TP') || type === 'TSL_HIT' ? 'tp'
+      : 'sl';
+
+    return { ...row, icon, title, subtitle, notifType };
+  }
+
+  // ─── Fetch: first load (last 48h) ──────────────────────────
+  async function fetchInitial() {
+    try {
+      const since = new Date(Date.now() - HOURS_BACK * 3600 * 1000).toISOString();
+      const url = `${SUPA_URL}/rest/v1/notifications?select=*&created_at=gte.${since}&order=created_at.desc&limit=${MAX_LOCAL}`;
+      const res = await fetch(url, { headers: supaHeaders() });
+      if (!res.ok) throw new Error(await res.text());
+      const rows = await res.json();
+      notifications = rows.map(buildDisplay);
+      lastFetchedAt = new Date().toISOString();
+      renderList();
+      updateBadge();
+    } catch (e) {
+      console.warn('[Notif] fetchInitial error:', e);
+    }
+  }
+
+  // ─── Poll: incremental (only rows newer than lastFetchedAt) ─
+  async function pollNew() {
+    if (!lastFetchedAt) return;
+    try {
+      const url = `${SUPA_URL}/rest/v1/notifications?select=*&created_at=gt.${encodeURIComponent(lastFetchedAt)}&order=created_at.asc&limit=50`;
+      const res = await fetch(url, { headers: supaHeaders() });
+      if (!res.ok) return;
+      const rows = await res.json();
+      if (!Array.isArray(rows) || rows.length === 0) { lastFetchedAt = new Date().toISOString(); return; }
+
+      rows.forEach(row => {
+        const display = buildDisplay(row);
+        notifications.unshift(display);
+      });
+      if (notifications.length > MAX_LOCAL) notifications = notifications.slice(0, MAX_LOCAL);
+      lastFetchedAt = new Date().toISOString();
+
+      renderList();
+      updateBadge();
+      // Ring the bell for new notifs
+      ringBell();
+    } catch (e) {
+      console.warn('[Notif] poll error:', e);
+    }
+  }
+
+  // ─── Mark read ─────────────────────────────────────────────
+  async function markRead(id) {
+    const n = notifications.find(x => x.id === id);
+    if (!n || n.read) return;
+    n.read = true;
+    renderList();
+    updateBadge();
+    // Update in DB (fire-and-forget)
+    fetch(`${SUPA_URL}/rest/v1/notifications?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: supaHeaders(),
+      body: JSON.stringify({ read: true })
+    }).catch(() => {});
+  }
+
+  async function markAllRead() {
+    const unread = notifications.filter(n => !n.read);
+    if (!unread.length) return;
+    unread.forEach(n => n.read = true);
+    renderList();
+    updateBadge();
+    // Bulk update DB
+    const ids = unread.map(n => `"${n.id}"`).join(',');
+    fetch(`${SUPA_URL}/rest/v1/notifications?id=in.(${ids})`, {
+      method: 'PATCH',
+      headers: supaHeaders(),
+      body: JSON.stringify({ read: true })
+    }).catch(() => {});
+  }
+
+  // ─── Bell ring animation ────────────────────────────────────
+  function ringBell() {
+    const bell = document.getElementById('notifBell');
+    if (!bell) return;
+    bell.classList.remove('notif-bell-ring');
+    void bell.offsetWidth;
+    bell.classList.add('notif-bell-ring');
+  }
+
+  // ─── Badge ─────────────────────────────────────────────────
+  function updateBadge() {
+    const unread = notifications.filter(n => !n.read).length;
+    const el = document.getElementById('notifBadge');
+    if (!el) return;
+    if (unread > 0) {
+      el.style.display = 'flex';
+      el.textContent = unread > 99 ? '99+' : unread;
+      el.classList.remove('badge-pop');
+      void el.offsetWidth;
+      el.classList.add('badge-pop');
+    } else {
+      el.style.display = 'none';
+    }
+  }
+
+  // ─── Render list ───────────────────────────────────────────
+  function renderList() {
+    const list  = document.getElementById('notifList');
+    const empty = document.getElementById('notifEmpty');
+    if (!list) return;
+
+    if (notifications.length === 0) {
+      list.innerHTML = '';
+      if (empty) empty.style.display = 'flex';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+
+    list.innerHTML = notifications.map(n => {
+      const relTime = timeAgo(n.created_at);
+      const d       = new Date(n.created_at);
+      const absTime = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+      const absDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+      const readClass = n.read ? 'notif-item-read' : '';
+      return `
+        <div class="notif-item notif-type-${n.notifType} ${readClass}" onclick="NotifManager.markRead('${n.id}')">
+          <div class="notif-item-icon">${n.icon}</div>
+          <div class="notif-item-body">
+            <div class="notif-item-title">${n.title}</div>
+            <div class="notif-item-sub">${n.subtitle}</div>
+            <div class="notif-item-time">
+              <span class="notif-abs-time">🕐 ${absDate} ${absTime}</span>
+              <span class="notif-rel-time">${relTime}</span>
+            </div>
+          </div>
+          ${!n.read ? '<div class="notif-unread-dot"></div>' : ''}
+        </div>`;
+    }).join('');
+  }
+
+  // ─── Panel toggle ──────────────────────────────────────────
+  function togglePanel()  { panelOpen ? closePanel() : openPanel(); }
+  function openPanel()  {
+    panelOpen = true;
+    const p = document.getElementById('notifPanel');
+    const o = document.getElementById('notifOverlay');
+    if (p) { p.style.display = 'flex'; requestAnimationFrame(() => p.classList.add('notif-panel-open')); }
+    if (o) o.style.display = 'block';
+  }
+  function closePanel() {
+    panelOpen = false;
+    const p = document.getElementById('notifPanel');
+    const o = document.getElementById('notifOverlay');
+    if (p) { p.classList.remove('notif-panel-open'); setTimeout(() => { if (!panelOpen) p.style.display = 'none'; }, 300); }
+    if (o) o.style.display = 'none';
+  }
+
+  // ─── Init ──────────────────────────────────────────────────
+  async function init() {
+    await fetchInitial();
+    // Start polling every 15s for new notifications
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(pollNew, POLL_MS);
+  }
+
+  // Public API
+  return { init, togglePanel, closePanel, markRead, markAllRead };
+})();
+
+// Global hooks called from HTML onclick
+function toggleNotifPanel() { NotifManager.togglePanel(); }
+function closeNotifPanel()  { NotifManager.closePanel(); }
+function initNotifications() { NotifManager.init(); }

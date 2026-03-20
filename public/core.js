@@ -217,6 +217,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
     fetchData();
     if (typeof fetchDonations === 'function') fetchDonations();
+    if (typeof initNotifications === 'function') initNotifications();
     
     setInterval(fetchData, 45000);
     if (typeof fetchDonations === 'function') setInterval(fetchDonations, 60000);
