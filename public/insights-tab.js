@@ -246,7 +246,7 @@ async function triggerDeepAnalysis() {
   if (allSignals.length < 5) {
     setView('aiError');
     const em = document.getElementById('aiErrorMsg');
-    if(em) em.textContent = 'Data tidak mencukupi untuk analisa (min 5 sinyal). Tunggu beberapa sinyal masuk terlebih dahulu.';
+    if(em) em.textContent = 'Insufficient data for analysis (min 5 signals). Please wait for more signals to arrive.';
     return;
   }
 
@@ -285,7 +285,7 @@ async function triggerDeepAnalysis() {
     if(pr) pr.innerHTML = typeof marked !== 'undefined' ? marked.parse(aiResponse) : aiResponse.replace(/\n/g, '<br>');
     
     const at = document.getElementById('aiTimestamp');
-    if(at) at.textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    if(at) at.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     
     setView('aiResult');
 

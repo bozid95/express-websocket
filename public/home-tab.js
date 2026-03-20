@@ -45,7 +45,7 @@ function updateRunningStats() {
   const af = document.getElementById('accFill'); if(af) af.style.width = acc !== '—' ? acc + '%' : '0%';
 
   let detail = `${profit} profit · ${loss} loss`;
-  if (noPrice > 0) detail += ` · ${noPrice} menunggu harga live`;
+  if (noPrice > 0) detail += ` · ${noPrice} waiting for live price`;
   const rd = document.getElementById('runDetail'); if(rd) rd.textContent = detail;
 
   // Render mini P&L cards
@@ -138,11 +138,11 @@ function updateActiveInsights() {
     const homeTip = document.getElementById('homeTip');
     if (homeTip) {
       if (lPerc > 60) {
-        homeTip.textContent = "Market Pulse menunjukkan bias BULLISH kuat (L > 60%). Ini waktu yang ideal untuk mencari setup LONG dengan konfirmasi volume tinggi di area Support.";
+        homeTip.textContent = "Market Pulse shows a strong BULLISH bias (L > 60%). This is an ideal time to look for LONG setups with high volume confirmation at Support areas.";
       } else if (sPerc > 60) {
-        homeTip.textContent = "Market Pulse menunjukkan bias BEARISH dominan (S > 60%). Berhati-hatilah pada pullback pendek, setup SHORT di area Resistance terlihat lebih menjanjikan.";
+        homeTip.textContent = "Market Pulse shows a dominant BEARISH bias (S > 60%). Be careful of short pullbacks; SHORT setups at Resistance areas look more promising.";
       } else {
-        homeTip.textContent = "Pasar saat ini dalam kondisi Netral/Terimbang. Hindari FOMO dan tunggu konfirmasi breakout atau sinyal dengan skor > 85 untuk probabilitas tinggi.";
+        homeTip.textContent = "The market is currently Neutral/Balanced. Avoid FOMO and wait for breakout confirmation or signals with score > 85 for high probability.";
       }
     }
   }
@@ -166,23 +166,23 @@ function updateActiveInsights() {
   
   if (scorePerfEl && scoreSubEl) {
     if (highWr > lowWr + 5) {
-      scorePerfEl.innerHTML = '<span class="badge-safe action-badge">Skor Tinggi Valid</span>';
+      scorePerfEl.innerHTML = '<span class="badge-safe action-badge">High Score Valid</span>';
       scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(0)}% (Strong Correlation)`;
     } else if (lowWr > highWr) {
-      scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Anomali Skor</span>';
-      scoreSubEl.textContent = `Peringatan: Skor rendah malah lebih akurat hari ini (${lowWr.toFixed(0)}% WR).`;
+      scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Score Anomaly</span>';
+      scoreSubEl.textContent = `Warning: Low scores are more accurate today (${lowWr.toFixed(0)}% WR).`;
     } else {
-      scorePerfEl.textContent = 'Stabil';
-      scoreSubEl.textContent = 'Korelasi skor & profit dalam kondisi normal.';
+      scorePerfEl.textContent = 'Stable';
+      scoreSubEl.textContent = 'Score & profit correlation is normal.';
     }
   }
 
   let guidance = "";
-  if (longs > shorts * 2) guidance = "Sentimen: OVERBOUGHT. Hati-hati entry LONG baru, pasar sedang jenuh beli.";
-  else if (shorts > longs * 2) guidance = "Sentimen: OVERSOLD. Sinyal SHORT mendominasi, cari sinyal dengan Grade A saja.";
-  else guidance = "Pasar Seimbang. Fokus pada sinyal koin individu dengan skor >75.";
+  if (longs > shorts * 2) guidance = "Sentiment: OVERBOUGHT. Be cautious about new LONG entries, the market is saturated.";
+  else if (shorts > longs * 2) guidance = "Sentiment: OVERSOLD. SHORT signals dominate, look for Grade A signals only.";
+  else guidance = "Balanced Market. Focus on individual coin signals with score >75.";
   
-  if (lowWr > highWr) guidance += " [System Note: Analisa data menunjukkan skor rendah sedang outlier/akurat saat ini.]";
+  if (lowWr > highWr) guidance += " [System Note: Historical data shows low scores are currently outliers/accurate today.]";
   
   const iGui = document.getElementById('intelGuidance');
   if(iGui) iGui.textContent = guidance;

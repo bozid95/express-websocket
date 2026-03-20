@@ -53,7 +53,7 @@ async function fetchData() {
     if (heroBox) heroBox.className = 'stat-box hero-box ' + (totalPnl >= 0 ? 'pos' : 'neg');
     
     const hwin = document.getElementById('hwin');
-    if (hwin) hwin.textContent = `Selesai: ${resolvedSignals.length} Sinyal | Running: ${activeCount} Sinyal`;
+    if (hwin) hwin.textContent = `Closed: ${resolvedSignals.length} Signals | Running: ${activeCount} Signals`;
     
     const macc = document.getElementById('macc');
     if (macc) macc.textContent = winRate + '%';

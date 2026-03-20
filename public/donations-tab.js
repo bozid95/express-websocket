@@ -37,7 +37,7 @@ function renderDonations() {
   let totalToday = 0;
   let totalMonth = 0;
   const now = new Date();
-  const formatIdr = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
   const strOptions = { timeZone: 'Asia/Jakarta' };
   const nowMonth = new Date(now.toLocaleString('en-US', strOptions)).getMonth();
   const nowYear = new Date(now.toLocaleString('en-US', strOptions)).getFullYear();
@@ -53,12 +53,12 @@ function renderDonations() {
     }
   });
   
-  const dts = document.getElementById('donTodayStats'); if(dts) dts.textContent = formatIdr(totalToday);
-  const dms = document.getElementById('donMonthStats'); if(dms) dms.textContent = formatIdr(totalMonth);
+  const dts = document.getElementById('donTodayStats'); if(dts) dts.textContent = formatCurrency(totalToday);
+  const dms = document.getElementById('donMonthStats'); if(dms) dms.textContent = formatCurrency(totalMonth);
 
   container.innerHTML = pageItems.map(d => {
     const date = new Date(d.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }).replace(',', '');
-    const amount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(d.amount);
+    const amount = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(d.amount);
     return `
       <div style="display:flex; justify-content:space-between; align-items:flex-start; padding: 12px 0; border-bottom: 1px solid var(--border);">
         <div>
@@ -105,7 +105,7 @@ function renderTopDonators() {
   });
 
   const top10 = Object.values(grouped).sort((a,b) => b.total - a.total).slice(0, 10);
-  const formatIdr = (val) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+  const formatCurrency = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
   
   let html = '';
   top10.forEach((d, i) => {
@@ -124,7 +124,7 @@ function renderTopDonators() {
           </div>
         </div>
         <div style="text-align:right; font-weight:700; font-size:14px; color:#ffb52d;">
-          ${formatIdr(d.total)}
+          ${formatCurrency(d.total)}
         </div>
       </div>
     `;
