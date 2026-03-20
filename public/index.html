@@ -50,21 +50,43 @@
       <div class="home-main-col">
         <div class="summary-grid">
           <div class="stat-box hero-box" id="heroBox">
-            <div class="stat-label" style="letter-spacing: 2px; color: var(--accent); margin-bottom: 12px;">REALIZED PERFORMANCE</div>
-            <div class="hero-pnl" id="hpnl" style="margin: 0;">0.00%</div>
-            <div id="hwin" style="font-size: 11px; font-weight: 700; color: var(--text-dim); margin-top: 12px;">Loading system statistics...</div>
+            <div class="stat-label" style="letter-spacing: 2.5px; color: var(--accent); margin-bottom: 8px;">REALIZED PERFORMANCE</div>
+            <div class="hero-pnl" id="hpnl" style="margin: 0; filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.3));">0.00%</div>
+            <div id="hwin" style="font-size: 11px; font-weight: 700; color: var(--text-dim); margin-top: 14px; opacity: 0.8;">Loading system statistics...</div>
+            
+            <div class="hero-substats" style="display: flex; justify-content: center; gap: 20px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); width: 100%;">
+              <div style="text-align: left;">
+                <div style="font-size: 8px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Top Profit</div>
+                <div id="hBest" style="font-size: 12px; font-weight: 700; color: var(--buy);">+0.00%</div>
+              </div>
+              <div style="text-align: left;">
+                <div style="font-size: 8px; color: var(--text-dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Avg Weekly</div>
+                <div id="hWeekly" style="font-size: 12px; font-weight: 700; color: var(--text);">+0.00%</div>
+              </div>
+            </div>
           </div>
-          <div class="stat-box">
-            <div class="stat-label">Win Rate</div>
-            <div class="stat-val" id="macc" style="color: var(--buy); font-size: 28px;">— %</div>
+          <div class="stat-box win-rate">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+              <div class="stat-label">Win Rate</div>
+              <div id="macc24h" style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(14, 203, 129, 0.1); color: var(--buy); font-weight: 700;">24H: —%</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px;">
+              <div class="stat-val" id="macc" style="color: var(--buy); font-size: 32px;">— %</div>
+              <div style="font-size: 10px; color: var(--text-dim); font-weight: 600;">(Overall Winrate)</div>
+            </div>
             <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:10px; margin-top:auto; overflow:hidden;">
               <div id="accMiniBar" style="height:100%; background:linear-gradient(90deg, var(--buy), #34d399); width:0%; transition:width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
             </div>
           </div>
-          <div class="stat-box">
+          <div class="stat-box sys-signals">
             <div class="stat-label">System Signals</div>
-            <div class="stat-val" id="mactiveTotal" style="color: var(--accent); font-size: 28px;">0</div>
-            <div style="font-size:10px; color:var(--text-dim); margin-top:auto; font-weight:600;">Total Tracked Assets</div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <div class="stat-val" id="mactiveTotal" style="color: var(--accent); font-size: 32px;">0</div>
+              <div style="font-size: 10px; color: var(--text-dim); font-weight: 600;">Total Tracked</div>
+            </div>
+            <div id="msideBreakdown" style="font-size:9px; color:var(--text-dim); margin-top:auto; font-weight:600; display: flex; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+               <span style="color: var(--buy);">0 L</span> · <span style="color: var(--sell);">0 S</span> · <span style="color: var(--text);">0 High Score</span>
+            </div>
           </div>
         </div>
 
@@ -104,16 +126,19 @@
           </div>
           <div class="running-grid">
             <div class="running-item profit">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-bottom: 4px;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
               <div class="running-num pos" id="runProfit">0</div>
               <div class="running-label">Profit Signals</div>
             </div>
             <div class="running-item loss">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-bottom: 4px;"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
               <div class="running-num neg" id="runLoss">0</div>
               <div class="running-label">Loss Signals</div>
             </div>
             <div class="running-item accuracy">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-bottom: 4px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4l3 3"></path></svg>
               <div class="running-num" id="runAccuracy" style="color:var(--accent)">—</div>
-              <div class="running-label">Signal Accuracy</div>
+              <div class="running-label">Live Accuracy</div>
             </div>
           </div>
           <div class="accuracy-bar"><div class="accuracy-fill" id="accFill" style="width:0%"></div></div>

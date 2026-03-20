@@ -30,20 +30,35 @@ async function fetchData() {
     if (!Array.isArray(signals)) return;
 
     allSignals = signals;
-
-    // Statistics Calculation: Include TP1/TP2 hits as they are already "wins"
+    
+    // Statistics Calculation
     const activeSignals = signals.filter(s => ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE'));
     const resolvedSignals = signals.filter(s => s.status && !['ACTIVE', '⌛ WAITING', 'EXPIRED'].includes(s.status));
-    const activeCount = activeSignals.length;
     
+    // Win Rate (Overall)
     const wins = resolvedSignals.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
     const winRate = resolvedSignals.length > 0 ? ((wins.length / resolvedSignals.length) * 100).toFixed(0) : 0;
-    const totalPnl = resolvedSignals.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
-
-    // Initial UI Update (Home Tab specifically)
-    if (typeof updateRunningStats === 'function') updateRunningStats();
     
-    // Summary Cards (Hero)
+    // Win Rate (Last 24h)
+    const now = new Date();
+    const signals24h = resolvedSignals.filter(s => (now - new Date(s.sent_at)) < 86400000);
+    const wins24h = signals24h.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
+    const winRate24h = signals24h.length > 0 ? ((wins24h.length / signals24h.length) * 100).toFixed(0) : 0;
+    
+    const totalPnl = resolvedSignals.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
+    
+    // Best Trade
+    const bestTrade = resolvedSignals.reduce((max, s) => Math.max(max, parseFloat(s.profit_pct) || 0), 0);
+    
+    // Avg Weekly (Estimate based on oldest signal)
+    let avgWeekly = totalPnl;
+    if (resolvedSignals.length > 0) {
+        const oldest = new Date(resolvedSignals[resolvedSignals.length-1].sent_at);
+        const weeks = Math.max(1, (now - oldest) / (86400000 * 7));
+        avgWeekly = totalPnl / weeks;
+    }
+
+    // Hero Cards
     const hpnl = document.getElementById('hpnl');
     if (hpnl) {
         hpnl.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + '%';
@@ -53,16 +68,41 @@ async function fetchData() {
     if (heroBox) heroBox.className = 'stat-box hero-box ' + (totalPnl >= 0 ? 'pos' : 'neg');
     
     const hwin = document.getElementById('hwin');
-    if (hwin) hwin.textContent = `Closed: ${resolvedSignals.length} Signals | Running: ${activeCount} Signals`;
+    if (hwin) hwin.textContent = `Closed: ${resolvedSignals.length} · Running: ${activeSignals.length}`;
     
+    const hBest = document.getElementById('hBest');
+    if (hBest) hBest.textContent = `+${bestTrade.toFixed(2)}%`;
+    
+    const hWeekly = document.getElementById('hWeekly');
+    if (hWeekly) hWeekly.textContent = `${avgWeekly >= 0 ? '+' : ''}${avgWeekly.toFixed(2)}%`;
+
+    // Win Rate Card
     const macc = document.getElementById('macc');
     if (macc) macc.textContent = winRate + '%';
+    
+    const macc24 = document.getElementById('macc24h');
+    if (macc24) {
+        macc24.textContent = `24H: ${winRate24h}%`;
+        macc24.style.background = winRate24h >= 50 ? 'rgba(14, 203, 129, 0.1)' : 'rgba(246, 70, 93, 0.1)';
+        macc24.style.color = winRate24h >= 50 ? 'var(--buy)' : 'var(--sell)';
+    }
     
     const mbar = document.getElementById('accMiniBar');
     if (mbar) mbar.style.width = winRate + '%';
     
+    // System Signals Card
     const mTotal = document.getElementById('mactiveTotal');
     if (mTotal) mTotal.textContent = signals.length;
+    
+    const mside = document.getElementById('msideBreakdown');
+    if (mside) {
+        const longs = signals.filter(s => (s.signal || '').includes('BUY')).length;
+        const shorts = signals.length - longs;
+        const high = signals.filter(s => (parseFloat(s.score) || 0) >= 85).length;
+        mside.innerHTML = `<span style="color: var(--buy);">${longs} L</span> · <span style="color: var(--sell);">${shorts} S</span> · <span style="color: var(--text);">${high} High Score</span>`;
+    }
+
+    if (typeof updateRunningStats === 'function') updateRunningStats();
 
     // Trigger tab-specific renders if they exist
     if (typeof renderSignals === 'function') renderSignals();
