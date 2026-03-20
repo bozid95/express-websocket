@@ -373,33 +373,85 @@
 
     </div>
 
-    <!-- ABOUT: Guide -->
+    <!-- ABOUT: How It Works -->
     <div id="tab-about" class="tab-content">
       <div class="panel">
-        <div class="panel-title" style="color:var(--accent); font-size:18px;">📚 Dashboard Guide</div>
-        <div class="panel-desc" style="margin-bottom:24px;">A comprehensive guide to interpreting CryptoSpike signal statuses and performance metrics.</div>
+        <div class="panel-title" style="color:var(--accent); font-size:18px;">🛠️ How It Works</div>
+        <div class="panel-desc" style="margin-bottom:24px;">A technical overview of the CryptoSpike ecosystem and signal lifecycle.</div>
         
-        <div style="margin-bottom: 18px;">
-          <div style="font-size:13px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-             <span class="status-dot" style="background:#34d399; box-shadow:0 0 6px #34d399"></span> Active Signals (Live)
+        <div style="margin-bottom: 20px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; background:rgba(99,102,241,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;">1</div>
+            Advanced Signal Generation
           </div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>⌛ WAITING :</b> The signal has been initiated but has not yet reached any designated targets. Profit/Loss fluctuates in real-time.</div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>🔄 TP1 / TP2 (Running) :</b> The signal has successfully reached Target 1 or 2. It remains dynamically tracked as it progresses towards the maximum target.</div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6; padding-left:32px;">
+            The CryptoSpike backend core continuously scans 200+ USDT pairs on Binance. It identifies high-probability setups using a combination of technical indicators (Volatility, Momentum, and Volume spikes) and multi-timeframe analysis.
+          </div>
         </div>
 
-        <div style="margin-bottom: 18px; border-top: 1px solid var(--border); padding-top:16px;">
-          <div style="font-size:13px; font-weight:600; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
-             <span class="status-dot" style="background:var(--sell); box-shadow:0 0 6px var(--sell)"></span> Closed Signals (History)
+        <div style="margin-bottom: 20px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; background:rgba(99,102,241,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;">2</div>
+            AI Confidence Scoring
           </div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>🏆 TP3 (Closed) :</b> The final target has been achieved. The signal is successfully concluded with maximum profit.</div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>❌ SL HIT :</b> The price hit the initial Stop Loss before reaching any targets. The signal is concluded with a loss.</div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>🛡️ TSL HIT :</b> Trailing Stop Loss. The signal initially reached a profitable target (TP1/TP2) but subsequently reversed and hit the ascending protective stop. The position is closed at a breakeven or partial profit.</div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6; padding-left:32px;">
+            Every signal is pre-evaluated by our proprietary AI model. It assigns a **Confidence Score (0-100)** to help you prioritize trades. The score factors in Bitcoin's dominance (Market Bias) and the specific pair's historical success rate within the system.
+          </div>
         </div>
 
-        <div style="border-top: 1px solid var(--border); padding-top:16px;">
-          <div style="font-size:13px; font-weight:600; margin-bottom:8px; color:#6366f1;">📊 Profit & Loss Tracking</div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>Total Performance (Realized P&L):</b> Located at the very top of the dashboard. This represents your <b>actual, finalized profit</b>. It exclusively and permanently records the final percentage sum from all closed historical trades (TP3, SL, or TSL).</div>
-          <div style="font-size:12px; margin-bottom:6px; color:var(--text-dim);"><b>Net Unrealized P&L (Floating):</b> Located under live signals. This represents <b>temporary "paper" profit</b>. It dynamically tracks the real-time profit of all currently active signals, which may fluctuate until the signal is formally closed.</div>
+        <div style="margin-bottom: 20px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; background:rgba(99,102,241,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;">3</div>
+            Live WebSocket Monitoring
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6; padding-left:32px;">
+            The Dashboard acts as your **Live Monitoring Terminal**. It establishes a direct WebSocket connection to Binance exchange to provide real-time, sub-second P&L updates for every active signal, ensuring you never miss a price move.
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; background:rgba(99,102,241,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;">4</div>
+            Automated Lifecycle Management
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6; padding-left:32px;">
+            The signal lifecycle is fully automated. The backend monitors your trades 24/7, automatically triggering **TP1, TP2, or TP3** hits. After reaching a target, the system activates a **Trailing Stop Loss (TSL)** to protect your locked-in profits from market reversals.
+          </div>
+        </div>
+
+        <div style="margin-bottom: 20px; border-top: 1px solid var(--border); padding-top:20px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; background:rgba(14,203,129,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;">5</div>
+            Intelligent Insight Analysis
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6; padding-left:32px;">
+            The learning loop completes in the <b>Insights Hub</b>. Our AI Signal Analyst (Llama 3.3) analyzes your unique historical data to suggest optimizations, such as better score thresholds or specific timeframes that yield higher win rates.
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border); padding-top:20px;">
+          <div style="font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px;">
+            <div style="width:24px; height:24px; background:rgba(99,102,241,0.1); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px;">6</div>
+            Profit & Statistics Calculation
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6; padding-left:32px;">
+            Profit is calculated using standard market formulas: <code>(Exit - Entry) / Entry * 100</code> for Longs and <code>(Entry - Exit) / Entry * 100</code> for Shorts. The <b>Total Realized Profit</b> on your dashboard is the cumulative sum of these percentages from all closed signals.
+          </div>
+        </div>
+
+        <div style="border-top: 2px solid var(--accent); margin-top:32px; padding-top:24px;">
+          <div class="panel-title" style="color:var(--text); font-size:18px; margin-bottom:8px;">🚀 User Success Guide</div>
+          <div class="panel-desc" style="margin-bottom:20px;">Follow these best practices to maximize your trading consistency with CryptoSpike.</div>
+
+          <div style="background:rgba(99,102,241,0.05); border:1px solid rgba(99,102,241,0.1); border-radius:12px; padding:16px;">
+            <ul style="margin:0; padding-left:20px; color:var(--text-dim); font-size:12px; line-height:1.8;">
+              <li><strong style="color:var(--text);">Prioritize High Scores:</strong> Focus on signals with a <b>Confidence Score > 80</b>. Historically, these have a significantly higher hit rate for TP2 and TP3.</li>
+              <li><strong style="color:var(--text);">Check Market Bias:</strong> Before entering a trade, look at the <b>Market Bias</b> bar in the Insights tab. It's safer to go Long when the bias is >60% Bullish.</li>
+              <li><strong style="color:var(--text);">Let the TSL Work:</strong> The Trailing Stop Loss is calibrated for volatility. Avoid manual exits; let the system lock in profits automatically as the price moves.</li>
+              <li><strong style="color:var(--text);">Daily AI Scan:</strong> Use the <b>Analyze Now</b> button every morning. The AI identifies temporary anomalies in the market that static charts might miss.</li>
+              <li><strong style="color:var(--text);">Manage Your Risk:</strong> Use the <b>Win Rate by Score</b> table to adjust your position size. If a score bracket has &lt;50% WR, reduce your exposure.</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
