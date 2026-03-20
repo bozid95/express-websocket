@@ -48,68 +48,66 @@
       <div class="home-main-col">
         <div class="summary-grid">
           <div class="stat-box hero-box" id="heroBox">
-            <div class="stat-label">Total Realized Profit</div>
-            <div class="hero-pnl" id="hpnl">0.00%</div>
-            <div class="stat-label" style="font-size: 10px; color: var(--text);" id="hwin">Loading data...</div>
+            <div class="stat-label" style="letter-spacing: 2px; color: var(--accent); margin-bottom: 12px;">REALIZED PERFORMANCE</div>
+            <div class="hero-pnl" id="hpnl" style="margin: 0;">0.00%</div>
+            <div id="hwin" style="font-size: 11px; font-weight: 700; color: var(--text-dim); margin-top: 12px;">Loading system statistics...</div>
           </div>
           <div class="stat-box">
             <div class="stat-label">Win Rate</div>
-            <div class="stat-val" id="macc">— %</div>
-            <div style="height:4px; background:rgba(255,255,255,0.05); border-radius:2px; margin-top:8px; overflow:hidden;">
-              <div id="accMiniBar" style="height:100%; background:var(--accent); width:0%; transition:width 0.5s;"></div>
+            <div class="stat-val" id="macc" style="color: var(--buy); font-size: 28px;">— %</div>
+            <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:10px; margin-top:auto; overflow:hidden;">
+              <div id="accMiniBar" style="height:100%; background:linear-gradient(90deg, var(--buy), #34d399); width:0%; transition:width 0.8s cubic-bezier(0.4, 0, 0.2, 1);"></div>
             </div>
           </div>
           <div class="stat-box">
-            <div class="stat-label">Signals Count</div>
-            <div class="stat-val" id="mactiveTotal">0</div>
-            <div style="font-size:10px; color:var(--text-dim); margin-top:4px;">Closed + Running</div>
+            <div class="stat-label">System Signals</div>
+            <div class="stat-val" id="mactiveTotal" style="color: var(--accent); font-size: 28px;">0</div>
+            <div style="font-size:10px; color:var(--text-dim); margin-top:auto; font-weight:600;">Total Tracked Assets</div>
           </div>
         </div>
 
-        <div id="homeMarketPulse" class="panel" style="background:rgba(99,102,241,0.03); border-color:rgba(99,102,241,0.15);">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-            <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
-              <span>🌐</span> Live Market intelligence
+        <div class="home-grid-row">
+          <div id="homeMarketPulse" class="panel" style="background:rgba(99,102,241,0.03); border-color:rgba(99,102,241,0.15); margin-bottom:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:8px; color: var(--text);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--accent)"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                Market Intelligence
+              </div>
+              <span class="status-tag" style="border-radius:20px; font-size:8px; background: rgba(99,102,241,0.1); color: var(--accent); border: none; padding: 3px 8px;">LIVE FEED</span>
             </div>
-            <span class="status-tag" style="border-radius:20px; font-size:8px;">Real-time</span>
+            <div class="sentiment-wrap">
+              <div class="sentiment-labels">
+                <span style="color:var(--buy); font-size: 9px;">BULLISH BIAS</span>
+                <span style="color:var(--sell); font-size: 9px;">BEARISH BIAS</span>
+              </div>
+              <div class="sentiment-bar-bg" style="height: 8px; border-radius: 4px;">
+                <div id="homeSentLongBar" class="sent-long" style="width:50%;"></div>
+                <div id="homeSentShortBar" class="sent-short" style="width:50%;"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:13px; font-weight:800;">
+                <span id="homeSentLongText" style="color:var(--buy)">50%</span>
+                <span id="homeSentShortText" style="color:var(--sell)">50%</span>
+              </div>
+            </div>
           </div>
-          <div class="sentiment-wrap">
-            <div class="sentiment-labels">
-              <span>Bullish (Longs)</span>
-              <span>Bearish (Shorts)</span>
-            </div>
-            <div class="sentiment-bar-bg">
-              <div id="homeSentLongBar" class="sent-long" style="width:50%;"></div>
-              <div id="homeSentShortBar" class="sent-short" style="width:50%;"></div>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px; font-weight:700;">
-              <span class="pos" id="homeSentLongText">50%</span>
-              <span class="neg" id="homeSentShortText">50%</span>
-            </div>
-          </div>
-        </div>
 
-        <div class="panel" style="padding: 20px;">
-          <div style="font-size:13px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-            <span>🛡️</span> Quick Trading Tip
-          </div>
-          <div style="font-size:12px; color:var(--text-dim); line-height:1.6;" id="homeTip">
-            Market dashboard is currently loading live data. AI Analysis and Strategy Bias are being recalculated.
-          </div>
         </div>
       </div>
 
       <div class="home-side-col">
         <div class="running-panel" id="runningPanel">
-          <div class="running-title">📡 Live Signal Terminal</div>
+          <div class="running-title" style="letter-spacing: 0.5px; text-transform: uppercase; font-size: 11px; color: var(--text-dim);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--accent);"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            Live Signal Terminal
+          </div>
           <div class="running-grid">
             <div class="running-item profit">
               <div class="running-num pos" id="runProfit">0</div>
-              <div class="running-label">Profit (+)</div>
+              <div class="running-label">Profit Scored</div>
             </div>
             <div class="running-item loss">
               <div class="running-num neg" id="runLoss">0</div>
-              <div class="running-label">Loss (-)</div>
+              <div class="running-label">Stop Reached</div>
             </div>
           </div>
           <div class="accuracy-bar"><div class="accuracy-fill" id="accFill" style="width:0%"></div></div>
@@ -210,7 +208,7 @@
       </div>
 
       <!-- Main AI Analysis Card -->
-      <div style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(14,203,129,0.04) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius:16px; overflow:hidden; margin-bottom:12px;">
+      <div id="aiAnalystCard" style="background: linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(14,203,129,0.04) 100%); border: 1px solid rgba(99,102,241,0.25); border-radius:16px; overflow:hidden; margin-bottom:12px;">
 
         <!-- Card Header -->
         <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid rgba(99,102,241,0.15);">
@@ -221,7 +219,7 @@
               <div style="font-size:10px; color:var(--text-dim);">Powered by Groq · Llama 3.3</div>
             </div>
           </div>
-          <button onclick="triggerDeepAnalysis()" id="btnDeepScan" style="font-size:10px; background:var(--accent); border:none; color:white; border-radius:8px; padding:6px 14px; cursor:pointer; font-weight:700; font-family:inherit; display:flex; align-items:center; gap:6px; transition:opacity 0.2s;">
+          <button onclick="triggerDeepAnalysis()" id="btnDeepScan" class="premium-btn" style="padding:8px 16px; font-size:11px;">
             <span>⚡</span> Analyze Now
           </button>
         </div>
