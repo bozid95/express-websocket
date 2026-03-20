@@ -46,43 +46,32 @@ const NotifManager = (() => {
     const pct  = parseFloat(row.profit_pct) || 0;
     const price = parseFloat(row.price) || 0;
 
-    let icon, title, subtitle;
+    let iconSvg, iconClass, title, subtitle;
+
+    // SVG icon map
+    const ICONS = {
+      NEW_SIGNAL: `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>`,
+      TP1_HIT:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+      TP2_HIT:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 10 11 15 8 12"/></svg>`,
+      TP3_HIT:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+      TSL_HIT:   `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+      SL_HIT:    `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    };
+    iconSvg   = ICONS[type] || ICONS.NEW_SIGNAL;
+    iconClass = type === 'NEW_SIGNAL' ? 'ic-new'
+      : type === 'TP3_HIT' ? 'ic-tp3'
+      : type === 'SL_HIT'  ? 'ic-sl'
+      : type.includes('TP') || type === 'TSL_HIT' ? 'ic-tp'
+      : 'ic-new';
 
     switch (type) {
-      case 'NEW_SIGNAL':
-        icon     = '🆕';
-        title    = `New Signal — ${sym}`;
-        subtitle = `${side} • Entry @ ${fmtPrice(price)}`;
-        break;
-      case 'TP1_HIT':
-        icon     = '✅';
-        title    = `TP1 Hit — ${sym}`;
-        subtitle = `${side} • TP1 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`;
-        break;
-      case 'TP2_HIT':
-        icon     = '🟢';
-        title    = `TP2 Hit — ${sym}`;
-        subtitle = `${side} • TP2 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`;
-        break;
-      case 'TP3_HIT':
-        icon     = '🏆';
-        title    = `TP3 Hit — ${sym}`;
-        subtitle = `${side} • TP3 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`;
-        break;
-      case 'TSL_HIT':
-        icon     = pct >= 0 ? '🛡️' : '🛑';
-        title    = `TSL Hit — ${sym}`;
-        subtitle = pct ? `${side} • Trailing SL • ${fmtPct(pct)}` : `${side} • Trailing SL triggered`;
-        break;
-      case 'SL_HIT':
-        icon     = '❌';
-        title    = `SL Hit — ${sym}`;
-        subtitle = `${side} • SL @ ${fmtPrice(price)} • ${fmtPct(Math.abs(pct) > 0 ? -Math.abs(pct) : pct)} loss`;
-        break;
-      default:
-        icon     = '📋';
-        title    = `${type} — ${sym}`;
-        subtitle = side;
+      case 'NEW_SIGNAL': title = `New Signal — ${sym}`; subtitle = `${side} • Entry @ ${fmtPrice(price)}`; break;
+      case 'TP1_HIT':   title = `TP1 Hit — ${sym}`;   subtitle = `${side} • TP1 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`; break;
+      case 'TP2_HIT':   title = `TP2 Hit — ${sym}`;   subtitle = `${side} • TP2 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`; break;
+      case 'TP3_HIT':   title = `TP3 Hit — ${sym}`;   subtitle = `${side} • TP3 @ ${fmtPrice(price)} • ${fmtPct(pct)} profit`; break;
+      case 'TSL_HIT':   title = `TSL Hit — ${sym}`;   subtitle = pct ? `${side} • Trailing SL • ${fmtPct(pct)}` : `${side} • Trailing SL triggered`; break;
+      case 'SL_HIT':    title = `SL Hit — ${sym}`;    subtitle = `${side} • SL @ ${fmtPrice(price)} • ${fmtPct(Math.abs(pct) > 0 ? -Math.abs(pct) : pct)} loss`; break;
+      default:          title = `${type} — ${sym}`;   subtitle = side;
     }
 
     const notifType = type === 'NEW_SIGNAL' ? 'new'
@@ -90,7 +79,7 @@ const NotifManager = (() => {
       : type.includes('TP') || type === 'TSL_HIT' ? 'tp'
       : 'sl';
 
-    return { ...row, icon, title, subtitle, notifType };
+    return { ...row, iconSvg, iconClass, title, subtitle, notifType };
   }
 
   // ─── Fetch: first load (last 48h) ──────────────────────────
@@ -212,7 +201,7 @@ const NotifManager = (() => {
       const readClass = n.read ? 'notif-item-read' : '';
       return `
         <div class="notif-item notif-type-${n.notifType} ${readClass}" onclick="NotifManager.markRead('${n.id}')">
-          <div class="notif-item-icon">${n.icon}</div>
+          <div class="notif-item-icon notif-${n.iconClass}">${n.iconSvg}</div>
           <div class="notif-item-body">
             <div class="notif-item-title">${n.title}</div>
             <div class="notif-item-sub">${n.subtitle}</div>
