@@ -34,18 +34,24 @@ function renderInsightTables() {
     const tp2 = parseFloat(s.tp2 || 0);
     const side = (s.signal || '').includes('BUY') ? 'LONG' : 'SHORT';
 
-    if (st === 'TP3_HIT') tp3++;
-    else if (st === 'TP2_HIT') tp2_c++;
-    else if (st === 'TP1_HIT') tp1_c++;
-    else if (st === 'SL_HIT') sl++;
-    else if (st === 'TSL_HIT') {
-      tsl++;
-      // Also count in TP bins if they reached them before TSL
+    if (st === 'TP3_HIT') {
+      tp3++;
+    } else if (st === 'TP2_HIT') {
+      tp2_c++;
+    } else if (st === 'TP1_HIT') {
+      tp1_c++;
+    } else if (st === 'SL_HIT') {
+      sl++;
+    } else if (st === 'TSL_HIT') {
+      // Categorize TSL based on highest TP reached before the stop
       if (entry > 0) {
         const tp1_pnl = side === 'LONG' ? ((tp1 - entry) / entry * 100) : ((entry - tp1) / entry * 100);
         const tp2_pnl = side === 'LONG' ? ((tp2 - entry) / entry * 100) : ((entry - tp2) / entry * 100);
-        if (pnl >= tp2_pnl - 0.5) tp2_c++; 
-        else if (pnl >= tp1_pnl - 0.5) tp1_c++;
+        if (pnl >= tp2_pnl - 0.5) {
+          tp2_c++; 
+        } else if (pnl >= tp1_pnl - 0.5) {
+          tp1_c++;
+        }
       }
     }
 
@@ -149,10 +155,6 @@ function renderInsightTables() {
             <div style="flex:1; text-align:center;">
               <div style="font-size:12px; font-weight:700; color:#34d399;">${tp1_c}</div>
               <div style="font-size:7px; color:var(--text-dim);">TP1</div>
-            </div>
-            <div style="flex:1; text-align:center;">
-              <div style="font-size:12px; font-weight:700; color:#94a3b8;">${tsl}</div>
-              <div style="font-size:7px; color:var(--text-dim);">TSL</div>
             </div>
             <div style="flex:1; text-align:center;">
               <div style="font-size:12px; font-weight:700; color:var(--sell);">${sl}</div>
