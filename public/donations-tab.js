@@ -135,16 +135,16 @@ function renderTopDonators() {
 function switchDonationView(view) {
   const brd = document.getElementById('btnRecentDons');
   if(brd) {
-      brd.style.background = view === 'recent' ? 'rgba(99,102,241,0.1)' : 'var(--bg)';
+      brd.style.background = view === 'recent' ? 'rgba(99,102,241,0.1)' : 'transparent';
       brd.style.color = view === 'recent' ? 'var(--accent)' : 'var(--text-dim)';
-      brd.style.border = view === 'recent' ? '1px solid var(--accent)' : '1px solid var(--border)';
+      brd.style.border = view === 'recent' ? '1px solid var(--accent)' : 'none';
   }
   
   const btd = document.getElementById('btnTopDons');
   if(btd) {
-      btd.style.background = view === 'top' ? 'rgba(99,102,241,0.1)' : 'var(--bg)';
+      btd.style.background = view === 'top' ? 'rgba(99,102,241,0.1)' : 'transparent';
       btd.style.color = view === 'top' ? 'var(--accent)' : 'var(--text-dim)';
-      btd.style.border = view === 'top' ? '1px solid var(--accent)' : '1px solid var(--border)';
+      btd.style.border = view === 'top' ? '1px solid var(--accent)' : 'none';
   }
 
   const vrd = document.getElementById('viewRecentDons');
