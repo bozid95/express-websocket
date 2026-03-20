@@ -130,7 +130,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 /* Running Stats Panel */
 .running-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
 .running-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-.running-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.running-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
 .running-item { text-align: center; padding: 10px 6px; border-radius: 10px; }
 .running-item.profit { background: rgba(14, 203, 129, 0.08); border: 1px solid rgba(14, 203, 129, 0.2); }
 .running-item.loss { background: rgba(246, 70, 93, 0.08); border: 1px solid rgba(246, 70, 93, 0.2); }
