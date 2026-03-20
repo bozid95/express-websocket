@@ -35,13 +35,25 @@
     .tab-content.active { display: block; animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Summary Dashboard */
+    /* Summary Dashboard - Premium Redesign */
     .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
-    .stat-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
-    .stat-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
-    .stat-val { font-size: 18px; font-weight: 600; }
-    .hero-box { grid-column: span 2; padding: 24px; text-align: center; }
-    .hero-pnl { font-size: 28px; font-weight: 700; margin: 4px 0; }
+    .stat-box { 
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px; 
+      padding: 16px; position: relative; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: transform 0.2s;
+    }
+    .stat-box:hover { transform: translateY(-2px); }
+    .stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px; font-weight: 700; letter-spacing: 0.5px; }
+    .stat-val { font-size: 20px; font-weight: 700; color: var(--text); }
+    
+    .hero-box { 
+      grid-column: span 2; padding: 28px; text-align: center;
+      background: linear-gradient(145deg, #1e2329 0%, #0b0e11 100%);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .hero-pnl { font-size: 42px; font-weight: 800; margin: 8px 0; letter-spacing: -1px; }
+    .hero-box.pos { border-color: rgba(14, 203, 129, 0.3); background: linear-gradient(145deg, rgba(14, 203, 129, 0.05) 0%, var(--bg) 100%); }
+    .hero-box.neg { border-color: rgba(246, 70, 93, 0.3); background: linear-gradient(145deg, rgba(246, 70, 93, 0.05) 0%, var(--bg) 100%); }
 
     /* Signal Card - Simpler, cleaner, scanable */
     .signal-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
@@ -110,7 +122,7 @@
     /* Running Stats Panel */
     .running-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
     .running-title { font-size: 13px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-    .running-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+    .running-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
     .running-item { text-align: center; padding: 10px 6px; border-radius: 10px; }
     .running-item.profit { background: rgba(14, 203, 129, 0.08); border: 1px solid rgba(14, 203, 129, 0.2); }
     .running-item.loss { background: rgba(246, 70, 93, 0.08); border: 1px solid rgba(246, 70, 93, 0.2); }
@@ -205,13 +217,84 @@
     .page-info { font-size: 12px; color: var(--text-dim); font-weight: 500; }
     .signal-count { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 8px; font-weight: 500; }
 
-    /* Responsive */
-    @media (min-width: 600px) {
-      .container { max-width: 500px; margin: 0 auto; }
+    /* Responsive & Desktop Layout */
+    .sidebar { display: none; }
+    .main-wrapper { display: flex; min-height: 100vh; }
+    
+    @media (min-width: 1024px) {
+      body { padding-bottom: 0; }
+      .header { left: 260px; width: calc(100% - 260px); }
+      .container { max-width: 100%; margin-left: 260px; padding: 32px; width: calc(100% - 260px); }
+      .bottom-nav { display: none; }
+      
+      .sidebar { 
+        display: flex; position: fixed; left: 0; top: 0; bottom: 0; width: 260px; 
+        background: var(--nav-bg); border-right: 1px solid var(--border); 
+        padding: 24px; flex-direction: column; z-index: 1001; 
+      }
+      .side-brand { font-size: 22px; font-weight: 700; margin-bottom: 40px; color: var(--text); }
+      .side-brand span { color: var(--accent); }
+      .side-nav { display: flex; flex-direction: column; gap: 8px; }
+      .side-link { 
+        display: flex; align-items: center; gap: 12px; padding: 12px 16px; 
+        color: var(--text-dim); text-decoration: none; border-radius: 12px; 
+        font-weight: 500; transition: all 0.2s; cursor: pointer;
+      }
+      .side-link:hover { background: rgba(255,255,255,0.03); color: var(--text); }
+      .side-link.active { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+      .side-link svg { width: 20px; height: 20px; }
+
+      /* Multi-column layouts */
+      .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      #signalContainer { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+      
+      /* Dashboard Column Layout */
+      #tab-home.active { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+      .running-panel { margin-bottom: 0; height: fit-content; position: sticky; top: 100px; }
+
+      /* Insights Column Layout */
+      #tab-insights.active { display: grid; grid-template-columns: 1fr 400px; gap: 24px; align-items: start; }
+      #insightStatsTables { grid-column: 2; grid-row: 1 / span 3; margin-bottom: 0; }
+      #liveIntelPanel { grid-column: 1 / span 2; }
+
+      /* Charts & Other Tabs Layout */
+      #tab-about .panel, #tab-donation .panel { max-width: 800px; margin-left: auto; margin-right: auto; }
+    }
+
+    @media (min-width: 1024px) {
+       body { background: #080a0c; }
+       .sidebar { background: #111418; }
+       .header { background: rgba(8, 10, 12, 0.8); backdrop-filter: blur(10px); }
     }
   </style>
 </head>
 <body>
+  <nav class="sidebar">
+    <div class="side-brand">Crypto<span>Spike</span></div>
+    <div class="side-nav">
+      <div class="side-link active" onclick="switchTab('home', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        Home
+      </div>
+      <div class="side-link" onclick="switchTab('signals', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+        Signals
+      </div>
+      <div class="side-link" onclick="switchTab('insights', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        Insights
+      </div>
+      <div class="side-link" onclick="switchTab('about', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        Guide
+      </div>
+      <div class="side-link" onclick="switchTab('donation', this)">
+        <svg class="heart-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>
+        Support
+      </div>
+    </div>
+  </nav>
+
   <header class="header">
     <div class="brand">Crypto<span>Spike</span></div>
     <div class="status"><div class="status-dot"></div>Signals Active</div>
@@ -221,52 +304,91 @@
     
     <!-- HOME: Summary -->
     <div id="tab-home" class="tab-content active">
-      <div class="summary-grid">
-        <div class="stat-box hero-box">
-          <div class="stat-label">Total Performance</div>
-          <div class="hero-pnl" id="hpnl">0.00%</div>
-          <div class="stat-label" style="font-size: 10px;" id="hwin">Loading data...</div>
+      <div class="home-main-col">
+        <div class="summary-grid">
+          <div class="stat-box hero-box" id="heroBox">
+            <div class="stat-label">System Performance (Realized)</div>
+            <div class="hero-pnl" id="hpnl">0.00%</div>
+            <div class="stat-label" style="font-size: 10px; color: var(--text);" id="hwin">Loading data...</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Win Rate</div>
+            <div class="stat-val" id="macc">— %</div>
+            <div style="height:4px; background:rgba(255,255,255,0.05); border-radius:2px; margin-top:8px; overflow:hidden;">
+              <div id="accMiniBar" style="height:100%; background:var(--accent); width:0%; transition:width 0.5s;"></div>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Signals Count</div>
+            <div class="stat-val" id="mactiveTotal">0</div>
+            <div style="font-size:10px; color:var(--text-dim); margin-top:4px;">Closed + Running</div>
+          </div>
         </div>
-        <div class="stat-box">
-          <div class="stat-label">Win Rate</div>
-          <div class="stat-val" id="macc">— %</div>
+
+        <div id="homeMarketPulse" class="panel" style="background:rgba(99,102,241,0.03); border-color:rgba(99,102,241,0.15);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:6px;">
+              <span>🌐</span> Live Market intelligence
+            </div>
+            <span class="status-tag" style="border-radius:20px; font-size:8px;">Real-time</span>
+          </div>
+          <div class="sentiment-wrap">
+            <div class="sentiment-labels">
+              <span>Bullish (Longs)</span>
+              <span>Bearish (Shorts)</span>
+            </div>
+            <div class="sentiment-bar-bg">
+              <div id="homeSentLongBar" class="sent-long" style="width:50%;"></div>
+              <div id="homeSentShortBar" class="sent-short" style="width:50%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px; font-weight:700;">
+              <span class="pos" id="homeSentLongText">50%</span>
+              <span class="neg" id="homeSentShortText">50%</span>
+            </div>
+          </div>
         </div>
-        <div class="stat-box">
-          <div class="stat-label">Open Trade</div>
-          <div class="stat-val" id="mactive">0</div>
+
+        <div class="panel" style="padding: 20px;">
+          <div style="font-size:13px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+            <span>🛡️</span> Quick Trading Tip
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); line-height:1.6;" id="homeTip">
+            Market dashboard is currently loading live data. AI Analysis and Strategy Bias are being recalculated.
+          </div>
         </div>
       </div>
 
-      <div class="running-panel" id="runningPanel">
-        <div class="running-title">📡 Live Running Signals</div>
-        <div class="running-grid">
-          <div class="running-item profit">
-            <div class="running-num pos" id="runProfit">0</div>
-            <div class="running-label">Profit (+)</div>
+      <div class="home-side-col">
+        <div class="running-panel" id="runningPanel">
+          <div class="running-title">📡 Live Signal Terminal</div>
+          <div class="running-grid">
+            <div class="running-item profit">
+              <div class="running-num pos" id="runProfit">0</div>
+              <div class="running-label">Profit (+)</div>
+            </div>
+            <div class="running-item loss">
+              <div class="running-num neg" id="runLoss">0</div>
+              <div class="running-label">Loss (-)</div>
+            </div>
           </div>
-          <div class="running-item loss">
-            <div class="running-num neg" id="runLoss">0</div>
-            <div class="running-label">Loss (-)</div>
-          </div>
-          <div class="running-item accuracy">
-            <div class="running-num" id="runAccuracy" style="color:var(--accent)">—</div>
-            <div class="running-label">Signal Accuracy</div>
-          </div>
-        </div>
-        <div class="accuracy-bar"><div class="accuracy-fill" id="accFill" style="width:0%"></div></div>
-        <div style="font-size:10px; color:var(--text-dim); margin-top:6px; text-align:center;" id="runDetail">Waiting for live prices...</div>
-        <div id="pnlCardsContainer" style="margin-top:14px; display:none;">
-          <div class="pnl-cards-title">
-            <span>📊 Live P&L per Signal</span>
-            <span style="font-size:10px; color:var(--text-dim); font-weight:400;" id="pnlCardCount"></span>
-          </div>
-          <div class="pnl-cards-grid" id="pnlCardsGrid"></div>
-          <div class="pnl-net" id="pnlNet" style="display:none;">
-            <div class="pnl-net-label">Net Unrealized P&L</div>
-            <div class="pnl-net-val" id="pnlNetVal">—</div>
+          <div class="accuracy-bar"><div class="accuracy-fill" id="accFill" style="width:0%"></div></div>
+          <div style="font-size:10px; color:var(--text-dim); margin-top:6px; text-align:center;" id="runDetail">Waiting for live data...</div>
+          
+          <div id="pnlCardsContainer" style="margin-top:16px; border-top: 1px solid var(--border); padding-top:16px;">
+            <div class="pnl-cards-title">
+              <span>📊 Real-time P&L Stream</span>
+              <span style="font-size:10px; color:var(--text-dim); font-weight:400;" id="pnlCardCount"></span>
+            </div>
+            <div class="pnl-cards-grid" id="pnlCardsGrid"></div>
+            <div class="pnl-net" id="pnlNet" style="display:none;">
+              <div class="pnl-net-label">TOTAL FLOATING</div>
+              <div class="pnl-net-val" id="pnlNetVal">—</div>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
     </div>
 
     <!-- SIGNALS: History -->
@@ -683,10 +805,27 @@
       if (total > 0) {
         const lPerc = (longs / total) * 100;
         const sPerc = 100 - lPerc;
-        document.getElementById('sentLongBar').style.width = lPerc + '%';
-        document.getElementById('sentShortBar').style.width = sPerc + '%';
-        document.getElementById('sentLongText').textContent = lPerc.toFixed(0) + '%';
-        document.getElementById('sentShortText').textContent = sPerc.toFixed(0) + '%';
+        const hLBar = document.getElementById("homeSentLongBar"); if(hLBar) hLBar.style.width = lPerc + "%";
+        const hSBar = document.getElementById("homeSentShortBar"); if(hSBar) hSBar.style.width = sPerc + "%";
+        const hLText = document.getElementById("homeSentLongText"); if(hLText) hLText.textContent = lPerc.toFixed(0) + "%";
+        const hSText = document.getElementById("homeSentShortText"); if(hSText) hSText.textContent = sPerc.toFixed(0) + "%";
+
+        const iLBar = document.getElementById("sentLongBar"); if(iLBar) iLBar.style.width = lPerc + "%";
+        const iSBar = document.getElementById("sentShortBar"); if(iSBar) iSBar.style.width = sPerc + "%";
+        const iLText = document.getElementById("sentLongText"); if(iLText) iLText.textContent = lPerc.toFixed(0) + "%";
+        const iSText = document.getElementById("sentShortText"); if(iSText) iSText.textContent = sPerc.toFixed(0) + "%";
+
+        // Update Home Tip based on sentiment
+        const homeTip = document.getElementById('homeTip');
+        if (homeTip) {
+          if (lPerc > 60) {
+            homeTip.textContent = "Market Pulse menunjukkan bias BULLISH kuat (L > 60%). Ini waktu yang ideal untuk mencari setup LONG dengan konfirmasi volume tinggi di area Support.";
+          } else if (sPerc > 60) {
+            homeTip.textContent = "Market Pulse menunjukkan bias BEARISH dominan (S > 60%). Berhati-hatilah pada pullback pendek, setup SHORT di area Resistance terlihat lebih menjanjikan.";
+          } else {
+            homeTip.textContent = "Pasar saat ini dalam kondisi Netral/Terimbang. Hindari FOMO dan tunggu konfirmasi breakout atau sinyal dengan skor > 85 untuk probabilitas tinggi.";
+          }
+        }
       }
 
       // 2. Score Consistency: Apakah Skor Tinggi (80+) saat ini benar-benar profit?
@@ -707,15 +846,17 @@
       const scorePerfEl = document.getElementById('intelScorePerf');
       const scoreSubEl = document.getElementById('intelScoreSub');
       
-      if (highWr > lowWr + 5) {
-        scorePerfEl.innerHTML = '<span class="badge-safe action-badge">Skor Tinggi Valid</span>';
-        scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(0)}% (Strong Correlation)`;
-      } else if (lowWr > highWr) {
-        scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Anomali Skor</span>';
-        scoreSubEl.textContent = `Peringatan: Skor rendah malah lebih akurat hari ini (${lowWr.toFixed(0)}% WR).`;
-      } else {
-        scorePerfEl.textContent = 'Stabil';
-        scoreSubEl.textContent = 'Korelasi skor & profit dalam kondisi normal.';
+      if (scorePerfEl && scoreSubEl) {
+        if (highWr > lowWr + 5) {
+          scorePerfEl.innerHTML = '<span class="badge-safe action-badge">Skor Tinggi Valid</span>';
+          scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(0)}% (Strong Correlation)`;
+        } else if (lowWr > highWr) {
+          scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Anomali Skor</span>';
+          scoreSubEl.textContent = `Peringatan: Skor rendah malah lebih akurat hari ini (${lowWr.toFixed(0)}% WR).`;
+        } else {
+          scorePerfEl.textContent = 'Stabil';
+          scoreSubEl.textContent = 'Korelasi skor & profit dalam kondisi normal.';
+        }
       }
 
       // 3. Guidance
@@ -1201,9 +1342,13 @@ CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimban
 
     function switchTab(id, el) {
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.nav-btn, .side-link').forEach(n => n.classList.remove('active'));
       document.getElementById('tab-' + id).classList.add('active');
-      el.classList.add('active');
+      
+      // Handle both mobile and desktop activation
+      const tabs = document.querySelectorAll(`.nav-btn[onclick*="'${id}'"], .side-link[onclick*="'${id}'"]`);
+      tabs.forEach(t => t.classList.add('active'));
+
       localStorage.setItem('activeCryptoTab', id);
     }
 
@@ -1597,12 +1742,20 @@ CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimban
         const totalPnl = closed.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
 
         // Update UI
+        updateRunningStats();
+        
         const hpnl = document.getElementById('hpnl');
         hpnl.textContent = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + '%';
         hpnl.className = 'hero-pnl ' + (totalPnl >= 0 ? 'pos' : 'neg');
-        document.getElementById('hwin').textContent = `${wins.length} Win • ${losses.length} Loss • ${activeCount} Active`;
+        const heroBox = document.getElementById('heroBox');
+        if (heroBox) heroBox.className = 'stat-box hero-box ' + (totalPnl >= 0 ? 'pos' : 'neg');
+        document.getElementById('hwin').textContent = `Closed: ${closed.length} | Running: ${activeCount}`;
         document.getElementById('macc').textContent = winRate + '%';
-        document.getElementById('mactive').textContent = activeCount;
+        const mbar = document.getElementById('accMiniBar');
+        if (mbar) mbar.style.width = winRate + '%';
+        
+        const mTotal = document.getElementById('mactiveTotal');
+        if (mTotal) mTotal.textContent = signals.length;
 
         // Render with current filters
         renderSignals();
@@ -1863,6 +2016,20 @@ CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimban
           void row.offsetWidth;
           row.classList.add(dir === 'up' ? 'price-flash-up' : 'price-flash-down');
         }
+
+        // Card P&L calculation
+        const pnlEl = row.querySelector('.price-now-pnl');
+        if (pnlEl) {
+          const entry = parseFloat(row.dataset.entry);
+          const side = row.dataset.side;
+          if (entry > 0) {
+            let pnl = ((price - entry) / entry) * 100;
+            if (side === 'SHORT') pnl = -pnl;
+            const arrow = pnl >= 0 ? '▲' : '▼';
+            pnlEl.textContent = `${arrow} ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%`;
+            pnlEl.className = 'price-now-pnl ' + (pnl >= 0 ? 'pos' : 'neg');
+          }
+        }
       });
 
       // P&L elements that might exist anywhere (like in the Insight Log table)
@@ -1886,12 +2053,12 @@ CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimban
     function updateRunningStats() {
       const active = allSignals.filter(s => ['ACTIVE', 'TP1_HIT', 'TP2_HIT'].includes(s.status || 'ACTIVE'));
       if (active.length === 0) {
-        document.getElementById('runProfit').textContent = '0';
-        document.getElementById('runLoss').textContent = '0';
-        document.getElementById('runAccuracy').textContent = '—';
-        document.getElementById('accFill').style.width = '0%';
-        document.getElementById('runDetail').textContent = 'No active signals';
-        document.getElementById('pnlCardsContainer').style.display = 'none';
+        const rProf = document.getElementById('runProfit'); if(rProf) rProf.textContent = '0';
+        const rLoss = document.getElementById('runLoss'); if(rLoss) rLoss.textContent = '0';
+        const rAccErr = document.getElementById("runAccuracy"); if(rAccErr) rAccErr.textContent = "—";
+        const aFill = document.getElementById('accFill'); if(aFill) aFill.style.width = '0%';
+        const rDet = document.getElementById('runDetail'); if(rDet) rDet.textContent = 'No active signals';
+        const pCards = document.getElementById('pnlCardsContainer'); if(pCards) pCards.style.display = 'none';
         return;
       }
 
@@ -1927,7 +2094,7 @@ CATATAN: Data sinyal running di atas adalah posisi yang MASIH TERBUKA. Pertimban
 
       document.getElementById('runProfit').textContent = profit;
       document.getElementById('runLoss').textContent = loss;
-      document.getElementById('runAccuracy').textContent = acc !== '—' ? acc + '%' : '—';
+      const rAccOk = document.getElementById("runAccuracy"); if(rAccOk) rAccOk.textContent = (acc !== "—" ? acc + "%" : "—");
       document.getElementById('accFill').style.width = acc !== '—' ? acc + '%' : '0%';
 
       let detail = `${profit} profit · ${loss} loss`;
