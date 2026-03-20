@@ -9,9 +9,29 @@ const NotifManager = (() => {
   let lastFetchedAt = null;     // timestamp fetch terakhir (untuk incremental poll)
   let pollTimer = null;
   let panelOpen = false;
-  const MAX_LOCAL = 100;
-  const POLL_MS   = 15000;  // poll tiap 15 detik
-  const HOURS_BACK = 48;    // ambil notif 48 jam terakhir saat first load
+  const MAX_LOCAL  = 100;
+  const POLL_MS    = 15000;
+  const HOURS_BACK = 48;
+  const LS_KEY     = 'cs_read_notifs'; // localStorage key for read IDs
+
+  // ─── LocalStorage read tracking ─────────────────────────────
+  function getReadIds() {
+    try { return new Set(JSON.parse(localStorage.getItem(LS_KEY) || '[]')); }
+    catch { return new Set(); }
+  }
+  function saveReadId(id) {
+    const ids = getReadIds();
+    ids.add(id);
+    // Keep max 500 read IDs to avoid bloat
+    const arr = [...ids].slice(-500);
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  }
+  function saveAllReadIds(ids) {
+    const existing = getReadIds();
+    ids.forEach(id => existing.add(id));
+    const arr = [...existing].slice(-500);
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+  }
 
   // ─── Supabase helpers ──────────────────────────────────────
   function supaHeaders() {
@@ -90,7 +110,8 @@ const NotifManager = (() => {
       const res = await fetch(url, { headers: supaHeaders() });
       if (!res.ok) throw new Error(await res.text());
       const rows = await res.json();
-      notifications = rows.map(buildDisplay);
+      const readIds = getReadIds();
+      notifications = rows.map(row => buildDisplay({ ...row, read: readIds.has(row.id) }));
       lastFetchedAt = new Date().toISOString();
       renderList();
       updateBadge();
@@ -109,8 +130,9 @@ const NotifManager = (() => {
       const rows = await res.json();
       if (!Array.isArray(rows) || rows.length === 0) { lastFetchedAt = new Date().toISOString(); return; }
 
+      const readIds = getReadIds();
       rows.forEach(row => {
-        const display = buildDisplay(row);
+        const display = buildDisplay({ ...row, read: readIds.has(row.id) });
         notifications.unshift(display);
       });
       if (notifications.length > MAX_LOCAL) notifications = notifications.slice(0, MAX_LOCAL);
@@ -125,34 +147,23 @@ const NotifManager = (() => {
     }
   }
 
-  // ─── Mark read ─────────────────────────────────────────────
+  // ─── Mark read — localStorage only, no DB write ────────────
   async function markRead(id) {
     const n = notifications.find(x => x.id === id);
     if (!n || n.read) return;
     n.read = true;
+    saveReadId(id);
     renderList();
     updateBadge();
-    // Update in DB (fire-and-forget)
-    fetch(`${SUPA_URL}/rest/v1/notifications?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: supaHeaders(),
-      body: JSON.stringify({ read: true })
-    }).catch(() => {});
   }
 
   async function markAllRead() {
     const unread = notifications.filter(n => !n.read);
     if (!unread.length) return;
     unread.forEach(n => n.read = true);
+    saveAllReadIds(unread.map(n => n.id));
     renderList();
     updateBadge();
-    // Bulk update DB
-    const ids = unread.map(n => `"${n.id}"`).join(',');
-    fetch(`${SUPA_URL}/rest/v1/notifications?id=in.(${ids})`, {
-      method: 'PATCH',
-      headers: supaHeaders(),
-      body: JSON.stringify({ read: true })
-    }).catch(() => {});
   }
 
   // ─── Bell ring animation ────────────────────────────────────
