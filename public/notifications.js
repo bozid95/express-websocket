@@ -115,6 +115,24 @@ const NotifManager = (() => {
       lastFetchedAt = new Date().toISOString();
       renderList();
       updateBadge();
+
+      // Memunculkan popup untuk notif 5 menit terakhir yang belum dibaca
+      const fiveMinsAgo = Date.now() - (5 * 60 * 1000);
+      const recentUnread = rows.filter(row => {
+        const isRecent = new Date(row.created_at).getTime() >= fiveMinsAgo;
+        return isRecent && !readIds.has(row.id);
+      }).slice(0, 3); // Ambil maks 3 terbaru agar tidak spam
+      
+      // Delay sedikit agar animasi tidak bertabrakan dengan load utama
+      setTimeout(() => {
+        // Balik array agar yang paling lama muncul duluan (ditumpuk yang paling baru)
+        recentUnread.reverse().forEach((row, idx) => {
+          setTimeout(() => {
+            showToast(buildDisplay(row));
+          }, idx * 600); // 600ms stagger animation
+        });
+      }, 1000);
+
     } catch (e) {
       console.warn('[Notif] fetchInitial error:', e);
     }
@@ -140,11 +158,64 @@ const NotifManager = (() => {
 
       renderList();
       updateBadge();
-      // Ring the bell for new notifs
       ringBell();
+      
+      // Munculkan popup toast untuk max 3 notifikasi terbaru agar layar tidak spam
+      const newToasts = rows.slice(-3);
+      newToasts.forEach(row => {
+        const display = buildDisplay({ ...row, read: readIds.has(row.id) });
+        showToast(display);
+      });
     } catch (e) {
       console.warn('[Notif] poll error:', e);
     }
+  }
+
+  // ─── Toast Popup ─────────────────────────────────────────────
+  function showToast(notif) {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    const el = document.createElement('div');
+    el.className = `toast-item toast-type-${notif.notifType}`;
+    el.innerHTML = `
+      <div class="toast-icon notif-${notif.iconClass}" style="cursor:pointer;">${notif.iconSvg}</div>
+      <div class="toast-body" style="cursor:pointer;">
+        <div class="toast-title">${notif.title}</div>
+        <div class="toast-sub">${notif.subtitle}</div>
+      </div>
+      <button class="toast-close-btn" title="Mark as Read">✕</button>
+    `;
+    
+    // Klik icon atau teks untuk membuka panel notif
+    const openAction = (e) => {
+      e.stopPropagation();
+      openPanel();
+      el.classList.add('removing');
+      setTimeout(() => el.remove(), 300);
+    };
+    el.querySelector('.toast-icon').onclick = openAction;
+    el.querySelector('.toast-body').onclick = openAction;
+
+    // Klik tombol ✕ merah/close untuk dismiss dan mark as read selamanya
+    el.querySelector('.toast-close-btn').onclick = (e) => {
+      e.stopPropagation();
+      markRead(notif.id); 
+      el.classList.add('removing');
+      setTimeout(() => el.remove(), 300);
+    };
+
+    container.appendChild(el);
+
+    // Otomatis hilang dari layar (TAPI BELUM DIBACA jika tidak diklik) setelah 5 detik
+    setTimeout(() => {
+      if (el.parentNode) {
+        el.classList.add('removing');
+        setTimeout(() => {
+          if (el.parentNode) el.remove();
+        }, 300);
+      }
+    }, 5000);
   }
 
   // ─── Mark read — localStorage only, no DB write ────────────
@@ -251,11 +322,34 @@ const NotifManager = (() => {
     pollTimer = setInterval(pollNew, POLL_MS);
   }
 
+  // ─── Test Dummy Toast ──────────────────────────────────────
+  function testToast() {
+    showToast({
+      notifType: 'new',
+      iconClass: 'ic-new',
+      iconSvg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+      title: 'New Signal — BTCUSDT',
+      subtitle: 'LONG • Entry @ 65000.00'
+    });
+    setTimeout(() => {
+      showToast({
+        notifType: 'tp',
+        iconClass: 'ic-tp',
+        iconSvg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+        title: 'TP1 Hit — ETHUSDT',
+        subtitle: 'LONG • TP1 @ 3500.00 • +2.50% profit'
+      });
+    }, 800);
+  }
+
   // Public API
-  return { init, togglePanel, closePanel, markRead, markAllRead };
+  return { init, togglePanel, closePanel, markRead, markAllRead, testToast };
 })();
 
 // Global hooks called from HTML onclick
 function toggleNotifPanel() { NotifManager.togglePanel(); }
 function closeNotifPanel()  { NotifManager.closePanel(); }
 function initNotifications() { NotifManager.init(); }
+
+// Global testing hook for user
+function testToast() { NotifManager.testToast(); }

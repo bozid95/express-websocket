@@ -62,6 +62,18 @@
     
     <!-- HOME: Summary -->
     <div id="tab-home" class="tab-content active">
+
+      <!-- Compact Announcement Alert -->
+      <div id="topAnnouncement" class="compact-alert" style="display:none;">
+        <div id="annIcon" class="alert-icon">⚡</div>
+        <div class="alert-body">
+          <span id="annTitle" style="font-weight:600; color:var(--text); margin-right:4px;"></span>
+          <span id="annMessage"></span>
+          <a id="annLink" href="#" target="_blank" class="alert-link" style="display:none; margin-left:4px;"></a>
+        </div>
+        <button class="alert-close" onclick="closeAnnouncement()">✕</button>
+      </div>
+
       <div class="home-main-col">
         <div class="summary-grid">
           <div class="stat-box hero-box" id="heroBox">
@@ -640,5 +652,8 @@
   })();</script>
   <noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?5015284&101" alt="" border="0"></a></noscript>
   <!-- Histats.com  END  -->
+  
+  <!-- Toast / Popup Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
 </body>
 </html>

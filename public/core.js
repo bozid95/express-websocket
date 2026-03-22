@@ -216,14 +216,79 @@ window.addEventListener('DOMContentLoaded', () => {
       const tabEl = document.querySelector(`.nav-btn[onclick*="'${savedTab}'"]`);
       if (tabEl) switchTab(savedTab, tabEl);
     }
-    
+
+    fetchAnnouncement();
     fetchData();
     if (typeof fetchDonations === 'function') fetchDonations();
     if (typeof initNotifications === 'function') initNotifications();
     
     setInterval(fetchData, 45000);
+    // Cek pengumuman baru setiap 5 menit
+    setInterval(fetchAnnouncement, 300000);
     if (typeof fetchDonations === 'function') setInterval(fetchDonations, 60000);
     if (typeof renderSignals === 'function') setInterval(renderSignals, 60000);
     
     setTimeout(connectPriceWs, 3000);
 });
+
+// Dynamic Supabase Announcement
+let currentAnnounceId = null;
+
+async function fetchAnnouncement() {
+  try {
+    // Cari pengumuman aktif terbaru (limit 1)
+    const res = await fetch(SUPA_URL + '/rest/v1/announcements?select=*&is_active=eq.true&order=id.desc&limit=1', {
+      headers: { apikey: SUPA_KEY, Authorization: 'Bearer ' + SUPA_KEY }
+    });
+    
+    if (!res.ok) return;
+    const data = await res.json();
+    
+    const annBar = document.getElementById('topAnnouncement');
+    if (!annBar) return;
+
+    if (data && data.length > 0) {
+      const ann = data[0];
+      currentAnnounceId = ann.id;
+      
+      // Jika user sudah close pengumuman ini, jangan tampilkan
+      const hideKey = 'hideAlert_' + currentAnnounceId;
+      if (localStorage.getItem(hideKey)) {
+        annBar.style.display = 'none';
+        return;
+      }
+
+      // Isi Konten
+      document.getElementById('annIcon').textContent = ann.icon || '⚡';
+      document.getElementById('annTitle').textContent = ann.title || '';
+      document.getElementById('annMessage').textContent = ann.message || '';
+      
+      const linkEl = document.getElementById('annLink');
+      if (ann.link_url) {
+        linkEl.href = ann.link_url;
+        linkEl.textContent = ann.link_text || 'Click here';
+        linkEl.style.display = 'inline-block';
+      } else {
+        linkEl.style.display = 'none';
+      }
+      
+      annBar.style.display = 'flex';
+    } else {
+      // Tidak ada pengumuman
+      annBar.style.display = 'none';
+    }
+  } catch (err) {
+    console.error('[Announcement] Error fetching:', err);
+  }
+}
+
+// Global Function to close announcement
+function closeAnnouncement() {
+  const annBar = document.getElementById('topAnnouncement');
+  if (annBar) {
+    annBar.style.display = 'none';
+    if (currentAnnounceId !== null) {
+      localStorage.setItem('hideAlert_' + currentAnnounceId, 'true');
+    }
+  }
+}
