@@ -127,10 +127,12 @@ function connectPriceWs() {
 
   if (priceWs) { try { priceWs.close(); } catch(_){} priceWs = null; }
 
-  const streams = symbols.map(s => s.toLowerCase() + '@miniTicker').join('/');
-  const wsUrl = `wss://fstream.binance.com/stream?streams=${streams}`;
+  // Connect to our VPS proxy instead of Binance directly.
+  // This bypasses ISP blocks on Binance domains (common in Indonesia).
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const wsUrl = `${proto}://${location.host}/ws/prices?symbols=${symbols.join(',')}`;
 
-  console.log(`[PriceWS] Connecting for ${symbols.length} symbols...`);
+  console.log(`[PriceWS] Connecting via proxy for ${symbols.length} symbols...`);
   priceWs = new WebSocket(wsUrl);
 
   priceWs.onmessage = (evt) => {

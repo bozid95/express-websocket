@@ -229,7 +229,10 @@ Gunakan Markdown yang rapi, tabel, dan bold text. Pastikan nada bicara profesion
 		json.NewEncoder(w).Encode(prices)
 	})
 
-	// 5. Serve static files (dashboard)
+	// 5. WebSocket proxy for browser clients (bypasses ISP blocks on Binance)
+	http.HandleFunc("/ws/prices", binance.PriceProxyHandler)
+
+	// 6. Serve static files (dashboard)
 	http.Handle("/dashboard/", http.StripPrefix("/dashboard/", http.FileServer(http.Dir("./public"))))
 
 	// 5. Start HTTP Server
