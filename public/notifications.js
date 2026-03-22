@@ -116,23 +116,6 @@ const NotifManager = (() => {
       renderList();
       updateBadge();
 
-      // Memunculkan popup untuk notif 5 menit terakhir yang belum dibaca
-      const fiveMinsAgo = Date.now() - (5 * 60 * 1000);
-      const recentUnread = rows.filter(row => {
-        const isRecent = new Date(row.created_at).getTime() >= fiveMinsAgo;
-        return isRecent && !readIds.has(row.id);
-      }).slice(0, 3); // Ambil maks 3 terbaru agar tidak spam
-      
-      // Delay sedikit agar animasi tidak bertabrakan dengan load utama
-      setTimeout(() => {
-        // Balik array agar yang paling lama muncul duluan (ditumpuk yang paling baru)
-        recentUnread.reverse().forEach((row, idx) => {
-          setTimeout(() => {
-            showToast(buildDisplay(row));
-          }, idx * 600); // 600ms stagger animation
-        });
-      }, 1000);
-
     } catch (e) {
       console.warn('[Notif] fetchInitial error:', e);
     }
