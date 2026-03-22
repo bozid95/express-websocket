@@ -4,10 +4,17 @@
 // ===========================
 
 const PresenceManager = (() => {
-  const SESSION_ID  = crypto.randomUUID();
+  // Parse dari browser local storage, agar stabil meski direfresh / buka tab baru
+  let savedSession = localStorage.getItem('PresenceSessionID');
+  if (!savedSession) {
+    savedSession = crypto.randomUUID();
+    localStorage.setItem('PresenceSessionID', savedSession);
+  }
+  const SESSION_ID  = savedSession;
+  
   const INTERVAL_MS = 30000; // 30 seconds
   const WINDOW_MS   = 60000; // count sessions active in last 60s
-  const BASE_OFFSET = 5;     // base offset added to actual count
+  const BASE_OFFSET = 5;     // Di-set ke 0 agar murni menghitung data asli
   let timer = null;
 
   function headers() {
