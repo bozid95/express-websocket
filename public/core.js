@@ -36,14 +36,14 @@ async function fetchData() {
     const resolvedSignals = signals.filter(s => s.status && !['ACTIVE', '⌛ WAITING', 'EXPIRED'].includes(s.status));
     
     // Win Rate (Overall)
-    const wins = resolvedSignals.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
-    const winRate = resolvedSignals.length > 0 ? ((wins.length / resolvedSignals.length) * 100).toFixed(0) : 0;
+    const wins = resolvedSignals.filter(s => s.status && (s.status.includes('TP') || (s.status.includes('TSL') && (s.profit_pct == null || s.profit_pct === "" || parseFloat(s.profit_pct) >= 0))));
+    const winRate = resolvedSignals.length > 0 ? ((wins.length / resolvedSignals.length) * 100).toFixed(1) : 0;
     
     // Win Rate (Last 24h)
     const now = new Date();
     const signals24h = resolvedSignals.filter(s => (now - new Date(s.sent_at)) < 86400000);
-    const wins24h = signals24h.filter(s => s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
-    const winRate24h = signals24h.length > 0 ? ((wins24h.length / signals24h.length) * 100).toFixed(0) : 0;
+    const wins24h = signals24h.filter(s => s.status && (s.status.includes('TP') || (s.status.includes('TSL') && (s.profit_pct == null || s.profit_pct === "" || parseFloat(s.profit_pct) >= 0))));
+    const winRate24h = signals24h.length > 0 ? ((wins24h.length / signals24h.length) * 100).toFixed(1) : 0;
     
     const totalPnl = resolvedSignals.reduce((acc, s) => acc + (parseFloat(s.profit_pct) || 0), 0);
     

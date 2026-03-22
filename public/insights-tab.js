@@ -13,8 +13,8 @@ function renderInsightTables() {
       return;
   }
 
-  const wins = statsSignals.filter(s => s.status?.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0));
-  const losses = statsSignals.filter(s => s.status === 'SL_HIT' || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) <= 0));
+  const wins = statsSignals.filter(s => s.status?.includes('TP') || (s.status?.includes('TSL') && (s.profit_pct == null || s.profit_pct === "" || parseFloat(s.profit_pct) >= 0)));
+  const losses = statsSignals.filter(s => s.status?.includes('SL') && !s.status?.includes('TSL') || (s.status?.includes('TSL') && parseFloat(s.profit_pct) < 0));
   const wr = statsSignals.length > 0 ? ((wins.length / statsSignals.length) * 100).toFixed(1) : '0';
   
   const avgW = wins.length ? (wins.map(s=>parseFloat(s.profit_pct)||0).reduce((a,b)=>a+b,0)/wins.length).toFixed(2) : '0';
@@ -66,7 +66,7 @@ function renderInsightTables() {
   const scoreRows = [['90+',90,999],['80-89',80,89],['70-79',70,79],['60-69',60,69],['<60',0,59]].map(([lbl,mn,mx])=>{
     const g = statsSignals.filter(s=>{ const sc=parseInt(s.score)||0; return sc>=mn && sc<=mx; });
     if (!g.length) return '';
-    const gw = g.filter(s=>s.status?.includes('TP')||(s.status==='TSL_HIT' && parseFloat(s.profit_pct) > 0)).length;
+    const gw = g.filter(s=>s.status?.includes('TP')||(s.status?.includes('TSL') && (s.profit_pct == null || s.profit_pct === "" || parseFloat(s.profit_pct) >= 0))).length;
     const gwp = ((gw/g.length)*100).toFixed(0);
     const cls = parseInt(gwp)>=60?'pos':parseInt(gwp)<40?'neg':'';
     return `<tr><td>${lbl}</td><td>${g.length}</td><td class="${cls}">${gwp}%</td></tr>`;
@@ -259,8 +259,8 @@ async function triggerDeepAnalysis() {
   try {
     const statsSignals = allSignals.filter(s => s.status && !['ACTIVE', '⌛ WAITING', 'EXPIRED'].includes(s.status));
     const active = allSignals.filter(s => !s.status || ['ACTIVE','TP1_HIT','TP2_HIT'].includes(s.status));
-    const wins = statsSignals.filter(s => s.status && (s.status.includes('TP') || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) > 0)));
-    const losses = statsSignals.filter(s => s.status === 'SL_HIT' || (s.status === 'TSL_HIT' && parseFloat(s.profit_pct) <= 0));
+    const wins = statsSignals.filter(s => s.status && (s.status.includes('TP') || (s.status.includes('TSL') && (s.profit_pct == null || s.profit_pct === "" || parseFloat(s.profit_pct) >= 0))));
+    const losses = statsSignals.filter(s => s.status === 'SL_HIT' && !s.status.includes('TSL') || (s.status.includes('TSL') && parseFloat(s.profit_pct) < 0));
     const overallWR = statsSignals.length > 0 ? ((wins.length / statsSignals.length) * 100).toFixed(1) : '0';
 
     const winProfits = wins.map(s => parseFloat(s.profit_pct) || 0);

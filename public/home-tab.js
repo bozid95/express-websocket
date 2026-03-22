@@ -167,10 +167,10 @@ function updateActiveInsights() {
   if (scorePerfEl && scoreSubEl) {
     if (highWr > lowWr + 5) {
       scorePerfEl.innerHTML = '<span class="badge-safe action-badge">High Score Valid</span>';
-      scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(0)}% (Strong Correlation)`;
+      scoreSubEl.textContent = `High-Score Winrate: ${highWr.toFixed(1)}% (Strong Correlation)`;
     } else if (lowWr > highWr) {
       scorePerfEl.innerHTML = '<span class="badge-warn action-badge">Score Anomaly</span>';
-      scoreSubEl.textContent = `Warning: Low scores are more accurate today (${lowWr.toFixed(0)}% WR).`;
+      scoreSubEl.textContent = `Warning: Low scores are more accurate today (${lowWr.toFixed(1)}% WR).`;
     } else {
       scorePerfEl.textContent = 'Stable';
       scoreSubEl.textContent = 'Score & profit correlation is normal.';
