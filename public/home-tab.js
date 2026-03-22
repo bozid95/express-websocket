@@ -70,9 +70,11 @@ function updateRunningStats() {
   if(grid) {
       grid.innerHTML = pnlData.map(d => {
         const sym = d.symbol.replace('USDT', '');
+        const linkIcon = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="opacity:0.5; margin-left:3px; flex-shrink:0;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+        
         if (!d.hasPrice) {
-          return `<div class="pnl-mini" style="border-color:var(--border);">
-            <div class="pnl-mini-sym">${sym}</div>
+          return `<div class="pnl-mini" style="border-color:var(--border); cursor:pointer;" onclick="jumpToSignal('${sym}')" title="View ${sym} signals">
+            <div class="pnl-mini-sym" style="display:flex; align-items:center; justify-content:center;">${sym}${linkIcon}</div>
             <div class="pnl-mini-val" style="color:var(--text-dim)">— %</div>
             <div class="pnl-mini-side">${d.side}</div>
           </div>`;
@@ -80,8 +82,8 @@ function updateRunningStats() {
         const cls = d.pnl >= 0 ? 'up' : 'down';
         const color = d.pnl >= 0 ? 'pos' : 'neg';
         const arrow = d.pnl >= 0 ? '▲' : '▼';
-        return `<div class="pnl-mini ${cls}">
-          <div class="pnl-mini-sym">${sym}</div>
+        return `<div class="pnl-mini ${cls}" style="cursor:pointer;" onclick="jumpToSignal('${sym}')" title="View ${sym} signals">
+          <div class="pnl-mini-sym" style="display:flex; align-items:center; justify-content:center;">${sym}${linkIcon}</div>
           <div class="pnl-mini-val ${color}">${arrow} ${d.pnl >= 0 ? '+' : ''}${d.pnl.toFixed(2)}%</div>
           <div class="pnl-mini-side">${d.side}</div>
         </div>`;

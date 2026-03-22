@@ -148,9 +148,12 @@ function renderCard(s) {
   else if (status === 'EXPIRED') statusDisplay = '⌛ EXPIRED (Closed)';
 
   return `
-    <div class="signal-card">
+    <div class="signal-card" onclick="openChart('${s.symbol}')" style="cursor:pointer;" title="Open ${s.symbol} on TradingView">
       <div class="card-head">
-        <span class="pair-name">${s.symbol}</span>
+        <span class="pair-name" style="display:flex; align-items:center; gap:6px;">
+          ${s.symbol}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--text-dim); opacity:0.8;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </span>
         <span class="time-stamp">${date} • ${time} <span style="color:var(--accent); font-weight:600;">(${timeAgo})</span></span>
       </div>
       <div class="data-row" style="margin-bottom: 8px;">
@@ -257,3 +260,32 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Navigation & Chart Links
+function jumpToSignal(sym) {
+  if (typeof switchTab === 'function') switchTab('signals');
+  
+  filterStatus = 'all';
+  filterSide = 'all';
+  filterSort = 'newest';
+  filterSearch = sym.toUpperCase();
+  
+  const fs = document.getElementById('filterSearch'); 
+  if(fs) fs.value = filterSearch;
+  
+  document.querySelectorAll('.seg-btn').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('[data-val="all"], [data-val="newest"]').forEach(c => c.classList.add('active'));
+  
+  updateResetBtn();
+  currentPage = 1;
+  renderSignals();
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openChart(symbol) {
+  // Gunakan pencarian universal TradingView (tanpa prefix BINANCE:) 
+  // agar koin yang tidak ada di Binance (seperti BTR) tetap bisa terbuka dari exchange lain
+  const tvUrl = `https://www.tradingview.com/chart/?symbol=${symbol.toUpperCase()}`;
+  window.open(tvUrl, '_blank');
+}
