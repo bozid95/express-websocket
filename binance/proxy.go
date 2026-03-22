@@ -1,8 +1,8 @@
 package binance
 
 import (
+	"crypto/tls"
 	"encoding/json"
-	"express-websocket/engine"
 	"log"
 	"net/http"
 	"strconv"
@@ -13,159 +13,253 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// priceClient represents a connected browser client
+// upgrader allows WebSocket connections from any origin
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
+}
+
+// client represents a connected browser
 type priceClient struct {
 	conn    *websocket.Conn
-	symbols map[string]bool
-	mu      sync.Mutex
+	symbols []string
+	send    chan []byte
 }
 
 var (
-	priceClients   = make(map[*priceClient]bool)
-	priceClientsMu sync.RWMutex
-	broadcasterOnce sync.Once
+	clients   = make(map[*priceClient]bool)
+	clientsMu sync.Mutex
+
+	// shared Binance WS for proxy (separate from the engine's connection)
+	proxyWs       *websocket.Conn
+	proxyWsMu     sync.Mutex
+	proxySymbols  string // sorted symbol key currently subscribed
+	proxyOnce     sync.Once
 )
 
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		// Allow all origins — adjust if you want stricter CORS
-		return true
-	},
-}
-
-// priceMsg is the JSON format sent to browser clients.
-// Matches the miniTicker format expected by core.js:
-// {"data": {"s": "BTCUSDT", "c": "65432.10"}}
-type priceMsg struct {
-	Data struct {
-		S string `json:"s"` // symbol
-		C string `json:"c"` // close/last price
-	} `json:"data"`
-}
-
-// PriceProxyHandler handles WebSocket connections from the browser dashboard.
-// Query param: ?symbols=BTCUSDT,ETHUSDT,BNBUSDT
-// It broadcasts realtime prices from engine.LatestPrices to all connected clients.
+// PriceProxyHandler upgrades the HTTP connection to WebSocket and subscribes
+// the browser to live Binance miniTicker prices via the VPS as relay.
+// Query param: ?symbols=BTCUSDT,ETHUSDT,...
 func PriceProxyHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("[PriceProxy] ❌ Upgrade error: %v\n", err)
+		log.Printf("[PriceProxy] upgrade error: %v\n", err)
 		return
 	}
 
-	// Parse requested symbols from ?symbols= query param
 	symbolsParam := r.URL.Query().Get("symbols")
-	symbolFilter := make(map[string]bool)
-	if symbolsParam != "" {
-		for _, s := range strings.Split(symbolsParam, ",") {
-			sym := strings.TrimSpace(strings.ToUpper(s))
-			if sym != "" {
-				symbolFilter[sym] = true
-			}
+	var symbols []string
+	for _, s := range strings.Split(symbolsParam, ",") {
+		s = strings.TrimSpace(strings.ToUpper(s))
+		if s != "" {
+			symbols = append(symbols, s)
 		}
 	}
 
-	client := &priceClient{
+	c := &priceClient{
 		conn:    conn,
-		symbols: symbolFilter,
+		symbols: symbols,
+		send:    make(chan []byte, 256),
 	}
 
-	priceClientsMu.Lock()
-	priceClients[client] = true
-	priceClientsMu.Unlock()
+	clientsMu.Lock()
+	clients[c] = true
+	clientsMu.Unlock()
 
-	log.Printf("[PriceProxy] ✅ Client connected (symbols: %s)\n", symbolsParam)
+	log.Printf("[PriceProxy] client connected (%d symbols)\n", len(symbols))
 
-	// Start the broadcaster goroutine once (shared across all clients)
-	broadcasterOnce.Do(func() {
-		go startPriceBroadcaster()
+	// Start (or restart) the shared proxy Binance WS with the union of all symbols
+	proxyOnce.Do(func() {
+		go runProxyBinanceWs()
 	})
+	go reconnectIfNeeded(symbols)
 
-	// Keep connection alive — read pings/pongs, detect disconnect
+	// Write pump — sends messages from channel to browser
+	go func() {
+		defer conn.Close()
+		for msg := range c.send {
+			conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+				break
+			}
+		}
+	}()
+
+	// Read pump — keeps connection alive and detects disconnect
 	for {
-		_, _, err := conn.ReadMessage()
-		if err != nil {
+		if _, _, err := conn.ReadMessage(); err != nil {
 			break
 		}
 	}
 
-	// Client disconnected — clean up
-	priceClientsMu.Lock()
-	delete(priceClients, client)
-	priceClientsMu.Unlock()
-	conn.Close()
-	log.Printf("[PriceProxy] 🔌 Client disconnected\n")
+	clientsMu.Lock()
+	delete(clients, c)
+	close(c.send)
+	clientsMu.Unlock()
+	log.Println("[PriceProxy] client disconnected")
 }
 
-// startPriceBroadcaster runs a loop that pushes price updates to all connected clients
-// every second, sourcing data from engine.LatestPrices (kept up-to-date by binance.Connect).
-func startPriceBroadcaster() {
-	log.Println("[PriceProxy] 🚀 Broadcaster started")
-	ticker := time.NewTicker(1 * time.Second)
-	defer ticker.Stop()
+// reconnectIfNeeded checks if the proxy WS needs to subscribe to new symbols
+func reconnectIfNeeded(newSymbols []string) {
+	time.Sleep(500 * time.Millisecond) // brief wait for client to be registered
 
-	for range ticker.C {
-		priceClientsMu.RLock()
-		if len(priceClients) == 0 {
-			priceClientsMu.RUnlock()
-			continue
+	clientsMu.Lock()
+	allSymbols := make(map[string]bool)
+	for c := range clients {
+		for _, s := range c.symbols {
+			allSymbols[s] = true
 		}
+	}
+	clientsMu.Unlock()
 
-		// Collect current prices from engine
-		type symbolPrice struct {
-			symbol string
-			price  string
+	// Build sorted key
+	var list []string
+	for s := range allSymbols {
+		list = append(list, s)
+	}
+	key := strings.Join(sortedStrings(list), ",")
+
+	proxyWsMu.Lock()
+	needReconnect := key != proxySymbols
+	proxyWsMu.Unlock()
+
+	if needReconnect {
+		log.Printf("[PriceProxy] Symbols changed, reconnecting proxy WS...\n")
+		proxyWsMu.Lock()
+		if proxyWs != nil {
+			proxyWs.Close()
 		}
-		var updates []symbolPrice
-		engine.LatestPrices.Range(func(key, value interface{}) bool {
-			sym := key.(string)
-			info := value.(engine.PriceInfo)
-			if info.Price > 0 {
-				updates = append(updates, symbolPrice{
-					symbol: sym,
-					price:  formatPrice(info.Price),
-				})
-			}
-			return true
-		})
-		priceClientsMu.RUnlock()
-
-		if len(updates) == 0 {
-			continue
-		}
-
-		// Send to each client
-		priceClientsMu.RLock()
-		for client := range priceClients {
-			client.mu.Lock()
-			for _, u := range updates {
-				// Filter: only send symbols this client subscribed to (if filter set)
-				if len(client.symbols) > 0 && !client.symbols[u.symbol] {
-					continue
-				}
-
-				var msg priceMsg
-				msg.Data.S = u.symbol
-				msg.Data.C = u.price
-
-				data, err := json.Marshal(msg)
-				if err != nil {
-					continue
-				}
-
-				client.conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
-				if err := client.conn.WriteMessage(websocket.TextMessage, data); err != nil {
-					// Client likely disconnected; will be cleaned up in read loop
-					break
-				}
-			}
-			client.mu.Unlock()
-		}
-		priceClientsMu.RUnlock()
+		proxyWsMu.Unlock()
 	}
 }
 
-// formatPrice converts a float64 price to a clean string representation
+// runProxyBinanceWs maintains a persistent WebSocket to Binance miniTicker
+// and broadcasts price updates to all connected browser clients.
+func runProxyBinanceWs() {
+	for {
+		// Collect all symbols from connected clients
+		clientsMu.Lock()
+		symbolSet := make(map[string]bool)
+		for c := range clients {
+			for _, s := range c.symbols {
+				symbolSet[s] = true
+			}
+		}
+		clientsMu.Unlock()
+
+		if len(symbolSet) == 0 {
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		var symList []string
+		for s := range symbolSet {
+			symList = append(symList, s)
+		}
+
+		streams := make([]string, len(symList))
+		for i, s := range symList {
+			streams[i] = strings.ToLower(s) + "@miniTicker"
+		}
+		wsUrl := "wss://fstream.binance.com/stream?streams=" + strings.Join(streams, "/")
+
+		proxyWsMu.Lock()
+		proxySymbols = strings.Join(sortedStrings(symList), ",")
+		proxyWsMu.Unlock()
+
+		log.Printf("[PriceProxy] Connecting proxy WS for %d symbols...\n", len(symList))
+
+		dialer := *websocket.DefaultDialer
+		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		conn, _, err := dialer.Dial(wsUrl, nil)
+		if err != nil {
+			log.Printf("[PriceProxy] dial error: %v — retry in 5s\n", err)
+			time.Sleep(5 * time.Second)
+			continue
+		}
+
+		proxyWsMu.Lock()
+		proxyWs = conn
+		proxyWsMu.Unlock()
+		log.Println("[PriceProxy] proxy WS connected to Binance")
+
+		// Read messages and broadcast to all clients
+		for {
+			_, msg, err := conn.ReadMessage()
+			if err != nil {
+				log.Printf("[PriceProxy] read error: %v\n", err)
+				break
+			}
+			broadcastToClients(msg)
+		}
+
+		conn.Close()
+		proxyWsMu.Lock()
+		proxyWs = nil
+		proxyWsMu.Unlock()
+		log.Println("[PriceProxy] proxy WS disconnected, reconnecting in 3s...")
+		time.Sleep(3 * time.Second)
+	}
+}
+
+// broadcastToClients sends a raw Binance message to all browser clients.
+// Filters per client's symbol subscription.
+func broadcastToClients(raw []byte) {
+	// Extract symbol quickly without full unmarshal
+	var wrapper struct {
+		Data struct {
+			S string `json:"s"`
+			C string `json:"c"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(raw, &wrapper); err != nil {
+		return
+	}
+	sym := wrapper.Data.S
+	price := wrapper.Data.C
+	if sym == "" || price == "" {
+		return
+	}
+
+	// Re-encode as the simple format core.js expects:
+	// {"data": {"s": "BTCUSDT", "c": "65432.10"}}
+	out, _ := json.Marshal(map[string]interface{}{
+		"data": map[string]string{"s": sym, "c": price},
+	})
+
+	clientsMu.Lock()
+	defer clientsMu.Unlock()
+	for c := range clients {
+		// Check if this client subscribed to this symbol
+		subscribed := false
+		for _, s := range c.symbols {
+			if s == sym {
+				subscribed = true
+				break
+			}
+		}
+		if !subscribed {
+			continue
+		}
+		// Non-blocking send
+		select {
+		case c.send <- out:
+		default:
+			// Buffer full — skip this update for this client
+		}
+	}
+}
+
+func sortedStrings(s []string) []string {
+	// Simple insertion sort (small slice)
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && s[j] < s[j-1]; j-- {
+			s[j], s[j-1] = s[j-1], s[j]
+		}
+	}
+	return s
+}
+
+// formatPrice is kept for potential future use
 func formatPrice(p float64) string {
 	if p < 1 {
 		return strconv.FormatFloat(p, 'f', 6, 64)
